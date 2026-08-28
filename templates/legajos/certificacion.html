@@ -1,0 +1,153 @@
+{% load static %}<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <title>Certificación de servicios · {{ legajo.nombre_completo }}</title>
+  <style>
+    @page { size: A4; margin: 2cm 2cm 2.5cm; }
+
+    body { font-family: "DejaVu Serif", Georgia, serif; font-size: 11pt; color: #16232e; line-height: 1.5; }
+
+    .membrete { border-bottom: 2px solid #16232e; padding-bottom: 0.6rem; margin-bottom: 1.6rem; }
+    .membrete .nombre { font-size: 15pt; font-weight: 700; }
+    .membrete .datos { font-size: 9pt; color: #4a5c6b; }
+
+    h1 { font-size: 13pt; text-align: center; letter-spacing: 0.08em; text-transform: uppercase; margin: 0 0 1.4rem; }
+    h2 { font-size: 11pt; margin: 1.6rem 0 0.5rem; }
+
+    .parrafo { text-align: justify; margin-bottom: 1.2rem; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-bottom: 0.6rem; }
+    th, td { border: 1px solid #b9c4cb; padding: 4px 6px; text-align: left; vertical-align: top; }
+    th { background: #eef2f4; font-size: 8.5pt; text-transform: uppercase; letter-spacing: 0.03em; }
+    td.centrado, th.centrado { text-align: center; }
+
+    .resumen { margin-top: 1rem; border: 1px solid #b9c4cb; padding: 0.6rem 0.8rem; background: #f7f9fa; }
+    .resumen div { margin-bottom: 0.2rem; }
+    .resumen strong { font-size: 11.5pt; }
+
+    .nota { font-size: 8.5pt; color: #4a5c6b; font-style: italic; }
+
+    .firma { margin-top: 3.5rem; text-align: center; }
+    .firma .linea { border-top: 1px solid #16232e; width: 60%; margin: 0 auto 0.2rem; }
+    .firma .aclaracion { font-size: 9pt; color: #4a5c6b; }
+
+    .pie { position: fixed; bottom: -1.4cm; left: 0; right: 0; font-size: 7.5pt; color: #7c8b96; text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="membrete">
+  <div class="nombre">{{ institucion.nombre }}</div>
+  <div class="datos">
+    {% if institucion.cue %}CUE {{ institucion.cue }} · {% endif %}
+    {% if institucion.domicilio %}{{ institucion.domicilio }}{% if institucion.localidad %}, {{ institucion.localidad }}{% endif %}{% endif %}
+    {% if institucion.telefono %} · Tel. {{ institucion.telefono }}{% endif %}
+  </div>
+</div>
+
+<h1>Certificación de servicios</h1>
+
+<p class="parrafo">
+  Se deja constancia de que <strong>{{ legajo.apellido }}, {{ legajo.nombre }}</strong>,
+  CUIL {{ legajo.cuil }}{% if legajo.dni %}, DNI {{ legajo.dni }}{% endif %},
+  {% if cargos %}
+    prestó servicios en este establecimiento en los cargos y períodos que se detallan a continuación.
+  {% else %}
+    no registra cargos cargados en este establecimiento a la fecha de emisión.
+  {% endif %}
+</p>
+
+{% if cargos %}
+  <h2>Servicios prestados en este establecimiento</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Cargo / espacio curricular</th>
+        <th class="centrado">Horas</th>
+        <th>Situación de revista</th>
+        <th class="centrado">Desde</th>
+        <th class="centrado">Hasta</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for cargo in cargos %}
+        <tr>
+          <td>{{ cargo.descripcion }}</td>
+          <td class="centrado">
+            {% if cargo.horas_semanales %}{{ cargo.horas_semanales }}{% elif cargo.jornada_completa %}J. completa{% else %}—{% endif %}
+          </td>
+          <td>{{ cargo.get_situacion_revista_display }}</td>
+          <td class="centrado">{{ cargo.fecha_alta|date:"d/m/Y" }}</td>
+          <td class="centrado">
+            {% if cargo.fecha_baja %}{{ cargo.fecha_baja|date:"d/m/Y" }}{% else %}continúa{% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="resumen">
+    <div>
+      Antigüedad en este establecimiento:
+      <strong>{{ antiguedad_institucion }}</strong>
+      ({{ antiguedad_institucion.total_dias }} días)
+    </div>
+    {% if servicios_anteriores %}
+      <div>
+        Antigüedad docente total, incluidos los servicios declarados:
+        <strong>{{ antiguedad_total }}</strong>
+        ({{ antiguedad_total.total_dias }} días)
+      </div>
+    {% endif %}
+  </div>
+  <p class="nota">
+    Los períodos simultáneos se computan una sola vez.
+  </p>
+{% endif %}
+
+{% if servicios_anteriores %}
+  <h2>Servicios declarados en otras instituciones</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Institución</th>
+        <th>Cargo</th>
+        <th class="centrado">Desde</th>
+        <th class="centrado">Hasta</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for servicio in servicios_anteriores %}
+        <tr>
+          <td>{{ servicio.institucion_nombre }}</td>
+          <td>{{ servicio.cargo_descripcion|default:"—" }}</td>
+          <td class="centrado">{{ servicio.desde|date:"d/m/Y" }}</td>
+          <td class="centrado">{{ servicio.hasta|date:"d/m/Y" }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="nota">
+    Estos servicios se consignan según la documentación aportada por el interesado y no son
+    certificados por este establecimiento.
+  </p>
+{% endif %}
+
+<p class="parrafo" style="margin-top:1.6rem">
+  Se extiende la presente a pedido del interesado, a los
+  {{ fecha|date:"j" }} días del mes de {{ fecha|date:"F" }} de {{ fecha|date:"Y" }}
+  {% if institucion.localidad %}en {{ institucion.localidad }}{% endif %}.
+</p>
+
+<div class="firma">
+  <div class="linea"></div>
+  <div class="aclaracion">Firma y sello de la autoridad</div>
+</div>
+
+<div class="pie">
+  Emitido por {{ emitido_por.nombre_completo }} · {{ fecha|date:"d/m/Y" }} · {{ institucion.nombre }}
+</div>
+
+</body>
+</html>

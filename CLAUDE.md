@@ -18,7 +18,10 @@ código.
 - **F0 (fundaciones): lista.** Multi-institución, usuarios y roles, auditoría,
   y toda la estructura del colegio (niveles, ciclo lectivo, períodos, turnos,
   grilla horaria, cursos, materias y plan de estudios).
-- Siguiente: **F1 (RRHH / legajos)**.
+- **F1 (RRHH / legajos): lista.** Legajos, cargos con fuente de pago y
+  situación de revista, documentación con vencimientos, títulos, servicios
+  anteriores, cómputo de antigüedad y certificación de servicios en PDF.
+- Siguiente: **F2 (horarios)** — el generador con OR-Tools.
 
 ## Comandos
 
@@ -26,6 +29,7 @@ código.
 pip install -r requirements-dev.txt
 python manage.py migrate
 python manage.py cargar_piloto --password una-clave   # datos de ejemplo
+python manage.py sincronizar_permisos                 # tras agregar modelos
 python manage.py runserver
 pytest
 ```
@@ -54,6 +58,12 @@ instituciones expone datos laborales de otra escuela.
 
 - La fuente de pago (subvencionado/interno) es atributo **del cargo**, nunca de
   la persona: de ahí sale sola la separación entre planilla Oficial e Interna.
+  Una persona con cargos de las dos fuentes es el caso "mixto", sin ningún
+  campo extra.
+- Los períodos de servicio **se unen antes de contarse** (`legajos.antiguedad`):
+  varios cargos simultáneos son un solo tiempo trabajado.
+- Al agregar modelos nuevos hay que sumarlos a `core/permisos.py`, o los roles
+  existentes no van a poder administrarlos.
 - Las validaciones de coherencia van en `clean()` del modelo, para que las
   aproveche cualquier formulario.
 - Las acciones sensibles (cierres, reaperturas, exportaciones) se registran con

@@ -20,11 +20,17 @@ alcance, módulos, modelo de datos, arquitectura y roadmap por fases.
 
 ## Estado
 
-**Fase 0 (fundaciones) implementada.** Ya se puede cargar la estructura del
-colegio: instituciones, usuarios y roles, niveles, ciclo lectivo y períodos,
-turnos, grilla horaria flexible, cursos y plan de estudios.
+**Fases 0 y 1 implementadas.**
 
-Próxima fase: **F1 — RRHH / legajos**.
+- **F0 · Fundaciones** — instituciones con aislamiento de datos, usuarios y
+  roles, auditoría, y la estructura del colegio: niveles, ciclo lectivo y
+  períodos, turnos, grilla horaria flexible, cursos y plan de estudios.
+- **F1 · RRHH / Legajos** — legajos del personal, cargos con fuente de pago y
+  situación de revista, documentación con alertas de vencimiento, títulos,
+  servicios anteriores, cómputo de antigüedad y **certificación de servicios
+  en PDF**.
+
+Próxima fase: **F2 — Horarios**, con el generador automático.
 
 ## Poner en marcha
 
@@ -63,6 +69,7 @@ Configuración por variables de entorno (ver `.env.example`). Sin
 config/       configuración de Django (settings, urls, wsgi)
 core/         instituciones, usuarios, roles, aislamiento multi-escuela, auditoría
 estructura/   niveles, ciclo lectivo, períodos, turnos, grilla horaria, cursos, materias
+legajos/      personal, cargos, documentación, títulos, antigüedad, certificaciones
 templates/    plantillas HTML
 static/       hoja de estilos propia (sin build ni CDN)
 ```

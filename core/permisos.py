@@ -30,14 +30,26 @@ ESTRUCTURA = [
     "materiaplan",
 ]
 
+# Legajos del personal: datos sensibles, incluida documentación de salud.
+LEGAJOS = [
+    "legajo",
+    "cargo",
+    "tipodocumento",
+    "documentolegajo",
+    "titulo",
+    "servicioanterior",
+]
+
 # rol -> {app_label: {modelo: acciones}}
 PERMISOS_POR_ROL: dict[str, dict[str, dict[str, tuple[str, ...]]]] = {
     Rol.SECRETARIA: {
         "estructura": {modelo: TODAS for modelo in ESTRUCTURA},
+        "legajos": {modelo: TODAS for modelo in LEGAJOS},
         "core": {"membresia": SOLO_VER, "registroauditoria": SOLO_VER},
     },
     Rol.DIRECTIVO: {
         "estructura": {modelo: SOLO_VER for modelo in ESTRUCTURA},
+        "legajos": {modelo: SOLO_VER for modelo in LEGAJOS},
         "core": {"membresia": SOLO_VER, "registroauditoria": SOLO_VER},
     },
     # El docente usa el portal (F5), no el panel de administración.

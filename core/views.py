@@ -52,7 +52,45 @@ def inicio(request):
         ).exists(),
         "cursos": cursos.select_related("nivel", "turno", "esquema_horario")[:12],
     }
+    contexto.update(_resumen_de_personal(institucion))
     return render(request, "core/inicio.html", contexto)
+
+
+def _resumen_de_personal(institucion) -> dict:
+    """Personal activo y estado de la documentación (módulo de legajos)."""
+    from legajos.models import DocumentoLegajo, EstadoLegajo, FuentePago, Legajo
+
+    activos = Legajo.objects.del_contexto().filter(estado=EstadoLegajo.ACTIVO)
+
+    # Los documentos con vencimiento son pocos (unos cientos): se revisan en
+    # Python porque cada tipo tiene su propia ventana de preaviso.
+    documentos = (
+        DocumentoLegajo.objects.filter(
+            legajo__institucion=institucion, fecha_vencimiento__isnull=False
+        )
+        .select_related("tipo", "legajo")
+        .order_by("fecha_vencimiento")
+    )
+    vencidos = [documento for documento in documentos if documento.esta_vencido]
+    por_vencer = [documento for documento in documentos if documento.por_vencer]
+
+    return {
+        "cantidad_personal": activos.count(),
+        "personal_por_fuente": {
+            "subvencionado": activos.filter(
+                cargos__fuente_pago=FuentePago.SUBVENCIONADO, cargos__fecha_baja__isnull=True
+            )
+            .distinct()
+            .count(),
+            "interno": activos.filter(
+                cargos__fuente_pago=FuentePago.INTERNO, cargos__fecha_baja__isnull=True
+            )
+            .distinct()
+            .count(),
+        },
+        "documentos_vencidos": vencidos,
+        "documentos_por_vencer": por_vencer,
+    }
 
 
 @require_POST

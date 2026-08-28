@@ -13,9 +13,22 @@
   </p>
 
   <div class="grilla-indicadores">
-    <div class="tarjeta indicador {% if not cantidad_niveles %}pendiente{% endif %}">
-      <div class="numero">{{ cantidad_niveles }}</div>
-      <div class="rotulo">Niveles</div>
+    <div class="tarjeta indicador">
+      <div class="numero">{{ cantidad_personal }}</div>
+      <div class="rotulo">Personal activo</div>
+      {% if cantidad_personal %}
+        <div class="detalle">
+          {{ personal_por_fuente.subvencionado }} subvencionado ·
+          {{ personal_por_fuente.interno }} interno
+        </div>
+      {% endif %}
+    </div>
+    <div class="tarjeta indicador {% if documentos_vencidos %}pendiente{% endif %}">
+      <div class="numero">{{ documentos_vencidos|length }}</div>
+      <div class="rotulo">Documentos vencidos</div>
+      {% if documentos_por_vencer %}
+        <div class="detalle">{{ documentos_por_vencer|length }} por vencer</div>
+      {% endif %}
     </div>
     <div class="tarjeta indicador {% if not cantidad_cursos %}pendiente{% endif %}">
       <div class="numero">{{ cantidad_cursos }}</div>
@@ -25,11 +38,34 @@
       <div class="numero">{{ cantidad_materias }}</div>
       <div class="rotulo">Materias</div>
     </div>
-    <div class="tarjeta indicador">
-      <div class="numero">{{ periodos|length }}</div>
-      <div class="rotulo">Períodos del ciclo</div>
-    </div>
   </div>
+
+  {% if documentos_vencidos or documentos_por_vencer %}
+    <h2>Documentación a reclamar</h2>
+    <table class="datos">
+      <thead>
+        <tr><th>Persona</th><th>Documento</th><th>Vence</th><th>Situación</th></tr>
+      </thead>
+      <tbody>
+        {% for documento in documentos_vencidos|slice:":10" %}
+          <tr>
+            <td>{{ documento.legajo.nombre_completo }}</td>
+            <td>{{ documento.tipo }}</td>
+            <td>{{ documento.fecha_vencimiento|date:"d/m/Y" }}</td>
+            <td><span class="etiqueta alerta">vencido</span></td>
+          </tr>
+        {% endfor %}
+        {% for documento in documentos_por_vencer|slice:":10" %}
+          <tr>
+            <td>{{ documento.legajo.nombre_completo }}</td>
+            <td>{{ documento.tipo }}</td>
+            <td>{{ documento.fecha_vencimiento|date:"d/m/Y" }}</td>
+            <td>vence en {{ documento.dias_para_vencer }} días</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
 
   <h2>Puesta en marcha</h2>
   <div class="tarjeta">

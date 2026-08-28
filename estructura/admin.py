@@ -152,6 +152,8 @@ class CursoAdmin(AdminInstitucional):
         "horas_de_la_grilla",
     )
     list_filter = ("ciclo_lectivo", "nivel", "turno")
+    # Necesario para que otros módulos puedan elegir el curso por autocompletado.
+    search_fields = ("anio_estudio", "division")
     inlines = [MateriaPlanInline]
 
     @admin.display(description="horas del plan")

@@ -8,7 +8,7 @@ almuerzo). Los horarios exactos son aproximados: se ajustan desde el admin.
     python manage.py cargar_piloto --email secretaria@escuela.edu.ar
 """
 
-from datetime import date, time
+from datetime import date, time, timedelta
 
 from django.core.management.base import BaseCommand
 from django.db import transaction
@@ -28,6 +28,17 @@ from estructura.models import (
     TipoNivel,
     Turno,
 )
+from legajos.models import (
+    Cargo,
+    DocumentoLegajo,
+    FuentePago,
+    Legajo,
+    MotivoBaja,
+    ServicioAnterior,
+    SituacionRevista,
+    TipoDocumento,
+)
+from legajos.models import TipoCargo as TipoCargoLegajo
 
 # Grilla del turno mañana: las horas van de a pares con recreos de duración
 # variable, y algunos cursos cortan para almorzar.
@@ -61,6 +72,138 @@ MATERIAS_SECUNDARIA = [
 ]
 
 DIAS_HABILES = range(5)  # lunes a viernes
+
+# (nombre, lleva vencimiento, días de preaviso, obligatorio)
+TIPOS_DOCUMENTO = [
+    ("Apto psicofísico", True, 30, True),
+    ("Certificado de antecedentes penales", True, 60, True),
+    ("Título registrado", False, 30, True),
+    ("Constancia de CUIL", False, 30, False),
+]
+
+# Personal inventado que cubre los casos que el sistema debe soportar.
+PERSONAL_DE_EJEMPLO = [
+    {
+        "apellido": "Ferreyra",
+        "nombre": "Marina Soledad",
+        "cuil": "27-30123456-4",
+        "obra_social": "OSDE",
+        "dias_de_antiguedad": 3200,
+        "cargos": [
+            {
+                "tipo": TipoCargoLegajo.HORAS_CATEDRA,
+                "materia": "Matemática",
+                "curso": "1°A",
+                "horas": 5,
+                "revista": SituacionRevista.TITULAR,
+                "fuente": FuentePago.SUBVENCIONADO,
+                "dias_desde_alta": 3200,
+            },
+            {
+                "tipo": TipoCargoLegajo.HORAS_CATEDRA,
+                "materia": "Matemática",
+                "curso": "1°B",
+                "horas": 5,
+                "revista": SituacionRevista.TITULAR,
+                "fuente": FuentePago.SUBVENCIONADO,
+                "dias_desde_alta": 3200,
+            },
+        ],
+        "documentos": [("Apto psicofísico", -20), ("Certificado de antecedentes penales", 300)],
+        "servicios_anteriores": [
+            {
+                "institucion": "Escuela N° 12 «Los Álamos»",
+                "cargo": "Profesora de Matemática",
+                "desde": date(2012, 3, 1),
+                "hasta": date(2016, 12, 31),
+            }
+        ],
+    },
+    {
+        # Caso mixto: horas que paga el estado y horas que paga la escuela.
+        "apellido": "Ocampo",
+        "nombre": "Lucía Beatriz",
+        "cuil": "27-33456789-1",
+        "obra_social": "Jerárquicos Salud",
+        "dias_de_antiguedad": 1500,
+        "cargos": [
+            {
+                "tipo": TipoCargoLegajo.HORAS_CATEDRA,
+                "materia": "Lengua y Literatura",
+                "curso": "3°A",
+                "horas": 5,
+                "revista": SituacionRevista.PROVISIONAL,
+                "fuente": FuentePago.SUBVENCIONADO,
+                "dias_desde_alta": 1500,
+            },
+            {
+                "tipo": TipoCargoLegajo.HORAS_CATEDRA,
+                "materia": "Educación Artística",
+                "curso": "3°B",
+                "horas": 2,
+                "revista": SituacionRevista.PROVISIONAL,
+                "fuente": FuentePago.INTERNO,
+                "dias_desde_alta": 700,
+            },
+        ],
+        "documentos": [("Apto psicofísico", 25), ("Título registrado", None)],
+    },
+    {
+        "apellido": "Quiroga",
+        "nombre": "Hernán Darío",
+        "cuil": "20-28987654-3",
+        "dias_de_antiguedad": 900,
+        "cargos": [
+            {
+                "tipo": TipoCargoLegajo.HORAS_RELOJ,
+                "denominacion": "Preceptor/a",
+                "horas": 25,
+                "revista": SituacionRevista.PROVISIONAL,
+                "fuente": FuentePago.SUBVENCIONADO,
+                "dias_desde_alta": 900,
+            }
+        ],
+        "documentos": [("Apto psicofísico", 400)],
+    },
+    {
+        "apellido": "Bustos",
+        "nombre": "Verónica Andrea",
+        "cuil": "27-25678912-7",
+        "dias_de_antiguedad": 2400,
+        "cargos": [
+            {
+                "tipo": TipoCargoLegajo.CARGO_BASE,
+                "denominacion": "Secretaria",
+                "jornada_completa": True,
+                "revista": SituacionRevista.TITULAR,
+                "fuente": FuentePago.INTERNO,
+                "dias_desde_alta": 2400,
+            }
+        ],
+        "documentos": [("Certificado de antecedentes penales", 15)],
+    },
+    {
+        # Suplente con designación a término.
+        "apellido": "Peralta",
+        "nombre": "Iván Nicolás",
+        "cuil": "20-35789456-2",
+        "dias_de_antiguedad": 40,
+        "cargos": [
+            {
+                "tipo": TipoCargoLegajo.HORAS_CATEDRA,
+                "materia": "Historia",
+                "curso": "5°A",
+                "horas": 3,
+                "revista": SituacionRevista.SUPLENTE,
+                "fuente": FuentePago.SUBVENCIONADO,
+                "dias_desde_alta": 40,
+                "dias_hasta_baja": 50,
+                "motivo_baja": MotivoBaja.FIN_SUPLENCIA,
+            }
+        ],
+        "documentos": [("Apto psicofísico", 500)],
+    },
+]
 
 
 class Command(BaseCommand):
@@ -100,6 +243,7 @@ class Command(BaseCommand):
         ciclo = self._crear_ciclo(institucion, anio)
         esquemas = self._crear_grilla(institucion, niveles[TipoNivel.SECUNDARIO])
         self._crear_cursos_y_plan(institucion, niveles[TipoNivel.SECUNDARIO], ciclo, esquemas)
+        self._crear_personal(institucion, niveles[TipoNivel.SECUNDARIO], ciclo)
 
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS(f"Listo. Institución «{institucion}» preparada."))
@@ -241,6 +385,91 @@ class Command(BaseCommand):
                         MateriaPlan(curso=curso, materia=materias[nombre], horas_semanales=horas)
                         for nombre, _abrev, horas in MATERIAS_SECUNDARIA
                     )
+
+    def _crear_personal(self, institucion, nivel, ciclo):
+        """Personal de muestra, con los casos que el sistema tiene que soportar.
+
+        Las personas son inventadas. Incluye un caso mixto (horas del estado y
+        horas de la escuela en la misma persona), un suplente, documentación
+        vencida y por vencer, y servicios anteriores para el cómputo de
+        antigüedad.
+        """
+        tipos_documento = {}
+        for nombre, vence, preaviso, obligatorio in TIPOS_DOCUMENTO:
+            tipo, _creado = TipoDocumento.objects.get_or_create(
+                institucion=institucion,
+                nombre=nombre,
+                defaults={
+                    "lleva_vencimiento": vence,
+                    "dias_preaviso": preaviso,
+                    "obligatorio": obligatorio,
+                },
+            )
+            tipos_documento[nombre] = tipo
+
+        materias = {
+            materia.nombre: materia
+            for materia in Materia.objects.filter(institucion=institucion, nivel=nivel)
+        }
+        cursos = {
+            str(curso): curso
+            for curso in Curso.objects.filter(institucion=institucion, ciclo_lectivo=ciclo)
+        }
+        hoy = date.today()
+
+        for datos in PERSONAL_DE_EJEMPLO:
+            legajo, creado = Legajo.objects.get_or_create(
+                institucion=institucion,
+                cuil=datos["cuil"],
+                defaults={
+                    "apellido": datos["apellido"],
+                    "nombre": datos["nombre"],
+                    "obra_social": datos.get("obra_social", ""),
+                    "fecha_ingreso": hoy - timedelta(days=datos["dias_de_antiguedad"]),
+                },
+            )
+            self._informar("Legajo", legajo, creado)
+            if not creado:
+                continue
+
+            for cargo in datos["cargos"]:
+                Cargo.objects.create(
+                    institucion=institucion,
+                    legajo=legajo,
+                    tipo=cargo["tipo"],
+                    denominacion=cargo.get("denominacion", ""),
+                    nivel=nivel,
+                    materia=materias.get(cargo.get("materia", "")),
+                    curso=cursos.get(cargo.get("curso", "")),
+                    horas_semanales=cargo.get("horas"),
+                    jornada_completa=cargo.get("jornada_completa", False),
+                    situacion_revista=cargo["revista"],
+                    fuente_pago=cargo["fuente"],
+                    fecha_alta=hoy - timedelta(days=cargo.get("dias_desde_alta", 365)),
+                    fecha_baja=(
+                        hoy + timedelta(days=cargo["dias_hasta_baja"])
+                        if "dias_hasta_baja" in cargo
+                        else None
+                    ),
+                    motivo_baja=cargo.get("motivo_baja", ""),
+                )
+
+            for nombre_tipo, dias in datos.get("documentos", []):
+                DocumentoLegajo.objects.create(
+                    legajo=legajo,
+                    tipo=tipos_documento[nombre_tipo],
+                    fecha_emision=hoy - timedelta(days=365),
+                    fecha_vencimiento=hoy + timedelta(days=dias) if dias is not None else None,
+                )
+
+            for servicio in datos.get("servicios_anteriores", []):
+                ServicioAnterior.objects.create(
+                    legajo=legajo,
+                    institucion_nombre=servicio["institucion"],
+                    cargo_descripcion=servicio.get("cargo", ""),
+                    desde=servicio["desde"],
+                    hasta=servicio["hasta"],
+                )
 
     def _informar(self, etiqueta, objeto, creado):
         marca = self.style.SUCCESS("+") if creado else self.style.WARNING("=")

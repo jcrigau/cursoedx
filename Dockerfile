@@ -5,10 +5,16 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# Dependencias del sistema: psycopg necesita libpq; el resto es para compilar
-# ruedas que no vengan precompiladas.
+# Dependencias del sistema: libpq para psycopg; pango y las fuentes DejaVu para
+# que WeasyPrint pueda componer los PDF (certificaciones, planillas).
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential libpq-dev \
+    && apt-get install -y --no-install-recommends \
+        build-essential \
+        libpq-dev \
+        libpango-1.0-0 \
+        libpangoft2-1.0-0 \
+        libharfbuzz0b \
+        fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .

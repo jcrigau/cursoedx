@@ -131,6 +131,14 @@ h2 { font-size: 1.1rem; margin: 2rem 0 0.75rem; }
 
 .indicador.pendiente .numero { color: var(--alerta); }
 
+.indicador .detalle {
+  color: var(--tinta-suave);
+  font-size: 0.82rem;
+  margin-top: 0.3rem;
+}
+
+.etiqueta.alerta { background: var(--alerta-clara); color: var(--alerta); }
+
 /* Tablas ---------------------------------------------------------------- */
 
 table.datos {
