@@ -161,6 +161,63 @@ Y **Reload** en la pestaña Web.
 
 ---
 
+## Usar un dominio propio
+
+Registrar el dominio es **solo el nombre**. Para que alguien escriba
+`sge.miescuela.com.ar` y le abra el sistema hacen falta tres cosas más:
+
+1. **Hosting** donde corra la aplicación.
+2. **DNS** que apunte el nombre a ese hosting.
+3. **Certificado HTTPS**, o el navegador va a mostrar "sitio no seguro".
+
+### Lo primero a saber
+
+**La cuenta gratuita de PythonAnywhere no admite dominio propio**: solo
+funciona `usuario.pythonanywhere.com`. El dominio requiere un plan pago. Así
+que la decisión del dominio y la del plan van juntas.
+
+Para un sitio de prueba, el subdominio gratuito alcanza y sobra. El dominio
+propio recién vale la pena cuando el sistema se muestra a otras escuelas.
+
+### El trámite en NIC.ar
+
+Registrar un `.com.ar` se hace en https://nic.ar y requiere **Clave Fiscal de
+ARCA (ex AFIP)**: la cuenta de NIC se valida con ella, así que hay que tenerla
+a nombre de quien va a figurar como titular. El registro es anual y se renueva.
+
+Conviene registrarlo a nombre de quien va a ser dueño del producto, no de la
+escuela: si mañana se vende a varias instituciones, el dominio es tuyo.
+
+### Cómo se conecta
+
+El camino más simple y sin costo extra:
+
+1. Registrar el dominio en NIC.ar.
+2. Crear una cuenta gratuita en **Cloudflare** y agregar el dominio. Cloudflare
+   da dos servidores de nombres.
+3. En NIC.ar, en *Delegaciones*, cargar esos dos servidores de Cloudflare.
+4. En Cloudflare, crear el registro que apunta al hosting:
+   - **PythonAnywhere (plan pago):** un `CNAME` de `www` hacia la dirección que
+     te da la pestaña Web, y activar el certificado desde ahí.
+   - **VPS propio:** un registro `A` con la IP del servidor. El certificado lo
+     emite Caddy solo, gratis.
+
+La propagación tarda entre minutos y algunas horas.
+
+### Lo que hay que cambiar en el sistema
+
+Solo dos variables del `.env`, y **Reload** (o `docker compose up -d`):
+
+```
+SGE_ALLOWED_HOSTS=sge.miescuela.com.ar
+SGE_CSRF_TRUSTED_ORIGINS=https://sge.miescuela.com.ar
+```
+
+Sin la segunda, los formularios empiezan a fallar con un error de CSRF: es el
+olvido más habitual al mudar un sistema a su dominio.
+
+---
+
 ## B · Docker en un servidor propio
 
 Cuando el sistema pase de la prueba al uso diario:
