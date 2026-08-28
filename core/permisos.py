@@ -40,19 +40,30 @@ LEGAJOS = [
     "servicioanterior",
 ]
 
+# Horarios: DDJJ, versiones y asignaciones.
+HORARIOS = [
+    "declaraciondisponibilidad",
+    "franjanodisponible",
+    "versionhorario",
+    "asignacionhoraria",
+]
+
 # rol -> {app_label: {modelo: acciones}}
 PERMISOS_POR_ROL: dict[str, dict[str, dict[str, tuple[str, ...]]]] = {
     Rol.SECRETARIA: {
         "estructura": {modelo: TODAS for modelo in ESTRUCTURA},
         "legajos": {modelo: TODAS for modelo in LEGAJOS},
+        "horarios": {modelo: TODAS for modelo in HORARIOS},
         "core": {"membresia": SOLO_VER, "registroauditoria": SOLO_VER},
     },
     Rol.DIRECTIVO: {
         "estructura": {modelo: SOLO_VER for modelo in ESTRUCTURA},
         "legajos": {modelo: SOLO_VER for modelo in LEGAJOS},
+        "horarios": {modelo: SOLO_VER for modelo in HORARIOS},
         "core": {"membresia": SOLO_VER, "registroauditoria": SOLO_VER},
     },
-    # El docente usa el portal (F5), no el panel de administración.
+    # El docente usa el portal (F5), no el panel de administración. Podrá ver
+    # su propio horario desde ahí.
     Rol.DOCENTE: {},
     # El liquidador solo descarga novedades cerradas (F4).
     Rol.LIQUIDADOR: {},

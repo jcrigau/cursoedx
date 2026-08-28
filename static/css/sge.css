@@ -210,6 +210,83 @@ table.datos tr:last-child td { border-bottom: 0; }
 .pasos .falta .marca-paso { color: var(--alerta); }
 .pasos .hecho .texto { color: var(--tinta-suave); }
 
+/* Grilla de horarios ---------------------------------------------------- */
+
+table.grilla-horario {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  table-layout: fixed;
+}
+
+table.grilla-horario th,
+table.grilla-horario td {
+  border: 1px solid var(--borde);
+  padding: 0.4rem 0.5rem;
+  vertical-align: top;
+}
+
+table.grilla-horario thead th {
+  background: #eef2f4;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tinta-suave);
+  text-align: center;
+}
+
+table.grilla-horario th.hora {
+  width: 5.5rem;
+  background: #f7f9fa;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--tinta-suave);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+table.grilla-horario th.hora .fin {
+  display: block;
+  font-weight: 400;
+  opacity: 0.65;
+}
+
+.celda { height: 3.1rem; }
+.celda .principal { display: block; font-weight: 600; font-size: 0.9rem; line-height: 1.25; }
+.celda .secundario { display: block; font-size: 0.78rem; color: var(--tinta-suave); }
+.celda .pendiente { color: #b9c4cb; }
+.celda.recreo, .celda.almuerzo {
+  background: #f2f5f6;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--tinta-suave);
+}
+.celda.recreo .principal, .celda.almuerzo .principal { font-weight: 400; }
+.celda.clase.vacia { background: #fdfbf9; }
+
+.enlaces-grilla { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.ficha {
+  display: inline-block;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  text-decoration: none;
+  font-weight: 600;
+  box-shadow: var(--sombra);
+}
+
+.ficha:hover { border-color: var(--acento); }
+
+@media print {
+  .barra, .no-imprimir { display: none; }
+  body { background: #fff; font-size: 11pt; }
+  .contenido { max-width: none; padding: 0; }
+  table.grilla-horario { border-color: #999; }
+}
+
 /* Formularios ----------------------------------------------------------- */
 
 .formulario { max-width: 380px; margin: 4rem auto; }

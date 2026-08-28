@@ -3,12 +3,12 @@
 from datetime import date
 
 from django.contrib.auth.decorators import login_required, permission_required
-from django.http import Http404, HttpResponse
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.template.loader import render_to_string
-from django.utils.text import slugify
 
 from core.models import AccionAuditada, registrar_auditoria
+from core.pdf import responder_pdf
 
 from .antiguedad import antiguedad_en_la_institucion, calcular_antiguedad
 from .models import Legajo
@@ -41,27 +41,12 @@ def certificacion_servicios(request, pk):
     if request.GET.get("formato") == "html":
         return HttpResponse(html)
 
-    pdf = _a_pdf(html, request)
     registrar_auditoria(
         AccionAuditada.EXPORTACION,
         legajo,
         usuario=request.user,
         descripcion=f"Certificación de servicios de {legajo.nombre_completo}",
     )
-    nombre = slugify(f"certificacion-servicios-{legajo.apellido}-{legajo.nombre}")
-    return HttpResponse(
-        pdf,
-        content_type="application/pdf",
-        headers={"Content-Disposition": f'inline; filename="{nombre}.pdf"'},
+    return responder_pdf(
+        html, request, f"certificacion-servicios-{legajo.apellido}-{legajo.nombre}"
     )
-
-
-def _a_pdf(html: str, request) -> bytes:
-    try:
-        from weasyprint import HTML
-    except ImportError as error:  # pragma: no cover - depende del entorno
-        raise Http404(
-            "Falta WeasyPrint para generar el PDF. Mientras tanto se puede ver la "
-            "certificación con ?formato=html e imprimirla desde el navegador."
-        ) from error
-    return HTML(string=html, base_url=request.build_absolute_uri("/")).write_pdf()

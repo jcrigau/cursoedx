@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ grilla.titulo }} · Horario{% endblock %}
+
+{% block contenido %}
+  <h1>{{ grilla.titulo }}</h1>
+  <p class="subtitulo">{{ grilla.subtitulo }}</p>
+
+  {% if grilla.sin_asignar %}
+    <div class="aviso warning">
+      Qued{{ grilla.sin_asignar|pluralize:"a,an" }} {{ grilla.sin_asignar }}
+      hora{{ grilla.sin_asignar|pluralize }} sin materia asignada.
+    </div>
+  {% endif %}
+
+  <table class="grilla-horario">
+    <thead>
+      <tr>
+        <th class="hora">Hora</th>
+        {% for dia, nombre in grilla.dias %}<th>{{ nombre }}</th>{% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% for fila in grilla.filas %}
+        <tr>
+          <th class="hora">
+            {{ fila.inicio|time:"H:i" }}<span class="fin">{{ fila.fin|time:"H:i" }}</span>
+          </th>
+          {% for celda in fila.celdas %}
+            <td class="celda {{ celda.tipo }}{% if celda.vacia %} vacia{% endif %}">
+              {% if not celda.vacia %}
+                <span class="principal">{{ celda.principal }}</span>
+                {% if celda.secundario %}<span class="secundario">{{ celda.secundario }}</span>{% endif %}
+              {% elif celda.tipo == "clase" %}
+                <span class="pendiente">—</span>
+              {% elif celda.tipo == "libre" %}
+                <span class="pendiente">libre</span>
+              {% endif %}
+            </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="pie no-imprimir">
+    <a href="?formato=pdf">Descargar en PDF</a> ·
+    <a href="{% url 'horario_version' version.pk %}">Volver a la versión</a>
+  </p>
+{% endblock %}

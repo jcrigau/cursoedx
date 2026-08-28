@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.urls import include, path
 
 from core import views as core_views
+from horarios import views as horarios_views
 from legajos import views as legajos_views
 
 urlpatterns = [
@@ -13,6 +14,15 @@ urlpatterns = [
         "legajos/<int:pk>/certificacion/",
         legajos_views.certificacion_servicios,
         name="certificacion_servicios",
+    ),
+    path("horarios/<int:pk>/", horarios_views.version, name="horario_version"),
+    path(
+        "horarios/<int:pk>/curso/<int:curso_id>/", horarios_views.grilla_curso, name="horario_curso"
+    ),
+    path(
+        "horarios/<int:pk>/docente/<int:legajo_id>/",
+        horarios_views.grilla_docente,
+        name="horario_docente",
     ),
     path("cuentas/", include("django.contrib.auth.urls")),
     path("admin/", admin.site.urls),

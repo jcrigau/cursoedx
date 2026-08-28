@@ -120,6 +120,8 @@ class BloqueHorarioAdmin(AdminInstitucional):
     list_filter = ("esquema", "dia_semana", "tipo")
     list_editable = ("hora_inicio", "hora_fin", "tipo")
     ordering = ("esquema", "dia_semana", "hora_inicio")
+    # Permite elegir el bloque por autocompletado desde el módulo de horarios.
+    search_fields = ("etiqueta", "esquema__nombre")
     exclude = ()
 
     @admin.display(description="duración")

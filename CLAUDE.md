@@ -21,7 +21,10 @@ código.
 - **F1 (RRHH / legajos): lista.** Legajos, cargos con fuente de pago y
   situación de revista, documentación con vencimientos, títulos, servicios
   anteriores, cómputo de antigüedad y certificación de servicios en PDF.
-- Siguiente: **F2 (horarios)** — el generador con OR-Tools.
+- **F2 (horarios): lista.** DDJJ de disponibilidad, versiones por período,
+  generador con OR-Tools (minimiza los días de asistencia de cada docente),
+  asignaciones bloqueables, grillas por curso y por docente, export a PDF.
+- Siguiente: **F3 (asistencia y licencias)**.
 
 ## Comandos
 
@@ -30,9 +33,13 @@ pip install -r requirements-dev.txt
 python manage.py migrate
 python manage.py cargar_piloto --password una-clave   # datos de ejemplo
 python manage.py sincronizar_permisos                 # tras agregar modelos
+python manage.py generar_horario 1 --segundos 60      # generar un horario
 python manage.py runserver
 pytest
 ```
+
+Despliegue: ver `DESPLIEGUE.md` (PythonAnywhere para la versión de prueba,
+Docker para uso real).
 
 Con Docker: `docker compose up --build` (requiere `SGE_SECRET_KEY` en el `.env`).
 
@@ -70,6 +77,12 @@ instituciones expone datos laborales de otra escuela.
   `core.models.registrar_auditoria`.
 - La grilla horaria no se asume uniforme: cada día tiene sus bloques y cada
   curso sigue un `EsquemaHorario` (con almuerzo, sin almuerzo…).
+- Los choques de horario se detectan **comparando horarios reales**
+  (`horarios.models.se_superponen`), nunca por identidad de bloque: dos cursos
+  con esquemas distintos tienen bloques distintos a la misma hora del reloj.
+- Las dependencias pesadas (OR-Tools, WeasyPrint) se importan dentro de la
+  función que las usa y degradan con un mensaje claro: el sistema tiene que
+  poder desplegarse en un hospedaje chico.
 
 ## Decisiones tomadas
 

@@ -16,6 +16,7 @@ diaria del personal docente:
 
 📄 **[REQUERIMIENTOS.md](REQUERIMIENTOS.md)** — documento funcional completo:
 alcance, módulos, modelo de datos, arquitectura y roadmap por fases.
+🚀 **[DESPLIEGUE.md](DESPLIEGUE.md)** — cómo publicarlo (PythonAnywhere o Docker).
 🛠️ **[CLAUDE.md](CLAUDE.md)** — convenciones para desarrollar el proyecto.
 
 ## Estado
@@ -29,8 +30,12 @@ alcance, módulos, modelo de datos, arquitectura y roadmap por fases.
   situación de revista, documentación con alertas de vencimiento, títulos,
   servicios anteriores, cómputo de antigüedad y **certificación de servicios
   en PDF**.
+- **F2 · Horarios** — declaraciones juradas de disponibilidad, versiones de
+  horario por cuatrimestre y **generador automático** que ubica todas las horas
+  del plan sin choques, minimizando los días que cada docente debe asistir.
+  Grillas por curso y por docente, imprimibles.
 
-Próxima fase: **F2 — Horarios**, con el generador automático.
+Próxima fase: **F3 — Asistencia y licencias**.
 
 ## Poner en marcha
 
@@ -70,6 +75,7 @@ config/       configuración de Django (settings, urls, wsgi)
 core/         instituciones, usuarios, roles, aislamiento multi-escuela, auditoría
 estructura/   niveles, ciclo lectivo, períodos, turnos, grilla horaria, cursos, materias
 legajos/      personal, cargos, documentación, títulos, antigüedad, certificaciones
+horarios/     DDJJ, versiones de horario, generador con OR-Tools, grillas
 templates/    plantillas HTML
 static/       hoja de estilos propia (sin build ni CDN)
 ```

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ version.nombre }} · Horarios{% endblock %}
+
+{% block contenido %}
+  <h1>{{ version.nombre }}</h1>
+  <p class="subtitulo">
+    {{ version.periodo }} · {{ version.get_estado_display|lower }}
+    {% if version.generada_en %} · generado el {{ version.generada_en|date:"d/m/Y H:i" }}{% endif %}
+  </p>
+
+  {% if resumen %}
+    <div class="grilla-indicadores">
+      <div class="tarjeta indicador">
+        <div class="numero">{{ resumen.promedio_dias_por_docente }}</div>
+        <div class="rotulo">Días promedio por docente</div>
+        <div class="detalle">máximo {{ resumen.maximo_dias_por_docente }}</div>
+      </div>
+      <div class="tarjeta indicador">
+        <div class="numero">{{ resumen.docentes }}</div>
+        <div class="rotulo">Docentes con horario</div>
+      </div>
+      <div class="tarjeta indicador {% if sin_docente %}pendiente{% endif %}">
+        <div class="numero">{{ sin_docente }}</div>
+        <div class="rotulo">Horas sin docente</div>
+      </div>
+      <div class="tarjeta indicador">
+        <div class="numero">{{ resumen.segundos }}s</div>
+        <div class="rotulo">Tiempo de generación</div>
+        <div class="detalle">resultado {{ resumen.estado }}</div>
+      </div>
+    </div>
+  {% endif %}
+
+  <h2>Por curso</h2>
+  <div class="enlaces-grilla">
+    {% for curso in cursos %}
+      <a class="ficha" href="{% url 'horario_curso' version.pk curso.pk %}">{{ curso }}</a>
+    {% empty %}
+      <p>Todavía no hay horario generado.</p>
+    {% endfor %}
+  </div>
+
+  {% if docentes %}
+    <h2>Por docente</h2>
+    <table class="datos">
+      <thead>
+        <tr><th>Docente</th><th>Horas semanales</th><th>Días que asiste</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for fila in docentes %}
+          <tr>
+            <td>{{ fila.legajo.nombre_completo }}</td>
+            <td>{{ fila.horas }}</td>
+            <td>{{ fila.dias }}</td>
+            <td><a href="{% url 'horario_docente' version.pk fila.legajo.pk %}">ver horario</a></td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endblock %}

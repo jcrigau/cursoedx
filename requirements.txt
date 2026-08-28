@@ -4,5 +4,9 @@ python-dotenv>=1.0
 whitenoise>=6.6
 gunicorn>=21.2
 # Certificaciones y planillas en PDF. Necesita libpango en el sistema
-# (ya incluida en el Dockerfile).
+# (ya incluida en el Dockerfile). Si falta, los documentos salen en HTML y se
+# imprimen desde el navegador.
 weasyprint>=62
+# Generador de horarios. Es el paquete más pesado del proyecto: en hospedajes
+# muy chicos se puede omitir y cargar los horarios a mano (ver DESPLIEGUE.md).
+ortools>=9.10

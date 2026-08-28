@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "core",
     "estructura",
     "legajos",
+    "horarios",
 ]
 
 MIDDLEWARE = [
@@ -92,8 +93,17 @@ TEMPLATES = [
 WSGI_APPLICATION = "config.wsgi.application"
 
 
+MOTORES = {
+    "postgres": "django.db.backends.postgresql",
+    "postgresql": "django.db.backends.postgresql",
+    # MySQL es lo que ofrecen varios hospedajes económicos (PythonAnywhere,
+    # entre otros). Requiere instalar mysqlclient.
+    "mysql": "django.db.backends.mysql",
+}
+
+
 def configurar_base_de_datos() -> dict:
-    """SQLite por defecto; PostgreSQL cuando se define ``SGE_DATABASE_URL``."""
+    """SQLite por defecto; PostgreSQL o MySQL según ``SGE_DATABASE_URL``."""
     url = os.environ.get("SGE_DATABASE_URL", "").strip()
     if not url:
         return {
@@ -101,13 +111,14 @@ def configurar_base_de_datos() -> dict:
             "NAME": BASE_DIR / "db.sqlite3",
         }
     partes = urlparse(url)
-    if partes.scheme not in {"postgres", "postgresql"}:
+    motor = MOTORES.get(partes.scheme)
+    if motor is None:
         raise RuntimeError(
             f"Esquema de base de datos no soportado: {partes.scheme!r}. "
-            "Usá postgres:// o dejá SGE_DATABASE_URL vacío para SQLite."
+            "Usá postgres://, mysql://, o dejá SGE_DATABASE_URL vacío para SQLite."
         )
     return {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": motor,
         "NAME": partes.path.lstrip("/"),
         "USER": partes.username or "",
         "PASSWORD": partes.password or "",

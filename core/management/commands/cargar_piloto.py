@@ -28,6 +28,7 @@ from estructura.models import (
     TipoNivel,
     Turno,
 )
+from horarios.models import DeclaracionDisponibilidad, FranjaNoDisponible, MotivoNoDisponible
 from legajos.models import (
     Cargo,
     DocumentoLegajo,
@@ -72,6 +73,51 @@ MATERIAS_SECUNDARIA = [
 ]
 
 DIAS_HABILES = range(5)  # lunes a viernes
+
+# Tope de horas semanales que se le carga a un docente inventado.
+TOPE_HORAS_DOCENTE = 18
+
+APELLIDOS = [
+    "Aguirre",
+    "Benítez",
+    "Cabrera",
+    "Domínguez",
+    "Echeverría",
+    "Funes",
+    "Gallardo",
+    "Herrera",
+    "Ibarra",
+    "Juárez",
+    "Ledesma",
+    "Maldonado",
+    "Navarro",
+    "Olmedo",
+    "Ponce",
+    "Quinteros",
+    "Rivas",
+    "Sosa",
+    "Toledo",
+    "Urquiza",
+    "Villalba",
+    "Zárate",
+]
+
+NOMBRES = [
+    "Carolina",
+    "Martín",
+    "Silvina",
+    "Gustavo",
+    "Natalia",
+    "Federico",
+    "Mariela",
+    "Ezequiel",
+    "Romina",
+    "Sebastián",
+    "Valeria",
+    "Alejandro",
+    "Daniela",
+    "Pablo",
+]
 
 # (nombre, lleva vencimiento, días de preaviso, obligatorio)
 TIPOS_DOCUMENTO = [
@@ -223,6 +269,12 @@ class Command(BaseCommand):
         parser.add_argument(
             "--anio", type=int, default=date.today().year, help="Ciclo lectivo a crear."
         )
+        parser.add_argument(
+            "--sin-planta",
+            dest="con_planta",
+            action="store_false",
+            help="No generar la planta docente completa (solo el personal de muestra).",
+        )
 
     @transaction.atomic
     def handle(self, *args, **opciones):
@@ -244,6 +296,8 @@ class Command(BaseCommand):
         esquemas = self._crear_grilla(institucion, niveles[TipoNivel.SECUNDARIO])
         self._crear_cursos_y_plan(institucion, niveles[TipoNivel.SECUNDARIO], ciclo, esquemas)
         self._crear_personal(institucion, niveles[TipoNivel.SECUNDARIO], ciclo)
+        if opciones["con_planta"]:
+            self._crear_planta_docente(institucion, niveles[TipoNivel.SECUNDARIO], ciclo)
 
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS(f"Listo. Institución «{institucion}» preparada."))
@@ -470,6 +524,101 @@ class Command(BaseCommand):
                     desde=servicio["desde"],
                     hasta=servicio["hasta"],
                 )
+
+    def _crear_planta_docente(self, institucion, nivel, ciclo):
+        """Cubre todas las materias de todos los cursos con docentes inventados.
+
+        Reparte cada materia entre los docentes que hagan falta, sin pasar el
+        tope de horas de uno solo, y les carga una DDJJ: es la situación real
+        que tiene que resolver el generador de horarios.
+        """
+        cursos = list(
+            Curso.objects.filter(institucion=institucion, ciclo_lectivo=ciclo).order_by(
+                "anio_estudio", "division"
+            )
+        )
+        if not cursos:
+            return
+
+        materias = {
+            materia.nombre: materia
+            for materia in Materia.objects.filter(institucion=institucion, nivel=nivel)
+        }
+        periodos = list(PeriodoAcademico.objects.filter(ciclo=ciclo).order_by("orden"))
+        hoy = date.today()
+        creados = 0
+
+        for indice_materia, (nombre_materia, _abrev, horas) in enumerate(MATERIAS_SECUNDARIA):
+            materia = materias.get(nombre_materia)
+            if materia is None:
+                continue
+
+            docente, acumuladas = None, 0
+            for curso in cursos:
+                # Un docente no toma más de TOPE_HORAS_DOCENTE horas.
+                if docente is None or acumuladas + horas > TOPE_HORAS_DOCENTE:
+                    docente = self._docente_inventado(institucion, indice_materia, creados, hoy)
+                    if docente is None:
+                        break
+                    creados += 1
+                    acumuladas = 0
+                    self._cargar_ddjj(institucion, docente, periodos, creados)
+
+                Cargo.objects.create(
+                    institucion=institucion,
+                    legajo=docente,
+                    tipo=TipoCargoLegajo.HORAS_CATEDRA,
+                    nivel=nivel,
+                    materia=materia,
+                    curso=curso,
+                    horas_semanales=horas,
+                    situacion_revista=SituacionRevista.TITULAR
+                    if creados % 3
+                    else SituacionRevista.PROVISIONAL,
+                    fuente_pago=FuentePago.SUBVENCIONADO if creados % 4 else FuentePago.INTERNO,
+                    fecha_alta=hoy - timedelta(days=400 + creados * 30),
+                )
+                acumuladas += horas
+
+        self.stdout.write(f"  + {creados} docentes con sus cargos y declaraciones juradas")
+
+    def _docente_inventado(self, institucion, indice_materia, numero, hoy):
+        apellido = APELLIDOS[(indice_materia * 7 + numero) % len(APELLIDOS)]
+        nombre = NOMBRES[(indice_materia * 5 + numero) % len(NOMBRES)]
+        cuil = f"27-{30000000 + indice_materia * 1000 + numero:08d}-1"
+        legajo, creado = Legajo.objects.get_or_create(
+            institucion=institucion,
+            cuil=cuil,
+            defaults={
+                "apellido": apellido,
+                "nombre": nombre,
+                "fecha_ingreso": hoy - timedelta(days=400 + numero * 30),
+            },
+        )
+        return legajo if creado else None
+
+    def _cargar_ddjj(self, institucion, docente, periodos, numero):
+        """Le carga compromisos en otra escuela, como pasa en la realidad."""
+        if not periodos or numero % 3:
+            return
+        # Uno de cada tres docentes trabaja media jornada en otra institución.
+        dia = numero % 5
+        declaracion, _creada = DeclaracionDisponibilidad.objects.get_or_create(
+            institucion=institucion,
+            legajo=docente,
+            periodo=periodos[0],
+            defaults={"presentada_en": date.today()},
+        )
+        FranjaNoDisponible.objects.get_or_create(
+            declaracion=declaracion,
+            dia_semana=dia,
+            hora_desde=time(7, 45),
+            hora_hasta=time(10, 35),
+            defaults={
+                "motivo": MotivoNoDisponible.OTRA_ESCUELA,
+                "institucion_externa": "Escuela N° 24",
+            },
+        )
 
     def _informar(self, etiqueta, objeto, creado):
         marca = self.style.SUCCESS("+") if creado else self.style.WARNING("=")
