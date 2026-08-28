@@ -1,0 +1,52 @@
+{% load static %}<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block titulo %}SGE{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/sge.css' %}">
+</head>
+<body>
+<header class="barra">
+  <a href="{% url 'inicio' %}" class="marca">SGE<span>Gestión escolar</span></a>
+
+  {% if user.is_authenticated %}
+    {% if instituciones_disponibles|length > 1 %}
+      <form method="post" action="{% url 'cambiar_institucion' %}">
+        {% csrf_token %}
+        <input type="hidden" name="siguiente" value="{{ request.path }}">
+        <select name="institucion" onchange="this.form.submit()" aria-label="Institución">
+          {% for institucion in instituciones_disponibles %}
+            <option value="{{ institucion.pk }}" {% if institucion == institucion_actual %}selected{% endif %}>
+              {{ institucion }}
+            </option>
+          {% endfor %}
+        </select>
+        <noscript><button type="submit" class="enlace-sobrio">Cambiar</button></noscript>
+      </form>
+    {% elif institucion_actual %}
+      <span>{{ institucion_actual }}</span>
+    {% endif %}
+
+    <div class="barra-derecha">
+      {% if user.is_staff %}<a href="{% url 'admin:index' %}">Administración</a>{% endif %}
+      <span>{{ user.nombre_completo }}</span>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="enlace-sobrio">Salir</button>
+      </form>
+    </div>
+  {% endif %}
+</header>
+
+<main class="contenido">
+  {% if messages %}
+    {% for mensaje in messages %}
+      <div class="aviso {{ mensaje.tags }}">{{ mensaje }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {% block contenido %}{% endblock %}
+</main>
+</body>
+</html>

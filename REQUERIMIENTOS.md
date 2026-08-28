@@ -1,6 +1,7 @@
 # SGE — Sistema de Gestión para Secretaría Escolar
 
-> **Documento de requerimientos** · Versión 1.2 · Agosto 2026
+> **Documento de requerimientos** · Versión 1.3 · Agosto 2026
+> Estado de implementación: **F0 (fundaciones) lista**; siguiente F1 (RRHH).
 > Nombre comercial: a definir (SGE es nombre de trabajo).
 > Este es un documento vivo: se actualiza a medida que se toman decisiones. Sirve como fuente de verdad para las sesiones de desarrollo con Claude Code.
 
@@ -295,13 +296,13 @@ Elegida para un desarrollador solo, con Claude Code, y lista para crecer a SaaS.
 |---|---|---|
 | Backend | **Python 3.12 + Django 5** | Admin gratis para soporte, ORM sólido, ecosistema maduro, ideal para CRUD pesado. |
 | Base de datos | **PostgreSQL 16** | Multi-tenant confiable, integridad referencial. |
-| Frontend | **Templates Django + HTMX + Alpine.js + Tailwind CSS** | Un solo deploy, sin SPA que mantener; interactividad suficiente (grillas de horarios, validación en vivo). |
+| Frontend | **Templates Django**; CSS propio self-hosted en F0. HTMX/Alpine y, si hace falta, Tailwind se suman cuando la interfaz lo pida (F1+) | Un solo deploy, sin SPA que mantener. Sin build ni CDN, el sistema anda con internet intermitente — algo real en una escuela. |
 | Portal docente | La misma web, **responsive + PWA** (manifest + service worker) | Instalable en el celular del docente sin app stores; geolocalización vía API del navegador para el fichaje. |
 | Generador de horarios | **Google OR-Tools (CP-SAT)** | Estado del arte en timetabling; modela restricciones duras y objetivos ponderados (minimizar días de asistencia). |
 | Tareas en segundo plano | v1: **hilos/cola en base de datos** (sin Redis); luego django-rq + Redis | Generador y PDFs fuera del request. Sin Redis se puede desplegar gratis con menos memoria; se migra cuando haya hosting pago. |
 | PDFs | **WeasyPrint** | Certificaciones y planillas desde HTML/CSS. |
 | Excel | **openpyxl** | Exports de novedades y horarios. |
-| Autenticación | **django-allauth** (email + contraseña) | Roles por institución con grupos propios. |
+| Autenticación | Django estándar con **login por email** (F0). `django-allauth` queda para F5 si el portal docente necesita autogestión | Roles por institución, traducidos a grupos de permisos de Django. |
 | Multi-tenant | **Base única con `institucion_id`** en todo modelo de negocio + middleware/manager que fuerza el scoping | Simple de operar; suficiente hasta decenas de escuelas. |
 | Adjuntos | Disco local (volumen) en v1; S3-compatible después | |
 | Deploy | **Docker Compose**; arranque a **costo $0** (requisito del cliente): VPS gratuito tipo Oracle Cloud Always Free, o PC de la escuela + Cloudflare Tunnel | Mismo compose migrable a un VPS pago (~USD 10/mes) cuando el producto tenga clientes. |
@@ -337,7 +338,7 @@ Cada fase termina con algo usable en la escuela real. Sirven como unidades de tr
 
 | Fase | Contenido | Resultado usable |
 |---|---|---|
-| **F0 · Fundaciones** | Proyecto Django, Docker, CI, auth, multi-tenant, roles, ABM de institución, niveles, ciclo lectivo, cuatrimestres, turnos, bloques, cursos y materias. | Estructura del colegio cargada. |
+| **F0 · Fundaciones** ✅ | Proyecto Django, Docker, CI, auth, multi-tenant, roles con permisos, auditoría, ABM de institución, niveles, ciclo lectivo, cuatrimestres, turnos, grilla horaria, cursos, materias y plan de estudios. | **Hecha.** Estructura del colegio cargada. |
 | **F1 · RRHH** | Personas, legajos, cargos con fuente de pago y situación de revista, documentación con vencimientos y alertas, títulos, servicios, **certificación de servicios PDF**. | Reemplaza las carpetas y planillas de legajos. |
 | **F2 · Horarios** | Asignaciones docente-materia-curso, grilla manual con validación de choques, DDJJ, vistas e impresión; luego **generador CP-SAT** con objetivos ponderados, bloqueo + regeneración parcial, vigencias cuatrimestrales. | El horario 2027 se arma con el sistema. |
 | **F3 · Asistencia y licencias** | Parte diario autogenerado, carga por secretaría, catálogo de licencias, flujo solicitud→aprobación, topes, **suplencias con o sin cobertura**. | Se abandona el parte en papel como registro maestro. |

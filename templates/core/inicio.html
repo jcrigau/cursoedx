@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block titulo %}Inicio · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>{{ institucion_actual.nombre }}</h1>
+  <p class="subtitulo">
+    {% if ciclo %}
+      Ciclo lectivo {{ ciclo.anio }} · {{ ciclo.get_estado_display|lower }}
+    {% else %}
+      Todavía no hay ciclo lectivo cargado.
+    {% endif %}
+  </p>
+
+  <div class="grilla-indicadores">
+    <div class="tarjeta indicador {% if not cantidad_niveles %}pendiente{% endif %}">
+      <div class="numero">{{ cantidad_niveles }}</div>
+      <div class="rotulo">Niveles</div>
+    </div>
+    <div class="tarjeta indicador {% if not cantidad_cursos %}pendiente{% endif %}">
+      <div class="numero">{{ cantidad_cursos }}</div>
+      <div class="rotulo">Cursos del ciclo</div>
+    </div>
+    <div class="tarjeta indicador {% if not cantidad_materias %}pendiente{% endif %}">
+      <div class="numero">{{ cantidad_materias }}</div>
+      <div class="rotulo">Materias</div>
+    </div>
+    <div class="tarjeta indicador">
+      <div class="numero">{{ periodos|length }}</div>
+      <div class="rotulo">Períodos del ciclo</div>
+    </div>
+  </div>
+
+  <h2>Puesta en marcha</h2>
+  <div class="tarjeta">
+    <ul class="pasos">
+      <li class="{% if cantidad_niveles %}hecho{% else %}falta{% endif %}">
+        <span class="marca-paso">{% if cantidad_niveles %}✓{% else %}○{% endif %}</span>
+        <span class="texto">Cargar los niveles que tiene la escuela</span>
+      </li>
+      <li class="{% if ciclo %}hecho{% else %}falta{% endif %}">
+        <span class="marca-paso">{% if ciclo %}✓{% else %}○{% endif %}</span>
+        <span class="texto">Abrir el ciclo lectivo y sus períodos (cuatrimestres)</span>
+      </li>
+      <li class="{% if tiene_grilla %}hecho{% else %}falta{% endif %}">
+        <span class="marca-paso">{% if tiene_grilla %}✓{% else %}○{% endif %}</span>
+        <span class="texto">Definir turnos y la grilla de bloques horarios</span>
+      </li>
+      <li class="{% if cantidad_cursos %}hecho{% else %}falta{% endif %}">
+        <span class="marca-paso">{% if cantidad_cursos %}✓{% else %}○{% endif %}</span>
+        <span class="texto">Crear los cursos y divisiones del ciclo</span>
+      </li>
+      <li class="{% if cantidad_materias %}hecho{% else %}falta{% endif %}">
+        <span class="marca-paso">{% if cantidad_materias %}✓{% else %}○{% endif %}</span>
+        <span class="texto">Cargar las materias y el plan de estudios de cada curso</span>
+      </li>
+    </ul>
+    {% if user.is_staff %}
+      <p style="margin-bottom:0"><a href="{% url 'admin:index' %}">Ir a la administración para cargar datos →</a></p>
+    {% endif %}
+  </div>
+
+  {% if cursos %}
+    <h2>Cursos {% if ciclo %}del ciclo {{ ciclo.anio }}{% endif %}</h2>
+    <table class="datos">
+      <thead>
+        <tr>
+          <th>Curso</th><th>Nivel</th><th>Turno</th><th>Esquema horario</th>
+          <th>Horas del plan</th><th>Horas de la grilla</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for curso in cursos %}
+          <tr>
+            <td><strong>{{ curso }}</strong></td>
+            <td>{{ curso.nivel }}</td>
+            <td>{{ curso.turno.nombre }}</td>
+            <td>{{ curso.esquema_horario.nombre }}</td>
+            <td>{{ curso.horas_asignadas }}</td>
+            <td>{{ curso.esquema_horario.cantidad_horas_semanales }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="pie">
+      Si el plan pide más horas que las que ofrece la grilla, el horario no va a
+      poder armarse. Conviene corregirlo antes de generar los horarios.
+    </p>
+  {% endif %}
+{% endblock %}

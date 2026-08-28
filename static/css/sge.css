@@ -1,0 +1,247 @@
+/* Hoja de estilos del SGE.
+   Escrita a mano y servida por la propia app: sin build ni CDN, para que el
+   sistema funcione igual con internet intermitente o sin salida a internet. */
+
+:root {
+  --tinta: #16232e;
+  --tinta-suave: #4a5c6b;
+  --papel: #f5f7f8;
+  --superficie: #ffffff;
+  --borde: #dfe5e9;
+  --acento: #0f6b63;
+  --acento-claro: #e6f2f0;
+  --alerta: #b4451f;
+  --alerta-clara: #fdf0ea;
+  --ok: #2f6b3a;
+  --sombra: 0 1px 2px rgba(22, 35, 46, 0.06), 0 4px 12px rgba(22, 35, 46, 0.04);
+  --radio: 10px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--papel);
+  color: var(--tinta);
+  font-family: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+a { color: var(--acento); }
+
+/* Encabezado ------------------------------------------------------------ */
+
+.barra {
+  background: var(--tinta);
+  color: #fff;
+  padding: 0.65rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.barra a { color: #fff; text-decoration: none; }
+
+.marca {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  font-size: 1.05rem;
+}
+
+.marca span {
+  font-weight: 400;
+  opacity: 0.7;
+  margin-left: 0.5rem;
+  font-size: 0.85rem;
+  letter-spacing: 0;
+}
+
+.barra-derecha {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.9rem;
+}
+
+.barra select {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.9rem;
+}
+
+.barra select option { color: var(--tinta); }
+
+.enlace-sobrio {
+  background: none;
+  border: 0;
+  color: #fff;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0;
+  font-family: inherit;
+}
+
+/* Contenido ------------------------------------------------------------- */
+
+.contenido {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 1.75rem 1.25rem 4rem;
+}
+
+h1 { font-size: 1.6rem; margin: 0 0 0.25rem; letter-spacing: -0.01em; }
+h2 { font-size: 1.1rem; margin: 2rem 0 0.75rem; }
+
+.subtitulo { color: var(--tinta-suave); margin: 0 0 1.75rem; }
+
+.tarjeta {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 1.1rem 1.25rem;
+  box-shadow: var(--sombra);
+}
+
+.grilla-indicadores {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+.indicador .numero {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.indicador .rotulo {
+  color: var(--tinta-suave);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.indicador.pendiente .numero { color: var(--alerta); }
+
+/* Tablas ---------------------------------------------------------------- */
+
+table.datos {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  overflow: hidden;
+}
+
+table.datos th,
+table.datos td {
+  text-align: left;
+  padding: 0.55rem 0.85rem;
+  border-bottom: 1px solid var(--borde);
+}
+
+table.datos th {
+  background: #eef2f4;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tinta-suave);
+}
+
+table.datos tr:last-child td { border-bottom: 0; }
+
+/* Avisos y estados ------------------------------------------------------ */
+
+.aviso {
+  border-radius: var(--radio);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--borde);
+  background: var(--superficie);
+}
+
+.aviso.success { background: #eef6ef; border-color: #cfe3d2; }
+.aviso.warning { background: var(--alerta-clara); border-color: #f0d3c4; }
+.aviso.error { background: var(--alerta-clara); border-color: #eec3b3; color: var(--alerta); }
+
+.etiqueta {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  background: var(--acento-claro);
+  color: var(--acento);
+  font-weight: 600;
+}
+
+/* Listas de pasos ------------------------------------------------------- */
+
+.pasos { list-style: none; padding: 0; margin: 0; }
+
+.pasos li {
+  display: flex;
+  gap: 0.7rem;
+  align-items: baseline;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--borde);
+}
+
+.pasos li:last-child { border-bottom: 0; }
+
+.pasos .marca-paso { font-weight: 700; }
+.pasos .hecho .marca-paso { color: var(--ok); }
+.pasos .falta .marca-paso { color: var(--alerta); }
+.pasos .hecho .texto { color: var(--tinta-suave); }
+
+/* Formularios ----------------------------------------------------------- */
+
+.formulario { max-width: 380px; margin: 4rem auto; }
+
+.formulario label { display: block; font-weight: 600; margin-bottom: 0.2rem; }
+
+.formulario input {
+  width: 100%;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+  font-family: inherit;
+}
+
+.formulario input:focus {
+  outline: 2px solid var(--acento);
+  outline-offset: 1px;
+  border-color: var(--acento);
+}
+
+.boton {
+  background: var(--acento);
+  color: #fff;
+  border: 0;
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.boton:hover { background: #0c5a53; }
+
+.errores { color: var(--alerta); margin-bottom: 1rem; }
+
+.pie {
+  color: var(--tinta-suave);
+  font-size: 0.85rem;
+  margin-top: 2.5rem;
+}

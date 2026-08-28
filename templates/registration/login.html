@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block titulo %}Ingresar · SGE{% endblock %}
+
+{% block contenido %}
+  <div class="formulario">
+    <h1>Ingresar</h1>
+    <p class="subtitulo">Sistema de gestión escolar</p>
+
+    {% if form.errors %}
+      <p class="errores">Email o contraseña incorrectos.</p>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <label for="id_username">Email</label>
+      <input type="email" name="username" id="id_username" autocomplete="username" required autofocus>
+
+      <label for="id_password">Contraseña</label>
+      <input type="password" name="password" id="id_password" autocomplete="current-password" required>
+
+      <button type="submit" class="boton">Ingresar</button>
+      <input type="hidden" name="next" value="{{ next }}">
+    </form>
+  </div>
+{% endblock %}

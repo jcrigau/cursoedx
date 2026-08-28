@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sge
+      POSTGRES_USER: sge
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-sge}
+    volumes:
+      - datos_postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sge"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  web:
+    build: .
+    environment:
+      SGE_SECRET_KEY: ${SGE_SECRET_KEY:?definí SGE_SECRET_KEY en el .env}
+      SGE_DEBUG: "0"
+      SGE_ALLOWED_HOSTS: ${SGE_ALLOWED_HOSTS:-localhost,127.0.0.1}
+      SGE_CSRF_TRUSTED_ORIGINS: ${SGE_CSRF_TRUSTED_ORIGINS:-}
+      SGE_DATABASE_URL: postgres://sge:${POSTGRES_PASSWORD:-sge}@db:5432/sge
+      SGE_TIME_ZONE: ${SGE_TIME_ZONE:-America/Argentina/San_Luis}
+      # Detrás de un túnel (Cloudflare) el TLS lo termina el proxy.
+      SGE_SECURE_SSL_REDIRECT: ${SGE_SECURE_SSL_REDIRECT:-0}
+    volumes:
+      # Adjuntos de legajos y certificados: tienen que sobrevivir al contenedor.
+      - archivos_media:/app/media
+    ports:
+      - "${SGE_PUERTO:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             gunicorn config.wsgi:application --bind 0.0.0.0:8000 --workers 3"
+    restart: unless-stopped
+
+volumes:
+  datos_postgres:
+  archivos_media:
