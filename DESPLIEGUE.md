@@ -22,15 +22,22 @@ la web, no hay que administrar nada y queda con una dirección pública del tipo
 **Cuenta gratuita:** permite **una sola aplicación web**. Si ya tenés otro
 proyecto publicado ahí, el SGE no entra como segunda app.
 
-**Cuenta paga:** suele permitir más de una. La forma de saberlo sin adivinar es
-entrar a la pestaña **Web**: si aparece *Add a new web app*, hay lugar. Dos
-detalles a tener en cuenta antes de decidir:
+**Cuenta paga:** permite más de una aplicación. Al agregarla, la dirección
+puede ser de tres formas, **sin necesidad de comprar ningún dominio**:
 
-- El subdominio `usuario.pythonanywhere.com` es **uno por cuenta**; las apps
-  adicionales normalmente necesitan un dominio propio. Verificalo al agregarla.
-- Las dos apps **comparten disco, CPU y base de datos** de la misma cuenta. El
-  generador de horarios consume CPU del mismo pozo que el otro proyecto, y un
-  descuido de espacio afecta a los dos.
+- `algo-USUARIO.pythonanywhere.com` — un subdominio propio de PythonAnywhere.
+  Es lo más rápido: no hay que tocar DNS ni configurar nada.
+- Un subdominio de un dominio que ya tengas (`sge.tudominio.com.ar`), con un
+  CNAME. Queda más presentable para mostrarle el sistema a una escuela.
+- Un dominio nuevo, si hace falta (ver más abajo).
+
+Ojo con el formato del subdominio de PythonAnywhere: tiene que ser
+`prefijo-USUARIO.pythonanywhere.com`. Escribir `prefijo.pythonanywhere.com`
+a secas lo rechaza.
+
+Lo único a tener en cuenta: las apps de una misma cuenta **comparten disco, CPU
+y base de datos**. El generador de horarios consume CPU del mismo pozo que el
+otro proyecto, y un descuido de espacio afecta a los dos.
 
 **Para un sitio de prueba temporal** —que es de lo que se trata hasta que el
 sistema entre en funcionamiento— lo más conveniente es una **cuenta gratuita
@@ -173,11 +180,12 @@ Registrar el dominio es **solo el nombre**. Para que alguien escriba
 ### Lo primero a saber
 
 **La cuenta gratuita de PythonAnywhere no admite dominio propio**: solo
-funciona `usuario.pythonanywhere.com`. El dominio requiere un plan pago. Así
-que la decisión del dominio y la del plan van juntas.
+funciona `usuario.pythonanywhere.com`. El dominio requiere un plan pago.
 
-Para un sitio de prueba, el subdominio gratuito alcanza y sobra. El dominio
-propio recién vale la pena cuando el sistema se muestra a otras escuelas.
+Pero antes de comprar uno conviene descartar dos opciones que no cuestan nada:
+en una cuenta paga se puede usar `algo-USUARIO.pythonanywhere.com`, y si ya
+tenés cualquier dominio alcanza con un subdominio suyo. El dominio nuevo recién
+hace falta cuando el sistema sale como producto con su propia marca.
 
 ### El trámite en NIC.ar
 
