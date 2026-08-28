@@ -56,12 +56,20 @@ pip install -r requirements-dev.txt
 
 cp .env.example .env      # trae SGE_DEBUG=1 y una clave de relleno
 python manage.py migrate
-python manage.py cargar_piloto --password una-clave-segura   # datos de ejemplo
+python manage.py cargar_demo --password una-clave-segura     # datos de ejemplo
 python manage.py runserver
 ```
 
-Entrar a http://127.0.0.1:8000/ con `secretaria@ejemplo.edu.ar`.
+Entrar a http://127.0.0.1:8000/ con `secretaria@ejemplo.edu.ar`, y al portal
+docente en /portal/ con `docente@ejemplo.edu.ar`.
 Para un usuario propio: `python manage.py createsuperuser`.
+
+`cargar_demo` deja la escuela **funcionando**: arma la estructura, genera y
+publica el horario, carga licencias con y sin suplente sobre docentes que hoy
+tienen clase, registra la asistencia de los últimos días y compila el mes de
+novedades. Tarda alrededor de un minuto, casi todo en el generador. Si solo
+querés la estructura vacía, `cargar_piloto` hace esa parte y es inmediato.
+Cualquiera de los dos se puede volver a correr: no duplican nada.
 
 El `.env` no es opcional: sin él el sistema arranca en modo producción y se
 planta pidiendo `SGE_SECRET_KEY`. Es a propósito —un servidor no debe quedar

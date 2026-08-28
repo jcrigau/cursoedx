@@ -38,7 +38,8 @@ código.
 pip install -r requirements-dev.txt
 cp .env.example .env                                  # sin esto no arranca
 python manage.py migrate
-python manage.py cargar_piloto --password una-clave   # datos de ejemplo
+python manage.py cargar_piloto --password una-clave   # la escuela de ejemplo
+python manage.py cargar_demo --password una-clave     # además: horario, parte y mes armados
 python manage.py sincronizar_permisos                 # tras agregar modelos
 python manage.py generar_horario 1 --segundos 60      # generar un horario
 python manage.py cargar_catalogo_licencias            # régimen de San Luis
