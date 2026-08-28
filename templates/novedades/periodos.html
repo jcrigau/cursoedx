@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block titulo %}Novedades · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Novedades para liquidación</h1>
+  <p class="subtitulo">
+    Cada mes se compila desde lo que ya está cargado y se entrega separado en
+    planilla Oficial e Interna.
+  </p>
+
+  {% if puede_editar %}
+    <p class="navegacion-fecha">
+      <a class="ficha" href="{% url 'novedades_detalle' anio_actual mes_actual %}">
+        Preparar {{ nombre_mes_actual }} de {{ anio_actual }} →
+      </a>
+    </p>
+  {% endif %}
+
+  {% if periodos %}
+    <table class="datos">
+      <thead>
+        <tr>
+          <th>Período</th><th>Estado</th><th>A informar</th>
+          <th>Oficial</th><th>Interna</th><th>Pendientes</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for fila in periodos %}
+          <tr>
+            <td><strong>{{ fila.periodo }}</strong></td>
+            <td>
+              {% if fila.periodo.esta_cerrado %}
+                <span class="etiqueta">cerrado</span>
+              {% else %}
+                {{ fila.periodo.get_estado_display|lower }}
+              {% endif %}
+            </td>
+            <td>{{ fila.resumen.a_informar }}</td>
+            <td>{{ fila.resumen.oficial }}</td>
+            <td>{{ fila.resumen.interna }}</td>
+            <td>
+              {% if fila.resumen.pendientes %}
+                <span class="etiqueta alerta">{{ fila.resumen.pendientes }}</span>
+              {% else %}—{% endif %}
+            </td>
+            <td>
+              <a href="{% url 'novedades_detalle' fila.periodo.anio fila.periodo.mes %}">ver</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="aviso">Todavía no se preparó ningún mes.</div>
+  {% endif %}
+{% endblock %}

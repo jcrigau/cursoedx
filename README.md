@@ -40,7 +40,13 @@ alcance, módulos, modelo de datos, arquitectura y roadmap por fases.
   **parte diario** que se arma solo desde el horario vigente descontando
   licencias y sumando suplentes, y resumen mensual por persona y planilla.
 
-Próxima fase: **F4 — Novedades y cierre mensual**.
+- **F4 · Novedades y cierre mensual** — compilación automática del mes desde
+  altas, bajas, licencias, suplencias e inasistencias, **ruteada sola a planilla
+  Oficial o Interna** según quién paga cada cargo; revisión por persona con
+  checklist de "ya informada", cierre auditable que congela las novedades, y
+  exportación a Excel, CSV y PDF con las columnas de la planilla del liquidador.
+
+Próxima fase: **F5 — Portal docente**.
 
 ## Poner en marcha
 
@@ -83,6 +89,7 @@ legajos/      personal, cargos, documentación, títulos, antigüedad, certifica
 horarios/     DDJJ, versiones de horario, generador con OR-Tools, grillas
 licencias/    tipos por artículo, licencias, suplencias y coberturas
 asistencia/   parte diario, registros y resumen mensual
+novedades/    compilación mensual, cierre del período y exportaciones
 templates/    plantillas HTML
 static/       hoja de estilos propia (sin build ni CDN)
 ```

@@ -50,6 +50,7 @@ HORARIOS = [
 
 LICENCIAS = ["tipolicencia", "licencia", "cobertura"]
 ASISTENCIA = ["registroasistencia"]
+NOVEDADES = ["periodonovedades", "novedad"]
 
 # rol -> {app_label: {modelo: acciones}}
 PERMISOS_POR_ROL: dict[str, dict[str, dict[str, tuple[str, ...]]]] = {
@@ -59,6 +60,7 @@ PERMISOS_POR_ROL: dict[str, dict[str, dict[str, tuple[str, ...]]]] = {
         "horarios": {modelo: TODAS for modelo in HORARIOS},
         "licencias": {modelo: TODAS for modelo in LICENCIAS},
         "asistencia": {modelo: TODAS for modelo in ASISTENCIA},
+        "novedades": {modelo: TODAS for modelo in NOVEDADES},
         "core": {"membresia": SOLO_VER, "registroauditoria": SOLO_VER},
     },
     # El directivo consulta todo y además aprueba o rechaza licencias.
@@ -68,13 +70,15 @@ PERMISOS_POR_ROL: dict[str, dict[str, dict[str, tuple[str, ...]]]] = {
         "horarios": {modelo: SOLO_VER for modelo in HORARIOS},
         "licencias": {"tipolicencia": SOLO_VER, "licencia": TODAS, "cobertura": TODAS},
         "asistencia": {modelo: SOLO_VER for modelo in ASISTENCIA},
+        "novedades": {modelo: SOLO_VER for modelo in NOVEDADES},
         "core": {"membresia": SOLO_VER, "registroauditoria": SOLO_VER},
     },
     # El docente usa el portal (F5), no el panel de administración. Podrá ver
     # su propio horario desde ahí.
     Rol.DOCENTE: {},
-    # El liquidador solo descarga novedades cerradas (F4).
-    Rol.LIQUIDADOR: {},
+    # El liquidador entra a ver y descargar las novedades de los períodos ya
+    # cerrados; las vistas se encargan de no mostrarle los borradores.
+    Rol.LIQUIDADOR: {"novedades": {modelo: SOLO_VER for modelo in NOVEDADES}},
 }
 
 # Roles que necesitan entrar al panel de administración.

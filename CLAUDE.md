@@ -27,7 +27,10 @@ código.
 - **F3 (asistencia y licencias): lista.** Catálogo de licencias por artículo con
   topes, flujo de aprobación, coberturas (suplente o alumnos libres), parte
   diario autogenerado desde el horario vigente y resumen mensual.
-- Siguiente: **F4 (novedades y cierre mensual)**.
+- **F4 (novedades y cierre): lista.** Compilación mensual con ruteo automático a
+  planilla Oficial o Interna, checklist de informadas, cierre auditable con
+  congelado y reapertura, exportación a Excel/CSV/PDF y acceso del liquidador.
+- Siguiente: **F5 (portal docente)**.
 
 ## Comandos
 
@@ -92,6 +95,14 @@ instituciones expone datos laborales de otra escuela.
   del día, y quien tiene licencia aprobada ni siquiera aparece para marcar.
 - Una licencia **no obliga a cubrir**: la decisión (suplente o alumnos libres)
   se registra como `Cobertura`, incluido el caso de no cubrir.
+- Cada novedad se rutea a su planilla por la **fuente de pago del cargo** que la
+  originó, nunca por la persona: por eso una licencia sobre dos cargos de
+  distinta fuente genera dos líneas.
+- La compilación es **idempotente**: cada novedad automática lleva
+  `clave_origen`, así recompilar actualiza en vez de duplicar y no pisa lo
+  cargado a mano ni lo ya congelado por un cierre.
+- Las columnas del export viven en `novedades/exportar.py`: si otra escuela usa
+  otra planilla, se cambia solo ahí.
 
 ## Decisiones tomadas
 

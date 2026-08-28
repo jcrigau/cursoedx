@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block titulo %}Novedades de {{ periodo }} · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Novedades de {{ periodo }}</h1>
+  <p class="subtitulo">
+    {{ periodo.get_estado_display }}
+    {% if periodo.compilado_en %} · compilado el {{ periodo.compilado_en|date:"d/m/Y H:i" }}{% endif %}
+    {% if periodo.cerrado_en %} · cerrado el {{ periodo.cerrado_en|date:"d/m/Y H:i" }}
+      {% if periodo.cerrado_por %}por {{ periodo.cerrado_por.nombre_completo }}{% endif %}
+    {% endif %}
+  </p>
+
+  <div class="grilla-indicadores">
+    <div class="tarjeta indicador">
+      <div class="numero">{{ resumen.a_informar }}</div>
+      <div class="rotulo">Novedades a informar</div>
+      {% if sin_impacto %}
+        <div class="detalle">{{ sin_impacto }} sin impacto en haberes</div>
+      {% endif %}
+    </div>
+    <div class="tarjeta indicador">
+      <div class="numero">{{ resumen.oficial }}</div>
+      <div class="rotulo">Planilla Oficial</div>
+    </div>
+    <div class="tarjeta indicador">
+      <div class="numero">{{ resumen.interna }}</div>
+      <div class="rotulo">Planilla Interna</div>
+    </div>
+    <div class="tarjeta indicador {% if resumen.pendientes %}pendiente{% endif %}">
+      <div class="numero">{{ resumen.pendientes }}</div>
+      <div class="rotulo">Sin informar</div>
+      <div class="detalle">{{ resumen.informadas }} ya cargadas</div>
+    </div>
+  </div>
+
+  <div class="acciones no-imprimir">
+    {% if puede_editar and periodo.editable %}
+      <form method="post" style="display:inline">
+        {% csrf_token %}
+        <button type="submit" name="accion" value="compilar" class="boton">
+          {% if periodo.compilado_en %}Volver a compilar{% else %}Compilar el mes{% endif %}
+        </button>
+      </form>
+    {% endif %}
+    <a class="ficha" href="{% url 'novedades_exportar' periodo.anio periodo.mes %}?formato=xlsx">Excel</a>
+    <a class="ficha" href="{% url 'novedades_exportar' periodo.anio periodo.mes %}?formato=csv">CSV</a>
+    <a class="ficha" href="{% url 'novedades_exportar' periodo.anio periodo.mes %}?formato=pdf">PDF</a>
+  </div>
+
+  {% if periodo.compilado_en and not resumen.total %}
+    <div class="aviso">No hay novedades en este mes.</div>
+  {% elif not periodo.compilado_en %}
+    <div class="aviso warning">
+      Todavía no se compiló. Al compilar, el sistema recorre altas, bajas,
+      licencias e inasistencias del mes y arma las líneas del informe.
+    </div>
+  {% endif %}
+
+  {% if personas %}
+    <form method="post">
+      {% csrf_token %}
+      <h2>Novedades por persona</h2>
+      {% for fila in personas %}
+        <div class="tarjeta bloque-persona">
+          <div class="encabezado-persona">
+            <strong>{{ fila.legajo.nombre_completo }}</strong>
+            <span class="secundario">
+              {{ fila.legajo.cuil }}
+              {% if fila.destinos|length > 1 %}
+                · <span class="etiqueta">mixto: {{ fila.destinos|join:" y " }}</span>
+              {% endif %}
+            </span>
+          </div>
+          <table class="datos compacta">
+            <thead>
+              <tr>
+                {% if puede_editar %}<th style="width:2rem"></th>{% endif %}
+                <th>Novedad</th><th>Fecha</th><th>Espacio</th><th>Motivo</th>
+                <th>Días/Horas</th><th>Reemplazante</th><th>Planilla</th><th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for novedad in fila.novedades %}
+                <tr class="{% if novedad.informada %}informada{% endif %}">
+                  {% if puede_editar %}
+                    <td>
+                      {% if not novedad.informada %}
+                        <input type="checkbox" name="novedad" value="{{ novedad.pk }}">
+                      {% endif %}
+                    </td>
+                  {% endif %}
+                  <td><strong>{{ novedad.get_tipo_display }}</strong></td>
+                  <td>
+                    {{ novedad.fecha|date:"d/m/Y" }}
+                    {% if novedad.fecha_fin %}<div class="secundario">al {{ novedad.fecha_fin|date:"d/m/Y" }}</div>{% endif %}
+                  </td>
+                  <td>
+                    {{ novedad.espacio|default:"—" }}
+                    {% if novedad.cargo.curso %}
+                      <div class="secundario">{{ novedad.cargo.curso }}</div>
+                    {% endif %}
+                  </td>
+                  <td class="secundario">{{ novedad.motivo }}</td>
+                  <td>
+                    {% if novedad.dias %}{{ novedad.dias }} d{% endif %}
+                    {% if novedad.horas %}{% if novedad.dias %} · {% endif %}{{ novedad.horas }} hs{% endif %}
+                  </td>
+                  <td class="secundario">{{ novedad.reemplazante|default:"—" }}</td>
+                  <td>{{ novedad.get_destino_display|cut:"Planilla " }}</td>
+                  <td>
+                    {% if novedad.informada %}
+                      <span class="etiqueta">informada</span>
+                    {% else %}
+                      <span class="secundario">pendiente</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% endfor %}
+
+      {% if puede_editar %}
+        <p class="acciones no-imprimir">
+          <button type="submit" name="accion" value="informadas" class="boton">
+            Marcar las tildadas como informadas
+          </button>
+          <span class="pie">
+            Sirve para no perder el hilo mientras se cargan en la planilla del liquidador.
+          </span>
+        </p>
+      {% endif %}
+    </form>
+  {% endif %}
+
+  {% if suplencias %}
+    <h2>Suplencias vigentes en el mes</h2>
+    <table class="datos">
+      <thead><tr><th>Suplente</th><th>Cubre a</th><th>Cargo</th><th>Desde</th><th>Hasta</th></tr></thead>
+      <tbody>
+        {% for cobertura in suplencias %}
+          <tr>
+            <td>{{ cobertura.suplente.nombre_completo }}</td>
+            <td class="secundario">{{ cobertura.cargo.legajo.nombre_completo }}</td>
+            <td>{{ cobertura.cargo.descripcion }}</td>
+            <td>{{ cobertura.fecha_inicio|date:"d/m/Y" }}</td>
+            <td>{{ cobertura.fecha_fin|date:"d/m/Y" }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  {% if puede_editar %}
+    <h2>Cierre del período</h2>
+    <div class="tarjeta">
+      {% if periodo.editable %}
+        <p>
+          Al cerrar, las novedades quedan congeladas: es la constancia de lo que se
+          informó para liquidar ese mes.
+        </p>
+        <form method="post">
+          {% csrf_token %}
+          {% if request.GET.confirmar %}<input type="hidden" name="confirmar" value="1">{% endif %}
+          <button type="submit" name="accion" value="cerrar" class="boton">Cerrar el período</button>
+        </form>
+      {% else %}
+        <p>
+          El período está cerrado. Para corregir algo hay que reabrirlo, y queda
+          registrado quién lo hizo y por qué.
+        </p>
+        <form method="post" class="navegacion-fecha">
+          {% csrf_token %}
+          <input type="text" name="motivo" placeholder="Motivo de la reapertura" style="min-width:22rem">
+          <button type="submit" name="accion" value="reabrir" class="boton">Reabrir</button>
+        </form>
+        {% if periodo.motivo_reapertura %}
+          <p class="pie">Última reapertura: {{ periodo.motivo_reapertura }}</p>
+        {% endif %}
+      {% endif %}
+    </div>
+  {% endif %}
+{% endblock %}

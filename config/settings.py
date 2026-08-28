@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "horarios",
     "licencias",
     "asistencia",
+    "novedades",
 ]
 
 MIDDLEWARE = [

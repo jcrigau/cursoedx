@@ -318,6 +318,26 @@ table.grilla-horario th.hora .fin {
 
 .enlaces-grilla { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 
+/* Novedades ------------------------------------------------------------- */
+
+.bloque-persona { margin-bottom: 0.9rem; padding: 0.9rem 1rem; }
+
+.encabezado-persona {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+}
+
+table.datos.compacta th,
+table.datos.compacta td { padding: 0.35rem 0.55rem; font-size: 0.9rem; }
+
+table.datos.compacta { border: 0; }
+table.datos.compacta th { background: transparent; border-bottom: 1px solid var(--borde); }
+
+tr.informada td { opacity: 0.6; }
+
 .ficha {
   display: inline-block;
   background: var(--superficie);

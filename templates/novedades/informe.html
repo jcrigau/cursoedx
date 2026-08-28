@@ -1,0 +1,81 @@
+{% load static %}<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <title>Novedades de {{ periodo }} · {{ periodo.institucion.nombre_corto }}</title>
+  <style>
+    @page { size: A4 landscape; margin: 1.5cm 1.5cm 2cm; }
+    body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 9pt; color: #16232e; }
+
+    .membrete { border-bottom: 2px solid #16232e; padding-bottom: 0.5rem; margin-bottom: 1.2rem; }
+    .membrete .nombre { font-size: 14pt; font-weight: 700; }
+    .membrete .datos { font-size: 8.5pt; color: #4a5c6b; }
+
+    h1 { font-size: 12pt; margin: 0 0 0.3rem; }
+    .resumen { font-size: 9pt; color: #4a5c6b; margin-bottom: 1rem; }
+
+    table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+    th, td { border: 1px solid #b9c4cb; padding: 3px 5px; text-align: left; vertical-align: top; }
+    th { background: #eef2f4; font-size: 7.5pt; text-transform: uppercase; letter-spacing: 0.03em; }
+    tr.persona td { background: #f5f7f8; font-weight: 700; }
+
+    .pie { position: fixed; bottom: -1.1cm; left: 0; right: 0; font-size: 7pt; color: #7c8b96; text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="membrete">
+  <div class="nombre">{{ periodo.institucion.nombre }}</div>
+  <div class="datos">
+    {% if periodo.institucion.cue %}CUE {{ periodo.institucion.cue }} · {% endif %}
+    {{ periodo.institucion.localidad }}
+  </div>
+</div>
+
+<h1>Novedades para liquidación · {{ periodo }}</h1>
+<p class="resumen">
+  {{ resumen.a_informar }} novedades a informar
+  ({{ resumen.oficial }} en planilla Oficial y {{ resumen.interna }} en Interna).
+  {% if periodo.esta_cerrado %}Período cerrado el {{ periodo.cerrado_en|date:"d/m/Y" }}.{% else %}Borrador, sujeto a cambios.{% endif %}
+</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Novedad</th><th>Fecha</th><th>Espacio curricular</th><th>Motivo</th>
+      <th>Días</th><th>Horas</th><th>Reemplazante</th><th>Planilla</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for fila in personas %}
+      <tr class="persona">
+        <td colspan="8">{{ fila.legajo.nombre_completo }} · CUIL {{ fila.legajo.cuil }}</td>
+      </tr>
+      {% for novedad in fila.novedades %}
+        <tr>
+          <td>{{ novedad.get_tipo_display }}</td>
+          <td>
+            {{ novedad.fecha|date:"d/m/Y" }}{% if novedad.fecha_fin %} al {{ novedad.fecha_fin|date:"d/m/Y" }}{% endif %}
+          </td>
+          <td>
+            {{ novedad.espacio }}{% if novedad.cargo.curso %} · {{ novedad.cargo.curso }}{% endif %}
+          </td>
+          <td>{{ novedad.motivo }}</td>
+          <td>{{ novedad.dias|default:"" }}</td>
+          <td>{{ novedad.horas|default:"" }}</td>
+          <td>{{ novedad.reemplazante }}</td>
+          <td>{{ novedad.get_destino_display|cut:"Planilla " }}</td>
+        </tr>
+      {% endfor %}
+    {% empty %}
+      <tr><td colspan="8">Sin novedades en el período.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="pie">
+  Emitido por {{ emitido_por.nombre_completo }} el {{ emitido|date:"d/m/Y H:i" }} · {{ periodo.institucion.nombre }}
+</div>
+
+</body>
+</html>

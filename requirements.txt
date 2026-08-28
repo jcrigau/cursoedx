@@ -10,3 +10,5 @@ weasyprint>=62
 # Generador de horarios. Es el paquete más pesado del proyecto: en hospedajes
 # muy chicos se puede omitir y cargar los horarios a mano (ver DESPLIEGUE.md).
 ortools>=9.10
+# Exportación de las novedades a Excel.
+openpyxl>=3.1
