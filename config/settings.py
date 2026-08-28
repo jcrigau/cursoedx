@@ -36,8 +36,11 @@ if not SECRET_KEY:
         SECRET_KEY = "clave-insegura-solo-para-desarrollo"
     else:
         raise RuntimeError(
-            "Falta SGE_SECRET_KEY. Generá una con: "
-            'python -c "import secrets; print(secrets.token_urlsafe(50))"'
+            "Falta SGE_SECRET_KEY. En tu PC alcanza con copiar el archivo de "
+            "ejemplo: cp .env.example .env (en Windows, "
+            "Copy-Item .env.example .env). En un servidor, generá una clave "
+            'propia con: python -c "import secrets; '
+            'print(secrets.token_urlsafe(50))"'
         )
 
 ALLOWED_HOSTS = env_list("SGE_ALLOWED_HOSTS", "localhost,127.0.0.1")

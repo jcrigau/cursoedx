@@ -54,6 +54,7 @@ Próxima fase: **F5 — Portal docente**.
 python -m venv .venv && source .venv/bin/activate
 pip install -r requirements-dev.txt
 
+cp .env.example .env      # trae SGE_DEBUG=1 y una clave de relleno
 python manage.py migrate
 python manage.py cargar_piloto --password una-clave-segura   # datos de ejemplo
 python manage.py runserver
@@ -61,6 +62,24 @@ python manage.py runserver
 
 Entrar a http://127.0.0.1:8000/ con `secretaria@ejemplo.edu.ar`.
 Para un usuario propio: `python manage.py createsuperuser`.
+
+El `.env` no es opcional: sin él el sistema arranca en modo producción y se
+planta pidiendo `SGE_SECRET_KEY`. Es a propósito —un servidor no debe quedar
+nunca con la clave de ejemplo—, pero en una PC de desarrollo alcanza con copiar
+el archivo tal cual.
+
+En Windows (PowerShell) cambian tres líneas:
+
+```powershell
+py -3.12 -m venv .venv
+.venv\Scripts\Activate.ps1
+Copy-Item .env.example .env
+```
+
+El resto es igual. Requiere Python 3.10 o mayor (Django 5.1); la 3.12 es la que
+usa la integración continua. Los PDF salen como página web, porque WeasyPrint
+necesita librerías de sistema que en Windows no vienen con `pip`: se imprimen
+con Ctrl+P → Guardar como PDF, y el documento es el mismo.
 
 ### Con Docker (PostgreSQL incluido)
 
