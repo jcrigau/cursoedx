@@ -61,6 +61,18 @@ class Institucion(models.Model):
     localidad = models.CharField("localidad", max_length=100, blank=True)
     telefono = models.CharField("teléfono", max_length=50, blank=True)
     email = models.EmailField("email", blank=True)
+    # Ubicación del establecimiento: la usa el fichaje del portal docente para
+    # saber si la persona marcó estando en la escuela.
+    latitud = models.FloatField(
+        "latitud", null=True, blank=True, help_text="Se puede copiar de Google Maps."
+    )
+    longitud = models.FloatField("longitud", null=True, blank=True)
+    radio_fichaje_metros = models.PositiveIntegerField(
+        "radio para fichar (m)",
+        default=200,
+        help_text="Distancia máxima desde la escuela para considerar válida una fichada.",
+    )
+
     activa = models.BooleanField("activa", default=True)
     creada_en = models.DateTimeField("creada en", auto_now_add=True)
 

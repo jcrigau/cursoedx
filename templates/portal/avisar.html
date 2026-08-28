@@ -1,0 +1,49 @@
+{% extends "portal/base_portal.html" %}
+{% block titulo %}Avisar una inasistencia · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Avisar que no voy</h1>
+  <p class="subtitulo">
+    Le llega a secretaría para que organice las suplencias. No reemplaza a la
+    licencia: si corresponde certificado, hay que solicitarla aparte.
+  </p>
+
+  <form method="post" class="formulario-portal">
+    {% csrf_token %}
+    <label for="id_fecha">¿Qué día?</label>
+    <input type="date" name="fecha" id="id_fecha" value="{{ hoy|date:'Y-m-d' }}"
+           min="{{ hoy|date:'Y-m-d' }}" required>
+
+    <label for="id_motivo">Motivo</label>
+    <select name="motivo" id="id_motivo">
+      {% for valor, etiqueta in motivos %}<option value="{{ valor }}">{{ etiqueta }}</option>{% endfor %}
+    </select>
+
+    <label for="id_detalle">Detalle (opcional)</label>
+    <input type="text" name="detalle" id="id_detalle" maxlength="300"
+           placeholder="Ej.: turno médico a las 10">
+
+    <button type="submit" class="boton grande">Enviar el aviso</button>
+  </form>
+
+  {% if avisos %}
+    <h2>Mis avisos</h2>
+    {% for aviso in avisos %}
+      <div class="tarjeta">
+        <div class="entre">
+          <strong>{{ aviso.fecha|date:"d/m/Y" }}</strong>
+          <span class="etiqueta {% if aviso.estado == 'VISTO' %}{% else %}alerta{% endif %}">
+            {{ aviso.get_estado_display|lower }}
+          </span>
+        </div>
+        <div class="secundario">{{ aviso.get_motivo_display }}{% if aviso.detalle %} · {{ aviso.detalle }}{% endif %}</div>
+        {% if aviso.anulable %}
+          <form method="post" action="{% url 'portal_anular_aviso' aviso.pk %}">
+            {% csrf_token %}
+            <button type="submit" class="enlace-boton">Anular</button>
+          </form>
+        {% endif %}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endblock %}

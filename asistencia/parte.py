@@ -18,6 +18,7 @@ from estructura.models import PeriodoAcademico
 from horarios.models import AsignacionHoraria, EstadoVersion, VersionHorario
 from legajos.models import Legajo
 from licencias.models import Cobertura, TipoCobertura, coberturas_vigentes, licencias_vigentes
+from portal.models import AvisoInasistencia, EstadoAviso, Fichada, TipoFichada
 
 from .models import RegistroAsistencia
 
@@ -33,6 +34,8 @@ class LineaParte:
     es_suplente: bool = False
     titular: Legajo | None = None
     registro: RegistroAsistencia | None = None
+    aviso = None  # el docente avisó que no venía (portal)
+    fichada = None  # marcó su entrada desde el celular (portal)
 
     @property
     def detalle_cursos(self) -> str:
@@ -161,9 +164,25 @@ def parte_diario(institucion, fecha: date) -> ParteDiario:
             institucion=institucion, fecha=fecha
         ).select_related("licencia")
     }
+    # Lo que los propios docentes informaron desde el portal (F5).
+    avisos = {
+        aviso.legajo_id: aviso
+        for aviso in AvisoInasistencia.objects.filter(institucion=institucion, fecha=fecha).exclude(
+            estado=EstadoAviso.ANULADO
+        )
+    }
+    fichadas = {
+        fichada.legajo_id: fichada
+        for fichada in Fichada.objects.filter(
+            institucion=institucion, fecha=fecha, tipo=TipoFichada.ENTRADA
+        )
+    }
+
     for legajo_id, linea in lineas.items():
         linea.registro = registros.get(legajo_id)
         linea.licencia = licencias.get(legajo_id)
+        linea.aviso = avisos.get(legajo_id)
+        linea.fichada = fichadas.get(legajo_id)
 
     parte.lineas = sorted(lineas.values(), key=lambda linea: linea.legajo.nombre_completo)
     return parte

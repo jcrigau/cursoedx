@@ -1,0 +1,65 @@
+{% load static %}<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0f6b63">
+  <title>{% block titulo %}Mi portal · SGE{% endblock %}</title>
+  <link rel="manifest" href="{% static 'portal/manifest.webmanifest' %}">
+  <link rel="icon" href="{% static 'portal/icono.svg' %}" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="{% static 'portal/icono-192.png' %}">
+  <link rel="stylesheet" href="{% static 'css/sge.css' %}">
+  <link rel="stylesheet" href="{% static 'css/portal.css' %}">
+</head>
+<body class="portal">
+
+<header class="portal-barra">
+  <div>
+    <div class="saludo">{{ legajo.nombre|default:user.nombre }}</div>
+    <div class="escuela">{{ institucion_actual }}</div>
+  </div>
+  <form method="post" action="{% url 'logout' %}">
+    {% csrf_token %}
+    <button type="submit" class="enlace-sobrio">Salir</button>
+  </form>
+</header>
+
+<main class="portal-contenido">
+  {% if messages %}
+    {% for mensaje in messages %}
+      <div class="aviso {{ mensaje.tags }}">{{ mensaje }}</div>
+    {% endfor %}
+  {% endif %}
+  {% block contenido %}{% endblock %}
+</main>
+
+<nav class="portal-menu">
+  <a href="{% url 'portal_inicio' %}" class="{% if seccion == 'inicio' %}activo{% endif %}">
+    <span class="icono">●</span>Hoy
+  </a>
+  <a href="{% url 'portal_horario' %}" class="{% if seccion == 'horario' %}activo{% endif %}">
+    <span class="icono">▦</span>Horario
+  </a>
+  <a href="{% url 'portal_avisar' %}" class="{% if seccion == 'avisar' %}activo{% endif %}">
+    <span class="icono">✎</span>Avisar
+  </a>
+  <a href="{% url 'portal_licencias' %}" class="{% if seccion == 'licencias' %}activo{% endif %}">
+    <span class="icono">☰</span>Licencias
+  </a>
+  <a href="{% url 'portal_legajo' %}" class="{% if seccion == 'legajo' %}activo{% endif %}">
+    <span class="icono">◱</span>Legajo
+  </a>
+</nav>
+
+<script>
+  // El service worker solo guarda la cáscara de la aplicación: con internet
+  // intermitente el portal abre igual, aunque los datos se vean al reconectar.
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () {
+      navigator.serviceWorker.register("{% static 'portal/sw.js' %}").catch(function () {});
+    });
+  }
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

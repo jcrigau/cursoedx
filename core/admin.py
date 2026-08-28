@@ -99,6 +99,17 @@ class InstitucionAdmin(admin.ModelAdmin):
         (None, {"fields": ("nombre", "nombre_corto", "activa")}),
         ("Identificación", {"fields": ("cue", "cuit", "jurisdiccion")}),
         ("Contacto", {"fields": ("domicilio", "localidad", "telefono", "email")}),
+        (
+            "Ubicación (para el fichaje del portal)",
+            {
+                "fields": ("latitud", "longitud", "radio_fichaje_metros"),
+                "classes": ("collapse",),
+                "description": (
+                    "Coordenadas de la escuela. Se pueden copiar de Google Maps: "
+                    "botón derecho sobre el edificio → el primer valor es la latitud."
+                ),
+            },
+        ),
     )
 
     def has_module_permission(self, request):

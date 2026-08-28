@@ -1,0 +1,36 @@
+{% extends "portal/base_portal.html" %}
+{% block titulo %}Mi horario · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Mi horario</h1>
+  {% if grilla %}
+    <p class="subtitulo">{{ grilla.subtitulo }}</p>
+    <div class="tabla-desplazable">
+      <table class="grilla-horario">
+        <thead>
+          <tr>
+            <th class="hora">Hora</th>
+            {% for dia, nombre in grilla.dias %}<th>{{ nombre|slice:":3" }}</th>{% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for fila in grilla.filas %}
+            <tr>
+              <th class="hora">{{ fila.inicio|time:"H:i" }}<span class="fin">{{ fila.fin|time:"H:i" }}</span></th>
+              {% for celda in fila.celdas %}
+                <td class="celda {{ celda.tipo }}{% if celda.vacia %} vacia{% endif %}">
+                  {% if not celda.vacia %}
+                    <span class="principal">{{ celda.principal }}</span>
+                    <span class="secundario">{{ celda.secundario }}</span>
+                  {% else %}<span class="pendiente">libre</span>{% endif %}
+                </td>
+              {% endfor %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="aviso">Todavía no hay un horario publicado para este período.</div>
+  {% endif %}
+{% endblock %}

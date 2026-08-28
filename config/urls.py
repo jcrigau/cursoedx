@@ -8,6 +8,7 @@ from core import views as core_views
 from horarios import views as horarios_views
 from legajos import views as legajos_views
 from novedades import views as novedades_views
+from portal import views as portal_views
 
 urlpatterns = [
     path("", core_views.inicio, name="inicio"),
@@ -40,6 +41,13 @@ urlpatterns = [
         novedades_views.alternar_informada,
         name="novedades_alternar",
     ),
+    path("portal/", portal_views.inicio, name="portal_inicio"),
+    path("portal/horario/", portal_views.mi_horario, name="portal_horario"),
+    path("portal/legajo/", portal_views.mi_legajo, name="portal_legajo"),
+    path("portal/licencias/", portal_views.mis_licencias, name="portal_licencias"),
+    path("portal/avisar/", portal_views.avisar, name="portal_avisar"),
+    path("portal/avisar/<int:pk>/anular/", portal_views.anular_aviso, name="portal_anular_aviso"),
+    path("portal/fichar/", portal_views.fichar, name="portal_fichar"),
     path("cuentas/", include("django.contrib.auth.urls")),
     path("admin/", admin.site.urls),
 ]

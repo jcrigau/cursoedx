@@ -1,0 +1,68 @@
+{% extends "portal/base_portal.html" %}
+{% block titulo %}Mi legajo · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Mi legajo</h1>
+  <p class="subtitulo">{{ legajo.nombre_completo }} · CUIL {{ legajo.cuil }}</p>
+
+  <div class="tarjeta">
+    <div class="rotulo">Antigüedad docente</div>
+    <div class="dato">{{ antiguedad }}</div>
+    <div class="secundario">{{ antiguedad.total_dias }} días de servicio</div>
+  </div>
+
+  <h2>Mis cargos</h2>
+  {% for cargo in cargos %}
+    <div class="tarjeta">
+      <div class="entre">
+        <strong>{{ cargo.descripcion }}</strong>
+        {% if cargo.esta_vigente %}<span class="etiqueta">vigente</span>{% endif %}
+      </div>
+      <div class="secundario">
+        {{ cargo.get_situacion_revista_display }}
+        {% if cargo.horas_semanales %} · {{ cargo.horas_semanales }} hs{% endif %}
+        · desde {{ cargo.fecha_alta|date:"d/m/Y" }}
+        {% if cargo.fecha_baja %} hasta {{ cargo.fecha_baja|date:"d/m/Y" }}{% endif %}
+      </div>
+    </div>
+  {% empty %}
+    <div class="aviso">No hay cargos cargados.</div>
+  {% endfor %}
+
+  <h2>Documentación</h2>
+  {% for documento in documentos %}
+    <div class="tarjeta">
+      <div class="entre">
+        <strong>{{ documento.tipo }}</strong>
+        {% if documento.esta_vencido %}
+          <span class="etiqueta alerta">vencido</span>
+        {% elif documento.por_vencer %}
+          <span class="etiqueta alerta">por vencer</span>
+        {% endif %}
+      </div>
+      {% if documento.fecha_vencimiento %}
+        <div class="secundario">Vence el {{ documento.fecha_vencimiento|date:"d/m/Y" }}</div>
+      {% endif %}
+    </div>
+  {% empty %}
+    <div class="aviso">No hay documentación cargada.</div>
+  {% endfor %}
+
+  {% if titulos %}
+    <h2>Títulos y formación</h2>
+    {% for titulo in titulos %}
+      <div class="tarjeta">
+        <strong>{{ titulo.nombre }}</strong>
+        <div class="secundario">
+          {{ titulo.get_tipo_display }}
+          {% if titulo.institucion_otorgante %} · {{ titulo.institucion_otorgante }}{% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <p class="pie">
+    Si algún dato no coincide, avisale a secretaría: desde el portal se consulta,
+    no se modifica.
+  </p>
+{% endblock %}

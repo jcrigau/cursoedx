@@ -1,0 +1,186 @@
+/* Portal del docente: pensado para el celular.
+   Reusa los colores y componentes de sge.css y agrega lo propio de una
+   pantalla chica: barra fija abajo, tarjetas amplias y botones grandes. */
+
+body.portal {
+  padding-bottom: 5.2rem;   /* deja lugar para el menú fijo */
+  background: var(--papel);
+}
+
+.portal-barra {
+  background: var(--tinta);
+  color: #fff;
+  padding: 0.75rem 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.portal-barra .saludo { font-weight: 700; font-size: 1.05rem; }
+.portal-barra .escuela { font-size: 0.8rem; opacity: 0.7; }
+
+.portal-contenido {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.1rem 1rem 2rem;
+}
+
+.portal-contenido h1 { font-size: 1.45rem; margin: 0 0 0.2rem; }
+.portal-contenido h2 { font-size: 1rem; margin: 1.6rem 0 0.6rem; }
+
+.portal .tarjeta { margin-bottom: 0.75rem; }
+.portal .tarjeta .rotulo {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tinta-suave);
+}
+.portal .tarjeta .dato { font-size: 1.2rem; font-weight: 700; }
+.portal .tarjeta .dato.grande { font-size: 2.4rem; line-height: 1.1; }
+
+.tarjeta.destacada { border-left: 4px solid var(--acento); }
+.tarjeta.ficha-hoy { text-align: center; padding: 1.4rem 1.1rem; }
+
+.entre { display: flex; justify-content: space-between; align-items: baseline; gap: 0.6rem; }
+
+/* Lista de clases del día */
+
+.lista-clases { list-style: none; padding: 0; margin: 0; }
+
+.lista-clases li {
+  display: flex;
+  gap: 0.9rem;
+  align-items: baseline;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 0.7rem 0.9rem;
+  margin-bottom: 0.5rem;
+}
+
+.lista-clases .hora {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  color: var(--acento);
+  min-width: 3.2rem;
+}
+
+.lista-clases .detalle { display: flex; flex-direction: column; }
+
+/* Botones y formularios del portal */
+
+.boton.grande {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  font-size: 1.05rem;
+  margin: 0.6rem 0;
+}
+
+.boton.secundario-boton {
+  background: transparent;
+  color: var(--acento);
+  border: 1px solid var(--acento);
+  margin-top: 0.7rem;
+}
+
+.enlace-boton {
+  background: none;
+  border: 0;
+  color: var(--alerta);
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 0.3rem 0 0;
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.formulario-portal {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 1rem;
+  margin-bottom: 1.2rem;
+}
+
+.formulario-portal label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.88rem;
+  margin-bottom: 0.25rem;
+}
+
+.formulario-portal input,
+.formulario-portal select {
+  width: 100%;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid var(--borde);
+  border-radius: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  margin-bottom: 0.9rem;
+  background: #fff;
+}
+
+.desplegable {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  margin-bottom: 1.2rem;
+  overflow: hidden;
+}
+
+.desplegable > summary {
+  padding: 0.85rem 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--acento);
+}
+
+.desplegable .formulario-portal { border: 0; margin: 0; }
+
+.resultado {
+  margin-top: 0.8rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+}
+
+.resultado.ok { background: #eef6ef; color: var(--ok); }
+.resultado.error { background: var(--alerta-clara); color: var(--alerta); }
+
+.tabla-desplazable { overflow-x: auto; }
+
+/* Menú fijo inferior */
+
+.portal-menu {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  background: var(--superficie);
+  border-top: 1px solid var(--borde);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 10;
+}
+
+.portal-menu a {
+  flex: 1;
+  text-align: center;
+  padding: 0.55rem 0.2rem 0.65rem;
+  font-size: 0.72rem;
+  color: var(--tinta-suave);
+  text-decoration: none;
+}
+
+.portal-menu a.activo { color: var(--acento); font-weight: 700; }
+.portal-menu .icono { display: block; font-size: 1.15rem; line-height: 1.4; }
+
+@media (min-width: 640px) {
+  .portal-menu { position: static; border-top: 0; border-bottom: 1px solid var(--borde); }
+  body.portal { padding-bottom: 0; }
+}

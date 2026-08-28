@@ -73,6 +73,19 @@
                 {% if linea.es_suplente %}
                   <div class="secundario">suplente de {{ linea.titular.nombre_completo }}</div>
                 {% endif %}
+                {% if linea.aviso %}
+                  <div class="secundario">
+                    <span class="etiqueta alerta">avisó que no viene</span>
+                    {{ linea.aviso.get_motivo_display|lower }}
+                  </div>
+                {% elif linea.fichada %}
+                  <div class="secundario">
+                    fichó {{ linea.fichada.hora|time:"H:i" }}
+                    {% if not linea.fichada.en_la_escuela and linea.fichada.distancia_metros %}
+                      · <span class="etiqueta alerta">a {{ linea.fichada.distancia_metros }} m</span>
+                    {% endif %}
+                  </div>
+                {% endif %}
               </td>
               <td>{{ linea.horas }}</td>
               <td class="secundario">{{ linea.detalle_cursos }}</td>

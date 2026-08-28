@@ -51,6 +51,8 @@ HORARIOS = [
 LICENCIAS = ["tipolicencia", "licencia", "cobertura"]
 ASISTENCIA = ["registroasistencia"]
 NOVEDADES = ["periodonovedades", "novedad"]
+# Lo que llega del portal: la secretaría lo consulta y lo confirma.
+PORTAL = ["avisoinasistencia", "fichada"]
 
 # rol -> {app_label: {modelo: acciones}}
 PERMISOS_POR_ROL: dict[str, dict[str, dict[str, tuple[str, ...]]]] = {
@@ -61,6 +63,7 @@ PERMISOS_POR_ROL: dict[str, dict[str, dict[str, tuple[str, ...]]]] = {
         "licencias": {modelo: TODAS for modelo in LICENCIAS},
         "asistencia": {modelo: TODAS for modelo in ASISTENCIA},
         "novedades": {modelo: TODAS for modelo in NOVEDADES},
+        "portal": {modelo: TODAS for modelo in PORTAL},
         "core": {"membresia": SOLO_VER, "registroauditoria": SOLO_VER},
     },
     # El directivo consulta todo y además aprueba o rechaza licencias.
@@ -71,6 +74,7 @@ PERMISOS_POR_ROL: dict[str, dict[str, dict[str, tuple[str, ...]]]] = {
         "licencias": {"tipolicencia": SOLO_VER, "licencia": TODAS, "cobertura": TODAS},
         "asistencia": {modelo: SOLO_VER for modelo in ASISTENCIA},
         "novedades": {modelo: SOLO_VER for modelo in NOVEDADES},
+        "portal": {modelo: SOLO_VER for modelo in PORTAL},
         "core": {"membresia": SOLO_VER, "registroauditoria": SOLO_VER},
     },
     # El docente usa el portal (F5), no el panel de administración. Podrá ver

@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "licencias",
     "asistencia",
     "novedades",
+    "portal",
 ]
 
 MIDDLEWARE = [

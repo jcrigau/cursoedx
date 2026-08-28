@@ -1,0 +1,125 @@
+{% extends "portal/base_portal.html" %}
+{% block titulo %}Hoy · Mi portal{% endblock %}
+
+{% block contenido %}
+  <h1>Hoy</h1>
+  <p class="subtitulo">{{ hoy|date:"l j \d\e F"|capfirst }}</p>
+
+  {% if licencia %}
+    <div class="tarjeta destacada">
+      <div class="rotulo">Estás de licencia</div>
+      <div class="dato">{{ licencia.tipo }}</div>
+      <div class="secundario">
+        Hasta el {{ licencia.fecha_fin|date:"d/m/Y" }}
+      </div>
+    </div>
+  {% elif aviso %}
+    <div class="tarjeta destacada">
+      <div class="rotulo">Avisaste que hoy no venís</div>
+      <div class="dato">{{ aviso.get_motivo_display }}</div>
+      {% if aviso.detalle %}<div class="secundario">{{ aviso.detalle }}</div>{% endif %}
+    </div>
+  {% elif puede_fichar %}
+    <div class="tarjeta ficha-hoy">
+      {% if fichada %}
+        <div class="rotulo">Entrada registrada</div>
+        <div class="dato grande">{{ fichada.hora|time:"H:i" }}</div>
+        {% if not fichada.en_la_escuela and fichada.distancia_metros %}
+          <div class="secundario">a {{ fichada.distancia_metros }} m de la escuela</div>
+        {% endif %}
+        {% if salida %}
+          <div class="secundario">Salida: {{ salida.hora|time:"H:i" }}</div>
+        {% else %}
+          <button class="boton secundario-boton" data-fichar="SALIDA">Registrar salida</button>
+        {% endif %}
+      {% else %}
+        <div class="rotulo">Todavía no fichaste</div>
+        <button class="boton grande" data-fichar="ENTRADA">Registrar entrada</button>
+        <div class="secundario">Se usa tu ubicación para confirmar que estás en la escuela.</div>
+      {% endif %}
+      <div id="resultado-fichada" class="resultado" hidden></div>
+    </div>
+  {% endif %}
+
+  <h2>Mis clases de hoy</h2>
+  {% if clases %}
+    <ul class="lista-clases">
+      {% for clase in clases %}
+        <li>
+          <span class="hora">{{ clase.hora_inicio|time:"H:i" }}</span>
+          <span class="detalle">
+            <strong>{{ clase.curso }}</strong>
+            <span class="secundario">{{ clase.materia.nombre }}</span>
+          </span>
+        </li>
+      {% endfor %}
+    </ul>
+  {% elif not hay_horario %}
+    <div class="aviso">Todavía no hay un horario publicado para este período.</div>
+  {% else %}
+    <div class="aviso">Hoy no tenés clases.</div>
+  {% endif %}
+
+  {% if documentos_por_vencer %}
+    <h2>Documentación</h2>
+    {% for documento in documentos_por_vencer %}
+      <div class="tarjeta">
+        <strong>{{ documento.tipo }}</strong>
+        <div class="secundario">
+          {% if documento.esta_vencido %}
+            Vencido el {{ documento.fecha_vencimiento|date:"d/m/Y" }}
+          {% else %}
+            Vence el {{ documento.fecha_vencimiento|date:"d/m/Y" }}
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Fichaje: se pide la ubicación y se manda junto con la marca. Si el permiso
+  // está denegado o el GPS no responde, igual se registra la hora.
+  document.querySelectorAll("[data-fichar]").forEach(function (boton) {
+    boton.addEventListener("click", function () {
+      const tipo = boton.dataset.fichar;
+      const salida = document.getElementById("resultado-fichada");
+      boton.disabled = true;
+      boton.textContent = "Registrando…";
+
+      function enviar(posicion) {
+        const datos = new FormData();
+        datos.append("tipo", tipo);
+        datos.append("csrfmiddlewaretoken", "{{ csrf_token }}");
+        if (posicion) {
+          datos.append("latitud", posicion.coords.latitude);
+          datos.append("longitud", posicion.coords.longitude);
+          datos.append("precision", Math.round(posicion.coords.accuracy));
+        }
+        fetch("{% url 'portal_fichar' %}", { method: "POST", body: datos })
+          .then(function (r) { return r.json(); })
+          .then(function (respuesta) {
+            salida.hidden = false;
+            salida.textContent = respuesta.mensaje;
+            salida.className = "resultado " + (respuesta.ok ? "ok" : "error");
+            if (respuesta.ok) { setTimeout(function () { location.reload(); }, 1500); }
+          })
+          .catch(function () {
+            salida.hidden = false;
+            salida.className = "resultado error";
+            salida.textContent = "No se pudo registrar. Probá de nuevo.";
+            boton.disabled = false;
+          });
+      }
+
+      if (!navigator.geolocation) { enviar(null); return; }
+      navigator.geolocation.getCurrentPosition(
+        enviar,
+        function () { enviar(null); },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      );
+    });
+  });
+</script>
+{% endblock %}

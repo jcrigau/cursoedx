@@ -1,0 +1,56 @@
+{% extends "portal/base_portal.html" %}
+{% block titulo %}Mis licencias · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Mis licencias</h1>
+
+  <details class="desplegable" {% if not licencias %}open{% endif %}>
+    <summary>Solicitar una licencia</summary>
+    <form method="post" enctype="multipart/form-data" class="formulario-portal">
+      {% csrf_token %}
+      <label for="id_tipo">Tipo</label>
+      <select name="tipo" id="id_tipo" required>
+        {% for tipo in tipos %}
+          <option value="{{ tipo.pk }}">
+            {{ tipo }}{% if not tipo.con_goce %} (sin goce){% endif %}
+          </option>
+        {% endfor %}
+      </select>
+
+      <label for="id_desde">Desde</label>
+      <input type="date" name="desde" id="id_desde" value="{{ hoy|date:'Y-m-d' }}" required>
+
+      <label for="id_hasta">Hasta</label>
+      <input type="date" name="hasta" id="id_hasta" value="{{ hoy|date:'Y-m-d' }}" required>
+
+      <label for="id_certificado">Certificado (opcional)</label>
+      <input type="file" name="certificado" id="id_certificado" accept="image/*,.pdf">
+
+      <label for="id_observaciones">Observaciones</label>
+      <input type="text" name="observaciones" id="id_observaciones" maxlength="500">
+
+      <button type="submit" class="boton grande">Enviar solicitud</button>
+    </form>
+  </details>
+
+  {% for licencia in licencias %}
+    <div class="tarjeta">
+      <div class="entre">
+        <strong>{{ licencia.tipo }}</strong>
+        <span class="etiqueta {% if licencia.estado == 'RECHAZADA' %}alerta{% endif %}">
+          {{ licencia.situacion|lower }}
+        </span>
+      </div>
+      <div class="secundario">
+        {{ licencia.fecha_inicio|date:"d/m/Y" }} al {{ licencia.fecha_fin|date:"d/m/Y" }}
+        · {{ licencia.dias }} día{{ licencia.dias|pluralize }}
+        {% if not licencia.tipo.con_goce %} · sin goce{% endif %}
+      </div>
+      {% if licencia.motivo_rechazo %}
+        <div class="secundario">Motivo del rechazo: {{ licencia.motivo_rechazo }}</div>
+      {% endif %}
+    </div>
+  {% empty %}
+    <div class="aviso">No tenés licencias registradas.</div>
+  {% endfor %}
+{% endblock %}

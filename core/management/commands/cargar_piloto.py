@@ -294,6 +294,10 @@ class Command(BaseCommand):
                 "nombre_corto": "Instituto",
                 "jurisdiccion": Jurisdiccion.SAN_LUIS,
                 "localidad": "San Luis",
+                # Ubicación aproximada, para poder probar el fichaje del portal.
+                "latitud": -33.301726,
+                "longitud": -66.337752,
+                "radio_fichaje_metros": 200,
             },
         )
         self._informar("Institución", institucion, creada)
@@ -307,10 +311,13 @@ class Command(BaseCommand):
         if opciones["con_planta"]:
             self._crear_planta_docente(institucion, niveles[TipoNivel.SECUNDARIO], ciclo)
         self._crear_licencias(institucion)
+        docente = self._dar_acceso_al_portal(institucion, opciones)
 
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS(f"Listo. Institución «{institucion}» preparada."))
         self.stdout.write(f"Usuario de secretaría: {usuario.email}")
+        if docente:
+            self.stdout.write(f"Usuario del portal docente: {docente.email}")
         if not opciones["password"]:
             self.stdout.write(
                 "Sin contraseña: asignale una con "
@@ -707,6 +714,39 @@ class Command(BaseCommand):
                     observaciones="No hubo suplente disponible.",
                 )
             self._informar("Licencia", corta, True)
+
+    def _dar_acceso_al_portal(self, institucion, opciones):
+        """Le crea usuario al primer docente, para poder probar el portal."""
+        # Se elige alguien que esté trabajando: si estuviera de licencia, el
+        # portal mostraría eso y no se vería el fichaje ni el horario.
+        hoy = date.today()
+        legajo = (
+            Legajo.objects.filter(institucion=institucion, cargos__isnull=False, usuario=None)
+            .exclude(
+                licencias__estado=EstadoLicencia.APROBADA,
+                licencias__fecha_inicio__lte=hoy,
+                licencias__fecha_fin__gte=hoy,
+            )
+            .distinct()
+            .order_by("apellido", "nombre")
+            .first()
+        )
+        if legajo is None:
+            return None
+
+        email = f"docente@{opciones['email'].split('@')[-1]}"
+        usuario, creado = Usuario.objects.get_or_create(
+            email=email,
+            defaults={"nombre": legajo.nombre, "apellido": legajo.apellido},
+        )
+        if opciones["password"]:
+            usuario.set_password(opciones["password"])
+            usuario.save(update_fields=["password"])
+        Membresia.objects.get_or_create(usuario=usuario, institucion=institucion, rol=Rol.DOCENTE)
+        legajo.usuario = usuario
+        legajo.save(update_fields=["usuario", "actualizado_en"])
+        self._informar("Portal docente", f"{legajo} → {email}", creado)
+        return usuario
 
     def _informar(self, etiqueta, objeto, creado):
         marca = self.style.SUCCESS("+") if creado else self.style.WARNING("=")
