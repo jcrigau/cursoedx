@@ -1,6 +1,6 @@
 # SGE — Sistema de Gestión para Secretaría Escolar
 
-> **Documento de requerimientos** · Versión 1.0 · Agosto 2026
+> **Documento de requerimientos** · Versión 1.1 · Agosto 2026
 > Nombre comercial: a definir (SGE es nombre de trabajo).
 > Este es un documento vivo: se actualiza a medida que se toman decisiones. Sirve como fuente de verdad para las sesiones de desarrollo con Claude Code.
 
@@ -16,7 +16,7 @@ Aplicación web para la **secretaría de escuelas de gestión privada** que resu
 
 ### 1.1 Qué NO hace (fuera de alcance)
 
-- **No liquida sueldos.** Calcula y compila *novedades*; la liquidación la hace el estado (personal subvencionado) o el contador de la escuela (personal interno).
+- **No liquida sueldos.** Calcula y compila *novedades*; los sueldos los liquidan el estado (aporte estatal) y el liquidador de la escuela, que arma las planillas Oficial e Interna a partir de lo que la escuela le informa.
 - No gestiona alumnos en lo académico (notas, boletines, legajos de alumnos), ni comunicación con familias, ni facturación de cuotas, ni inventario. Los cursos/divisiones existen solo como estructura para los horarios.
 
 ---
@@ -27,11 +27,13 @@ Aplicación web para la **secretaría de escuelas de gestión privada** que resu
 
 En una escuela privada subvencionada conviven **tres situaciones de pago**:
 
-| Tipo de personal | Quién paga el sueldo | A quién se informan las novedades |
+| Tipo de personal | Quién paga el sueldo | En qué planilla se informa |
 |---|---|---|
-| **Subvencionado** | El estado provincial (aporte estatal) | Contralor / planilla al organismo de educación de gestión privada de la provincia |
-| **Interno** | La escuela | Contador / liquidador de la institución |
-| **Mixto** | Una misma persona tiene cargos u horas de ambos orígenes | Cada cargo se informa a su destino correspondiente |
+| **Subvencionado** | El estado provincial (aporte estatal) | **Planilla Oficial** |
+| **Interno** | La escuela | **Planilla Interna** |
+| **Mixto** | Una misma persona tiene cargos u horas de ambos orígenes | Cada cargo en su planilla |
+
+En el piloto, **ambas planillas las arma el liquidador externo**: la escuela solo le informa ausencias, altas y bajas, rotulando cada novedad como Oficial o Interna. No hay rendición directa de la escuela al estado. Para otras escuelas que sí rindan directo, el destino/formato de salida es configurable (fase SaaS).
 
 **Regla de modelado central:** la fuente de pago **no es un atributo de la persona sino de cada cargo/hora**. El caso "mixto" emerge naturalmente cuando una persona tiene cargos con distintas fuentes. Toda novedad hereda la fuente de pago del cargo que la origina y se enruta al destino correcto.
 
@@ -50,10 +52,10 @@ Hoy la secretaría carga cada novedad **manualmente en un Google Sheet compartid
 |---|---|
 | **Legajo** | Carpeta administrativa de un empleado en la institución: datos, cargos, documentación, historial. |
 | **Cargo** | Puesto que ocupa una persona: un cargo de base (p. ej. maestro de grado, preceptor) o un paquete de **horas cátedra** (materia + curso). |
-| **Hora cátedra** | Unidad de designación en secundaria: se designa por cantidad de horas semanales en una materia y curso. |
+| **Hora cátedra** | Unidad de designación en secundaria: se designa por cantidad de horas semanales en una materia y curso. En el piloto dura **40 minutos**; los preceptores computan **horas reloj de 60 minutos** — la unidad depende del tipo de cargo. |
 | **Situación de revista** | Condición del cargo: **titular**, **provisional/interino** o **suplente**. |
 | **Fuente de pago** | Origen del sueldo del cargo: **subvencionado** (estado) o **interno** (escuela). |
-| **POF** | Planta Orgánica Funcional: cargos y horas aprobados/financiados por el estado para la escuela. |
+| **POF** | Planta Orgánica Funcional: cargos y horas aprobados/financiados por el estado para la escuela. En el piloto no hay un documento POF único: la planta consta por **resoluciones individuales por cargo**, que el sistema registra en cada cargo. |
 | **DDJJ (declaración jurada) de horarios** | Declaración del docente de sus horarios ocupados en otras instituciones y disponibilidad; insumo para armar horarios y controlar incompatibilidades. |
 | **Novedad** | Todo hecho del mes que afecta la liquidación: alta, baja/cese, licencia, inasistencia, llegada tarde, suplencia, cambio de situación de revista o de horas. |
 | **Contralor** | Rendición/informe periódico al organismo estatal que financia los cargos subvencionados. |
@@ -84,8 +86,8 @@ Los roles se asignan **por institución** (una misma persona podría ser docente
 
 **Funciones:**
 
-- ABM de personas y legajos: datos personales (CUIL, DNI, contacto, domicilio), foto, estado (activo/baja).
-- **Cargos** por legajo, cada uno con: tipo (cargo de base / horas cátedra), nivel, materia y curso (si aplica), cantidad de horas semanales, **situación de revista** (titular / provisional / suplente), **fuente de pago** (subvencionado / interno), referencia a POF si es subvencionado, fecha de alta y de baja/cese, norma o resolución de designación.
+- ABM de personas y legajos: datos personales (CUIL, DNI, contacto, domicilio, obra social), foto, estado (activo/baja).
+- **Cargos** por legajo, cada uno con: tipo (cargo de base / horas cátedra de 40' / horas reloj de 60' — preceptores), nivel, materia y curso (si aplica), cantidad de horas semanales, **situación de revista** (titular / provisional / suplente), **fuente de pago** (subvencionado / interno), fecha de alta y de baja/cese, y **resolución de designación** (número, fecha, adjunto): en el piloto la planta aprobada por el estado consta por resoluciones individuales por cargo, así que la resolución es el respaldo del control "grilla vs. planta".
 - **Documentación con vencimientos:** apto psicofísico, certificado de antecedentes penales, títulos registrados, etc. Cada documento: tipo, archivo adjunto, fecha de emisión y de vencimiento. **Alertas configurables** (p. ej. 30/60 días antes de vencer).
 - **Títulos y formación:** títulos, postítulos y cursos, con puntaje/incumbencias como texto libre en v1.
 - **Historial de servicios:** todos los períodos trabajados en la institución (por cargo, con situación de revista) + carga manual de **servicios anteriores en otras instituciones** para el cómputo de **antigüedad docente** (el porcentaje lo aplica quien liquida; el sistema informa años/meses/días).
@@ -104,7 +106,7 @@ Los roles se asignan **por institución** (una misma persona podría ser docente
 **Estructura previa (configuración por institución):**
 
 - Ciclo lectivo (año), dividido en **cuatrimestres** (algunas materias cambian cuatrimestralmente).
-- Turnos (mañana/tarde/…), grilla de **bloques horarios** por turno (cantidad de horas cátedra por día, horarios de inicio/fin, recreos). Duración de la hora cátedra configurable.
+- Turnos y grilla de **bloques horarios** configurables por día y por curso. Realidad del piloto: turno mañana; hora cátedra de **40 min**; las horas van **de a pares (2×40')** con recreos de duración **variable** según el momento de la mañana; **algunos cursos tienen bloque de almuerzo y otros no**. La grilla debe ser flexible — bloques por día, bloques especiales (recreo/almuerzo) y variaciones por curso — sin asumir una grilla uniforme. El detalle fino (horarios exactos de cada bloque) se carga como configuración al implementar, con la grilla real de la escuela a la vista.
 - Cursos/divisiones por nivel y turno (p. ej. 3°A TM).
 - **Plan de estudios por curso:** materias con carga horaria semanal y vigencia (anual / 1er cuatrimestre / 2do cuatrimestre).
 - Asignación docente ↔ materia ↔ curso (derivada de los cargos del M1).
@@ -168,7 +170,7 @@ Los roles se asignan **por institución** (una misma persona podría ser docente
 **Funciones:**
 
 - **Catálogo de tipos de licencia** configurable: código, denominación, referencia normativa (artículo/inciso del régimen de San Luis en el primer cliente), con/sin goce de haberes, **si impacta en haberes** (descuento/pago adicional), tope de días por año/por caso, si requiere certificado, si es de corto o largo tratamiento.
-- **Precarga del catálogo con los motivos reales en uso** (relevados del circuito actual, ver Anexo A.3): Enfermedad, Atención Familiar, Razones Particulares, Congresos/Cursos/Jornadas, Estudios/Investigación, Examen, Fallecimiento Familiar, Maternidad (ref. Art. 83), Matrimonio (12 días), Licencia Especial sin Goce de Haberes, Licencia por Cargo de Mayor Jerarquía. Faltan confirmar artículos, topes y goce por tipo (§8).
+- **Precarga del catálogo con los motivos y artículos reales en uso** (tabla de la secretaría, ver Anexo A.3): Art. 76 Enfermedad/Estudio médico, Art. 83 Maternidad, Art. 91 Atención de Familiar, Art. 93.1 Matrimonio (12 días), Art. 93.2 Fallecimiento Familiar, Art. 93.3 Nacimiento de Hijo (padre), Art. 93.4 Razones Particulares, Art. 94.1 Exámenes, Art. 97 Congresos y Jornadas, Art. 98 Deportiva, Art. 100 Cargo de Mayor Jerarquía, Art. 107 Binomio Madre-Hijo, Licencias Especiales (art. variable, en general las únicas **sin goce**), Relevo de funciones. En general las licencias son **con goce** ("muy pocas sin goce, se pagan"). Falta confirmar topes de días por tipo (§8). Tardanza/Retiro anticipado figura en la tabla actual pero se registra por el módulo de asistencia (M3), no como licencia.
 - Solicitud de licencia: por secretaría (v1) o por el docente desde el portal (fase 2), sobre uno o más cargos del legajo, con período desde/hasta, adjuntos (certificados médicos) y observaciones.
 - Flujo de estados: solicitada → aprobada/rechazada (directivo) → en curso → finalizada; prórrogas/extensiones encadenadas.
 - Control automático de **topes** por tipo y año, con aviso al cargar.
@@ -210,7 +212,7 @@ Los roles se asignan **por institución** (una misma persona podría ser docente
 **Funciones:**
 
 - **Compilación automática** del período (mes/año): el sistema recorre cargos, licencias, asistencia y suplencias y arma el listado de novedades por persona y cargo.
-- **Separación por destino** según fuente de pago del cargo, con la terminología del circuito real: **"Planilla Oficial"** (cargos subvencionados → contralor estatal) y **"Planilla Interna"** (cargos internos → liquidación de la escuela). El personal mixto aparece en ambas, cada cargo en la suya. En el relevamiento: ~88% Oficial, ~12% Interna.
+- **Separación por destino** según fuente de pago del cargo, con la terminología del circuito real: **"Planilla Oficial"** (cargos subvencionados) y **"Planilla Interna"** (cargos internos). El personal mixto aparece en ambas, cada cargo en la suya. En el relevamiento: ~88% Oficial, ~12% Interna. En el piloto **ambas planillas las arma el liquidador**: el sistema entrega un único paquete con cada novedad ya rotulada (hoy ese rótulo lo decide la secretaría a mano; el sistema lo deriva del cargo y elimina errores de ruteo).
 - **Pre-cierre:** pantalla de revisión con checklist; la secretaría corrige/agrega novedades manuales antes de cerrar.
 - **Cierre del período:** congela las novedades (inmutables), registra quién y cuándo cerró; reapertura solo con permiso de directivo y quedando auditado.
 - **Salidas v1:**
@@ -221,7 +223,7 @@ Los roles se asignan **por institución** (una misma persona podría ser docente
 - **Salidas v2 (automatización del circuito actual):**
   - Generación de **links de Google Forms pre-llenados** por novedad (template de URL con IDs de campos configurable): un click por novedad en lugar de tipear todo.
   - Escritura directa al Google Sheet vía API (cuando el liquidador lo permita).
-  - Réplica de la **planilla oficial de contralor de San Luis** (pendiente: conseguir un modelo real, ver §8).
+  - ~~Réplica de planilla oficial de contralor~~ → **no aplica al piloto**: el liquidador arma todas las planillas; la escuela solo informa ausencias, altas y bajas. Si una futura escuela cliente rinde directo al estado, su formato se agrega como export configurable (F6).
 
 ### M7 · Tablero y alertas
 
@@ -274,7 +276,7 @@ erDiagram
 
 **Campos clave por entidad (resumen):**
 
-- `CARGO`: tipo (cargo_base | horas_catedra), horas_semanales, situacion_revista (titular | provisional | suplente), **fuente_pago (subvencionado | interno)**, fecha_alta, fecha_baja, resolucion.
+- `CARGO`: tipo (cargo_base | horas_catedra | horas_reloj), unidad_hora (40' | 60'), horas_semanales, situacion_revista (titular | provisional | suplente), **fuente_pago (subvencionado | interno)**, fecha_alta, fecha_baja, resolucion (número, fecha, adjunto).
 - `TIPO_LICENCIA`: codigo, nombre, referencia_normativa, con_goce (bool), tope_dias_anual, requiere_certificado.
 - `DDJJ_DISPONIBILIDAD`: legajo, periodo_academico, bloques_no_disponibles, observaciones, archivo adjunto.
 - `HORARIO_VERSION`: periodo_academico, estado (borrador | vigente | historico), vigencia_desde, vigencia_hasta.
@@ -295,13 +297,13 @@ Elegida para un desarrollador solo, con Claude Code, y lista para crecer a SaaS.
 | Frontend | **Templates Django + HTMX + Alpine.js + Tailwind CSS** | Un solo deploy, sin SPA que mantener; interactividad suficiente (grillas de horarios, validación en vivo). |
 | Portal docente | La misma web, **responsive + PWA** (manifest + service worker) | Instalable en el celular del docente sin app stores; geolocalización vía API del navegador para el fichaje. |
 | Generador de horarios | **Google OR-Tools (CP-SAT)** | Estado del arte en timetabling; modela restricciones duras y objetivos ponderados (minimizar días de asistencia). |
-| Tareas en segundo plano | **django-rq + Redis** | Generador, PDFs pesados y alertas fuera del request. Más simple que Celery. |
+| Tareas en segundo plano | v1: **hilos/cola en base de datos** (sin Redis); luego django-rq + Redis | Generador y PDFs fuera del request. Sin Redis se puede desplegar gratis con menos memoria; se migra cuando haya hosting pago. |
 | PDFs | **WeasyPrint** | Certificaciones y planillas desde HTML/CSS. |
 | Excel | **openpyxl** | Exports de novedades y horarios. |
 | Autenticación | **django-allauth** (email + contraseña) | Roles por institución con grupos propios. |
 | Multi-tenant | **Base única con `institucion_id`** en todo modelo de negocio + middleware/manager que fuerza el scoping | Simple de operar; suficiente hasta decenas de escuelas. |
 | Adjuntos | Disco local (volumen) en v1; S3-compatible después | |
-| Deploy | **Docker Compose** (web, worker, postgres, redis, caddy) en un VPS | Barato, reproducible, migrable a PaaS. |
+| Deploy | **Docker Compose**; arranque a **costo $0** (requisito del cliente): VPS gratuito tipo Oracle Cloud Always Free, o PC de la escuela + Cloudflare Tunnel | Mismo compose migrable a un VPS pago (~USD 10/mes) cuando el producto tenga clientes. |
 | Backups | `pg_dump` diario + copia off-site | Datos laborales sensibles. |
 | Tests / CI | **pytest-django** + GitHub Actions | Los cálculos de novedades y el generador exigen tests. |
 | Idioma / TZ | es-AR · `America/Argentina/San_Luis` | |
@@ -349,13 +351,13 @@ Cada fase termina con algo usable en la escuela real. Sirven como unidades de tr
 ## 8. Preguntas abiertas (resolver antes o durante cada fase)
 
 1. ~~**Planilla del liquidador**~~ → **RESUELTA**: formulario y planilla relevados, ver Anexo A. Queda pendiente para el prefill v2 obtener los **entry IDs** del Google Form (se sacan del link "Obtener enlace completado previamente" del formulario). *(F4 v2)*
-2. **Régimen de licencias de San Luis:** *parcialmente resuelta* — los motivos en uso están relevados (Anexo A.3); falta confirmar por tipo: artículo/inciso, con/sin goce y topes de días. *(bloquea F3)*
-3. **Formato del contralor estatal:** modelo real de la planilla/rendición que se presenta por los cargos subvencionados en San Luis. *(F4/F6)*
-4. **Estructura horaria exacta:** duración de la hora cátedra, bloques por turno, recreos, turnos existentes. *(F0)*
-5. **POF:** formato del documento oficial para modelar `POF_ITEM` y el control grilla vs. POF. *(F2)*
-6. **Volúmenes:** *parcialmente resuelta* — el circuito actual registra ~40 novedades/mes (693 en 17 meses; 86% secundario). Falta la cantidad de docentes, cursos y divisiones para dimensionar el generador. *(F2)*
-7. **Nombre comercial y dominio** del producto. *(F6)*
-8. **Presupuesto de hosting** (VPS ~USD 10–20/mes al inicio). *(F0)*
+2. ~~**Régimen de licencias**~~ → **RESUELTA en lo esencial**: catálogo con artículos relevado de la tabla de la secretaría (Anexo A.3); en general con goce, muy pocas sin goce (las "Especiales"). Queda confirmar **topes de días por tipo** al precargar el catálogo en F3.
+3. ~~**Formato del contralor estatal**~~ → **RESUELTA**: no existe rendición propia de la escuela al estado — el liquidador arma la Planilla Oficial y la Interna; la escuela solo informa ausencias, altas y bajas. Un formato estatal directo solo se agregaría para otra escuela cliente (F6).
+4. ~~**Estructura horaria**~~ → **RESUELTA en lo esencial**: turno mañana; hora cátedra 40' (docentes) y hora reloj 60' (preceptores); horas de a pares (2×40') con recreos variables; almuerzo según el curso. Queda cargar la grilla real (horarios exactos por día/curso) como configuración al implementar F0, con la grilla de la escuela a la vista.
+5. ~~**POF**~~ → **RESUELTA**: no hay documento POF único — la planta consta por **resoluciones individuales por cargo**; se modelan como datos y adjunto de cada cargo (M1).
+6. ~~**Volúmenes**~~ → **RESUELTA**: ~80 docentes en secundaria, ~130 personas en total; ~40 novedades/mes (86% secundario). Escala cómoda para el generador CP-SAT y para una base única multi-tenant.
+7. **Nombre comercial y dominio** del producto: aún no definido; proponer opciones al llegar a F6.
+8. ~~**Presupuesto de hosting**~~ → **RESUELTA**: **$0 al inicio** — desplegar en free tier (Oracle Cloud Always Free o PC de la escuela + Cloudflare Tunnel, ver §6); pasar a VPS pago recién cuando haya clientes.
 
 ---
 
@@ -401,25 +403,30 @@ El formulario repite la misma sección de campos para cada nivel (en primario "C
 | Tiempo Determinado | Sí/No → designación a término (suplencias/provisionales). |
 | En caso de Licencias - Fecha de Finalización | Fin de la licencia o de la designación. |
 | Planilla | **Oficial / Interna** → `destino` de la novedad (fuente de pago del cargo). |
-| OBSERVACIONES | Texto libre. En las **altas** hoy se tipea ahí CUIL, obra social y antigüedad → el sistema los toma estructurados del legajo. Aparecen referencias normativas: "Art. 83" (maternidad), "ART. 100" (suplencias). |
+| OBSERVACIONES | Texto libre. En las **altas** hoy se tipea ahí CUIL, obra social y antigüedad → el sistema los toma estructurados del legajo. Aparecen referencias normativas ("Art. 83" maternidad, "ART. 100" cargo de mayor jerarquía). |
 
-### A.3 Motivos observados (precarga del catálogo de licencias)
+### A.3 Catálogo de motivos de licencia (precarga del M4)
 
-Frecuencia aproximada en el período relevado; los nombres se normalizan (el form tiene typos como "Jonadas" y "Cargo Mayo"):
+Cruce de dos fuentes reales: la tabla **"Motivos Licencia"** que usa la secretaría (con los artículos del régimen aplicable) y la frecuencia observada en las 693 respuestas del form. Los nombres se normalizan (el form tiene typos como "Jonadas" y "Cargo Mayo"). Regla general: **casi todas con goce**; las "Especiales" son las únicas habitualmente sin goce. Topes de días por tipo: a confirmar al precargar (§8.2).
 
-| Motivo (normalizado) | Frecuencia | Notas |
-|---|---|---|
-| Enfermedad | muy alta (~180) | Corto y largo tratamiento a distinguir. |
-| Atención Familiar | alta (~95) | |
-| Razones Particulares | alta (~100) | En el form: "R. Particulares" / "Particular". |
-| Congresos / Cursos / Jornadas | alta (~80) | |
-| Examen | media (~18) | Incluye exámenes médicos y de estudio. |
-| Estudios / Investigación | media (~11) | |
-| Fallecimiento Familiar | baja (~6) | |
-| Maternidad | baja (~5) | Referencia "Art. 83". |
-| Matrimonio | baja (~2) | 12 días según observaciones. |
-| Licencia Especial sin Goce de Haberes | media (~15) | Sin goce → impacta haberes. |
-| Licencia por Cargo de Mayor Jerarquía | baja (~4) | En el form: "Lic. Cargo Mayo Jerarquia". |
+| Motivo | Artículo | Frecuencia relevada | Notas |
+|---|---|---|---|
+| Enfermedad / Estudio médico | Art. 76 | muy alta (~180) | Distinguir corto y largo tratamiento. |
+| Maternidad | Art. 83 | baja (~5) | |
+| Atención de Familiar | Art. 91 | alta (~95) | |
+| Matrimonio | Art. 93.1 | baja (~2) | 12 días según observaciones. |
+| Fallecimiento Familiar | Art. 93.2 | baja (~6) | |
+| Nacimiento de Hijo (padre) | Art. 93.3 | — | No apareció en el período relevado. |
+| Razones Particulares | Art. 93.4 | alta (~100) | En el form: "R. Particulares" / "Particular". |
+| Exámenes | Art. 94.1 | media (~18) | En el uso actual incluye exámenes médicos y de estudio. |
+| Congresos y Jornadas | Art. 97 | alta (~80) | |
+| Deportiva | Art. 98 | — | |
+| Cargo de Mayor Jerarquía | Art. 100 | baja (~4) | |
+| Binomio Madre-Hijo | Art. 107 | — | |
+| Licencias Especiales | variable | media (~15) | En el form: "Lic. Esp. sin Goce de Haberes" → **sin goce**, impacta haberes. |
+| Estudios / Investigación | a confirmar | media (~11) | Mapear al artículo correspondiente al precargar. |
+| Relevo de funciones | — | — | Situación especial de servicio, no una ausencia común. |
+| Tardanza / Retiro anticipado | — | — | Figura en la tabla actual, pero el sistema lo registra por asistencia (M3), no como licencia. |
 
 ### A.4 Reglas derivadas del relevamiento
 
