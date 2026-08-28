@@ -28,6 +28,11 @@
       <span>{{ institucion_actual }}</span>
     {% endif %}
 
+    <nav class="menu">
+      <a href="{% url 'parte_diario' %}">Parte diario</a>
+      <a href="{% url 'resumen_asistencia' %}">Resumen del mes</a>
+    </nav>
+
     <div class="barra-derecha">
       {% if user.is_staff %}<a href="{% url 'admin:index' %}">Administración</a>{% endif %}
       <span>{{ user.nombre_completo }}</span>

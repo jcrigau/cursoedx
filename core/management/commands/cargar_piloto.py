@@ -10,6 +10,7 @@ almuerzo). Los horarios exactos son aproximados: se ajustan desde el admin.
 
 from datetime import date, time, timedelta
 
+from django.core.management import call_command
 from django.core.management.base import BaseCommand
 from django.db import transaction
 
@@ -40,6 +41,13 @@ from legajos.models import (
     TipoDocumento,
 )
 from legajos.models import TipoCargo as TipoCargoLegajo
+from licencias.models import (
+    Cobertura,
+    EstadoLicencia,
+    Licencia,
+    TipoCobertura,
+    TipoLicencia,
+)
 
 # Grilla del turno mañana: las horas van de a pares con recreos de duración
 # variable, y algunos cursos cortan para almorzar.
@@ -298,6 +306,7 @@ class Command(BaseCommand):
         self._crear_personal(institucion, niveles[TipoNivel.SECUNDARIO], ciclo)
         if opciones["con_planta"]:
             self._crear_planta_docente(institucion, niveles[TipoNivel.SECUNDARIO], ciclo)
+        self._crear_licencias(institucion)
 
         self.stdout.write("")
         self.stdout.write(self.style.SUCCESS(f"Listo. Institución «{institucion}» preparada."))
@@ -619,6 +628,85 @@ class Command(BaseCommand):
                 "institucion_externa": "Escuela N° 24",
             },
         )
+
+    def _crear_licencias(self, institucion):
+        """Catálogo del régimen y un par de licencias en curso, con y sin cobertura."""
+        call_command("cargar_catalogo_licencias", institucion=institucion.pk, verbosity=0)
+
+        docentes = list(
+            Legajo.objects.filter(institucion=institucion, cargos__isnull=False)
+            .distinct()
+            .order_by("apellido", "nombre")[:2]
+        )
+        if len(docentes) < 2:
+            return
+
+        # Alta express de un suplente: entra sin cargos propios y recibe los
+        # del titular al designarlo.
+        suplente, _creado = Legajo.objects.get_or_create(
+            institucion=institucion,
+            cuil="27-38999111-2",
+            defaults={
+                "apellido": "Vega",
+                "nombre": "Julieta",
+                "fecha_ingreso": date.today(),
+            },
+        )
+
+        hoy = date.today()
+        enfermedad = TipoLicencia.objects.filter(institucion=institucion, codigo="Art. 76").first()
+        particulares = TipoLicencia.objects.filter(
+            institucion=institucion, codigo="Art. 93.4"
+        ).first()
+        if not (enfermedad and particulares):
+            return
+
+        # Una licencia larga cubierta por un suplente.
+        titular, otro = docentes[0], docentes[1]
+        licencia, creada = Licencia.objects.get_or_create(
+            institucion=institucion,
+            legajo=titular,
+            tipo=enfermedad,
+            fecha_inicio=hoy - timedelta(days=10),
+            defaults={
+                "fecha_fin": hoy + timedelta(days=5),
+                "estado": EstadoLicencia.APROBADA,
+            },
+        )
+        if creada:
+            for cargo in titular.cargos_vigentes(licencia.fecha_inicio):
+                cobertura = Cobertura.objects.create(
+                    institucion=institucion,
+                    licencia=licencia,
+                    cargo=cargo,
+                    tipo=TipoCobertura.SUPLENTE,
+                    suplente=suplente,
+                    fecha_inicio=licencia.fecha_inicio,
+                    fecha_fin=licencia.fecha_fin,
+                )
+                cobertura.designar_cargo_del_suplente()
+            self._informar("Licencia", licencia, True)
+
+        # Una licencia corta que la escuela decidió no cubrir.
+        corta, creada = Licencia.objects.get_or_create(
+            institucion=institucion,
+            legajo=otro,
+            tipo=particulares,
+            fecha_inicio=hoy,
+            defaults={"fecha_fin": hoy, "estado": EstadoLicencia.APROBADA},
+        )
+        if creada:
+            for cargo in otro.cargos_vigentes(hoy):
+                Cobertura.objects.create(
+                    institucion=institucion,
+                    licencia=corta,
+                    cargo=cargo,
+                    tipo=TipoCobertura.SIN_COBERTURA,
+                    fecha_inicio=hoy,
+                    fecha_fin=hoy,
+                    observaciones="No hubo suplente disponible.",
+                )
+            self._informar("Licencia", corta, True)
 
     def _informar(self, etiqueta, objeto, creado):
         marca = self.style.SUCCESS("+") if creado else self.style.WARNING("=")

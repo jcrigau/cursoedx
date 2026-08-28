@@ -40,6 +40,46 @@
     </div>
   </div>
 
+  <h2>Hoy</h2>
+  <div class="grilla-indicadores">
+    <div class="tarjeta indicador {% if parte_sin_registrar %}pendiente{% endif %}">
+      <div class="numero">{{ parte_sin_registrar }}</div>
+      <div class="rotulo">Sin registrar en el parte</div>
+      <div class="detalle"><a href="{% url 'parte_diario' %}">abrir el parte del día →</a></div>
+    </div>
+    <div class="tarjeta indicador">
+      <div class="numero">{{ licencias_en_curso }}</div>
+      <div class="rotulo">Licencias en curso</div>
+    </div>
+    <div class="tarjeta indicador {% if horas_sin_cobertura %}pendiente{% endif %}">
+      <div class="numero">{{ horas_sin_cobertura }}</div>
+      <div class="rotulo">Horas sin docente hoy</div>
+      {% if coberturas_pendientes %}
+        <div class="detalle">{{ coberturas_pendientes }} cobertura{{ coberturas_pendientes|pluralize }} sin resolver</div>
+      {% endif %}
+    </div>
+    <div class="tarjeta indicador {% if suplencias_por_vencer %}pendiente{% endif %}">
+      <div class="numero">{{ suplencias_por_vencer|length }}</div>
+      <div class="rotulo">Suplencias por vencer</div>
+    </div>
+  </div>
+
+  {% if suplencias_por_vencer %}
+    <table class="datos">
+      <thead><tr><th>Suplente</th><th>Cargo</th><th>Termina</th><th>Titular</th></tr></thead>
+      <tbody>
+        {% for cobertura in suplencias_por_vencer %}
+          <tr>
+            <td>{{ cobertura.suplente.nombre_completo }}</td>
+            <td>{{ cobertura.cargo.descripcion }}</td>
+            <td>{{ cobertura.fecha_fin|date:"d/m/Y" }}</td>
+            <td class="secundario">{{ cobertura.cargo.legajo.nombre_completo }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
   {% if documentos_vencidos or documentos_por_vencer %}
     <h2>Documentación a reclamar</h2>
     <table class="datos">

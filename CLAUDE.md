@@ -24,7 +24,10 @@ código.
 - **F2 (horarios): lista.** DDJJ de disponibilidad, versiones por período,
   generador con OR-Tools (minimiza los días de asistencia de cada docente),
   asignaciones bloqueables, grillas por curso y por docente, export a PDF.
-- Siguiente: **F3 (asistencia y licencias)**.
+- **F3 (asistencia y licencias): lista.** Catálogo de licencias por artículo con
+  topes, flujo de aprobación, coberturas (suplente o alumnos libres), parte
+  diario autogenerado desde el horario vigente y resumen mensual.
+- Siguiente: **F4 (novedades y cierre mensual)**.
 
 ## Comandos
 
@@ -34,6 +37,7 @@ python manage.py migrate
 python manage.py cargar_piloto --password una-clave   # datos de ejemplo
 python manage.py sincronizar_permisos                 # tras agregar modelos
 python manage.py generar_horario 1 --segundos 60      # generar un horario
+python manage.py cargar_catalogo_licencias            # régimen de San Luis
 python manage.py runserver
 pytest
 ```
@@ -83,6 +87,11 @@ instituciones expone datos laborales de otra escuela.
 - Las dependencias pesadas (OR-Tools, WeasyPrint) se importan dentro de la
   función que las usa y degradan con un mensaje claro: el sistema tiene que
   poder desplegarse en un hospedaje chico.
+- El parte diario **no se guarda**: se calcula cruzando el horario vigente con
+  licencias y coberturas (`asistencia.parte`). Solo se guardan las novedades
+  del día, y quien tiene licencia aprobada ni siquiera aparece para marcar.
+- Una licencia **no obliga a cubrir**: la decisión (suplente o alumnos libres)
+  se registra como `Cobertura`, incluido el caso de no cubrir.
 
 ## Decisiones tomadas
 

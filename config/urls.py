@@ -3,6 +3,7 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from asistencia import views as asistencia_views
 from core import views as core_views
 from horarios import views as horarios_views
 from legajos import views as legajos_views
@@ -24,6 +25,8 @@ urlpatterns = [
         horarios_views.grilla_docente,
         name="horario_docente",
     ),
+    path("asistencia/", asistencia_views.parte_del_dia, name="parte_diario"),
+    path("asistencia/resumen/", asistencia_views.resumen_del_mes, name="resumen_asistencia"),
     path("cuentas/", include("django.contrib.auth.urls")),
     path("admin/", admin.site.urls),
 ]

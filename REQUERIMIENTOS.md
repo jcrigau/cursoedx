@@ -1,7 +1,7 @@
 # SGE — Sistema de Gestión para Secretaría Escolar
 
-> **Documento de requerimientos** · Versión 1.5 · Agosto 2026
-> Estado de implementación: **F0, F1 y F2 listas**; siguiente F3 (asistencia y licencias).
+> **Documento de requerimientos** · Versión 1.6 · Agosto 2026
+> Estado de implementación: **F0 a F3 listas**; siguiente F4 (novedades y cierre).
 > Nombre comercial: a definir (SGE es nombre de trabajo).
 > Este es un documento vivo: se actualiza a medida que se toman decisiones. Sirve como fuente de verdad para las sesiones de desarrollo con Claude Code.
 
@@ -341,7 +341,7 @@ Cada fase termina con algo usable en la escuela real. Sirven como unidades de tr
 | **F0 · Fundaciones** ✅ | Proyecto Django, Docker, CI, auth, multi-tenant, roles con permisos, auditoría, ABM de institución, niveles, ciclo lectivo, cuatrimestres, turnos, grilla horaria, cursos, materias y plan de estudios. | **Hecha.** Estructura del colegio cargada. |
 | **F1 · RRHH** ✅ | Legajos, cargos con fuente de pago y situación de revista, documentación con vencimientos y alertas, títulos, servicios anteriores, cómputo de antigüedad (períodos simultáneos contados una sola vez) y **certificación de servicios en PDF**. | **Hecha.** Reemplaza las carpetas y planillas de legajos. |
 | **F2 · Horarios** ✅ | DDJJ de disponibilidad, versiones por período con publicación y archivo, **generador CP-SAT** (minimiza los días de asistencia de cada docente, evita huecos, respeta las DDJJ), asignaciones bloqueables para regenerar el resto, grillas por curso y por docente imprimibles. | **Hecha.** El horario se arma con el sistema. |
-| **F3 · Asistencia y licencias** | Parte diario autogenerado, carga por secretaría, catálogo de licencias, flujo solicitud→aprobación, topes, **suplencias con o sin cobertura**. | Se abandona el parte en papel como registro maestro. |
+| **F3 · Asistencia y licencias** ✅ | Parte diario autogenerado desde el horario vigente (descuenta licencias, suma suplentes y muestra las horas sin cubrir), carga por secretaría, catálogo de licencias por artículo con topes anuales, por caso y consecutivos, prórroga con aval, flujo de aprobación, **coberturas con o sin suplente** y resumen mensual. | **Hecha.** Se abandona el parte en papel como registro maestro. |
 | **F4 · Novedades y cierre** | Motor de compilación, separación contralor/interno, pre-cierre y cierre auditable, export Excel con mapeo al Sheet del liquidador, PDF, checklist "informada", acceso del contador. | El fin de mes baja de días a minutos. |
 | **F5 · Portal docente (PWA)** | Ver horario y legajo, avisar inasistencia, solicitar licencia con adjunto; **fichaje con geolocalización** (objetivo declarado). | Docentes autogestionan; asistencia en tiempo real. |
 | **F6 · Producto SaaS** | Onboarding de nuevas escuelas, configuración por jurisdicción, prefill de Google Forms / API Sheets, branding, planes y facturación, landing comercial. | Se puede vender a otra institución. |

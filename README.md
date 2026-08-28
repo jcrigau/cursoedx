@@ -35,7 +35,12 @@ alcance, módulos, modelo de datos, arquitectura y roadmap por fases.
   del plan sin choques, minimizando los días que cada docente debe asistir.
   Grillas por curso y por docente, imprimibles.
 
-Próxima fase: **F3 — Asistencia y licencias**.
+- **F3 · Asistencia y licencias** — catálogo de licencias por artículo con sus
+  topes, flujo de aprobación, decisión de cobertura (suplente o alumnos libres),
+  **parte diario** que se arma solo desde el horario vigente descontando
+  licencias y sumando suplentes, y resumen mensual por persona y planilla.
+
+Próxima fase: **F4 — Novedades y cierre mensual**.
 
 ## Poner en marcha
 
@@ -76,6 +81,8 @@ core/         instituciones, usuarios, roles, aislamiento multi-escuela, auditor
 estructura/   niveles, ciclo lectivo, períodos, turnos, grilla horaria, cursos, materias
 legajos/      personal, cargos, documentación, títulos, antigüedad, certificaciones
 horarios/     DDJJ, versiones de horario, generador con OR-Tools, grillas
+licencias/    tipos por artículo, licencias, suplencias y coberturas
+asistencia/   parte diario, registros y resumen mensual
 templates/    plantillas HTML
 static/       hoja de estilos propia (sin build ni CDN)
 ```

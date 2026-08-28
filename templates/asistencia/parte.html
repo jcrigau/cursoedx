@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block titulo %}Parte del {{ fecha|date:"d/m/Y" }} · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Parte diario</h1>
+  <p class="subtitulo">{{ fecha|date:"l j \d\e F \d\e Y"|capfirst }}</p>
+
+  <form method="get" class="navegacion-fecha no-imprimir">
+    <a class="ficha" href="?fecha={{ dia_anterior|date:'Y-m-d' }}">← Día anterior</a>
+    <input type="date" name="fecha" value="{{ fecha|date:'Y-m-d' }}" onchange="this.form.submit()">
+    <a class="ficha" href="?fecha={{ dia_siguiente|date:'Y-m-d' }}">Día siguiente →</a>
+    {% if fecha != hoy %}<a class="ficha" href="?fecha={{ hoy|date:'Y-m-d' }}">Hoy</a>{% endif %}
+  </form>
+
+  {% if parte.aviso %}
+    <div class="aviso warning">{{ parte.aviso }}</div>
+  {% endif %}
+
+  {% if pendientes %}
+    <div class="aviso warning">
+      Hay licencias sin resolver la cobertura:
+      {% for licencia, cargo in pendientes %}
+        {{ licencia.legajo.nombre_completo }} ({{ cargo.descripcion }}){% if not forloop.last %};{% endif %}
+      {% endfor %}.
+      Hay que designar suplente o dejar constancia de que el curso queda sin clase.
+    </div>
+  {% endif %}
+
+  {% if parte.sin_cobertura %}
+    <h2>Horas sin docente</h2>
+    <table class="datos">
+      <thead>
+        <tr><th>Hora</th><th>Curso</th><th>Materia</th><th>Titular ausente</th><th>Situación</th></tr>
+      </thead>
+      <tbody>
+        {% for hora in parte.sin_cobertura %}
+          <tr>
+            <td>{{ hora.hora_inicio|time:"H:i" }}</td>
+            <td>{{ hora.curso }}</td>
+            <td>{{ hora.materia }}</td>
+            <td>{{ hora.titular.nombre_completo }}</td>
+            <td>
+              {% if hora.decidida %}
+                <span class="etiqueta">alumnos libres</span>
+              {% else %}
+                <span class="etiqueta alerta">sin resolver</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  {% if parte.lineas %}
+    <h2>Personal que debe asistir ({{ parte.lineas|length }})</h2>
+    <form method="post">
+      {% csrf_token %}
+      <input type="hidden" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
+      <table class="datos">
+        <thead>
+          <tr>
+            <th>Docente</th><th>Horas</th><th>Cursos</th>
+            <th>Estado</th><th>Horas no dadas</th><th>Observaciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for linea in parte.lineas %}
+            <tr>
+              <td>
+                <strong>{{ linea.legajo.nombre_completo }}</strong>
+                {% if linea.es_suplente %}
+                  <div class="secundario">suplente de {{ linea.titular.nombre_completo }}</div>
+                {% endif %}
+              </td>
+              <td>{{ linea.horas }}</td>
+              <td class="secundario">{{ linea.detalle_cursos }}</td>
+              <td>
+                <select name="estado_{{ linea.legajo.id }}" {% if not puede_cargar %}disabled{% endif %}>
+                  <option value="">Presente</option>
+                  {% for valor, etiqueta in estados %}
+                    {% if valor != "PRESENTE" %}
+                      <option value="{{ valor }}"
+                        {% if linea.registro.estado == valor %}selected{% endif %}>{{ etiqueta }}</option>
+                    {% endif %}
+                  {% endfor %}
+                </select>
+              </td>
+              <td>
+                <input type="number" min="1" max="20" style="width:4.5rem"
+                       name="horas_{{ linea.legajo.id }}"
+                       value="{{ linea.registro.horas_afectadas|default_if_none:'' }}"
+                       {% if not puede_cargar %}disabled{% endif %}>
+              </td>
+              <td>
+                <input type="text" name="obs_{{ linea.legajo.id }}"
+                       value="{{ linea.registro.observaciones|default:'' }}"
+                       placeholder="{% if linea.licencia %}{{ linea.licencia.tipo }}{% endif %}"
+                       {% if not puede_cargar %}disabled{% endif %}>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% if puede_cargar %}
+        <p class="acciones">
+          <button type="submit" class="boton">Guardar el parte</button>
+          <span class="pie">
+            Lo que quede sin marcar se toma como presente. Las ausencias de quien
+            tenga licencia aprobada se justifican solas.
+          </span>
+        </p>
+      {% endif %}
+    </form>
+  {% endif %}
+{% endblock %}

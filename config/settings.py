@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     "estructura",
     "legajos",
     "horarios",
+    "licencias",
+    "asistencia",
 ]
 
 MIDDLEWARE = [

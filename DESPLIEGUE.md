@@ -17,6 +17,27 @@ la web, no hay que administrar nada y queda con una dirección pública del tipo
 
 ## A · PythonAnywhere paso a paso
 
+### 0. Antes de empezar: ¿cuenta nueva o la que ya tenés?
+
+**Cuenta gratuita:** permite **una sola aplicación web**. Si ya tenés otro
+proyecto publicado ahí, el SGE no entra como segunda app.
+
+**Cuenta paga:** suele permitir más de una. La forma de saberlo sin adivinar es
+entrar a la pestaña **Web**: si aparece *Add a new web app*, hay lugar. Dos
+detalles a tener en cuenta antes de decidir:
+
+- El subdominio `usuario.pythonanywhere.com` es **uno por cuenta**; las apps
+  adicionales normalmente necesitan un dominio propio. Verificalo al agregarla.
+- Las dos apps **comparten disco, CPU y base de datos** de la misma cuenta. El
+  generador de horarios consume CPU del mismo pozo que el otro proyecto, y un
+  descuido de espacio afecta a los dos.
+
+**Para un sitio de prueba temporal** —que es de lo que se trata hasta que el
+sistema entre en funcionamiento— lo más conveniente es una **cuenta gratuita
+nueva, dedicada al SGE**: no cuesta nada, no toca los recursos de otro
+proyecto, y el día que se descarta no queda nada colgando. Después, para el uso
+real de una escuela, se pasa a un plan pago o a un servidor propio (opción B).
+
 ### 1. Crear la cuenta
 
 En https://www.pythonanywhere.com → **Pricing & signup** → *Create a Beginner
@@ -63,8 +84,10 @@ SGE_DATABASE_URL=
 SGE_TIME_ZONE=America/Argentina/San_Luis
 ```
 
-`SGE_DATABASE_URL` vacío usa SQLite, que para una prueba alcanza y sobra. Si
-preferís MySQL (pestaña **Databases**), poné:
+`SGE_DATABASE_URL` vacío usa SQLite, que para una prueba alcanza y sobra —y es
+lo que corresponde en la cuenta gratuita, porque desde 2026 MySQL quedó
+reservado a los planes pagos para las cuentas nuevas. Si tenés MySQL
+disponible (pestaña **Databases**), poné:
 `SGE_DATABASE_URL=mysql://USUARIO:CLAVE@USUARIO.mysql.pythonanywhere-services.com/USUARIO$sge`
 e instalá el conector con `pip install mysqlclient`.
 
@@ -129,8 +152,9 @@ Y **Reload** en la pestaña Web.
 ### Qué esperar de la cuenta gratuita
 
 - La app se "duerme" si no se usa y tarda unos segundos en despertar.
-- Hay que entrar una vez cada tres meses a apretar un botón para que no se
-  desactive (PythonAnywhere avisa por mail).
+- Una app sin uso **se desactiva al mes** (antes eran tres): hay que entrar y
+  apretar el botón que la reactiva. PythonAnywhere avisa por mail.
+- Solo una aplicación web por cuenta (ver el punto 0).
 - Los PDF pueden salir como página web si faltan librerías del sistema: se
   imprimen desde el navegador con **Ctrl+P → Guardar como PDF**, y el documento
   es el mismo.

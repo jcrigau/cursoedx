@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block titulo %}Resumen de {{ nombre_mes|date:"F Y" }} · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Resumen del mes</h1>
+  <p class="subtitulo">{{ nombre_mes|date:"F \d\e Y"|capfirst }}</p>
+
+  <form method="get" class="navegacion-fecha no-imprimir">
+    <select name="mes" onchange="this.form.submit()">
+      {% for numero in meses %}
+        <option value="{{ numero }}" {% if numero == mes %}selected{% endif %}>{{ numero }}</option>
+      {% endfor %}
+    </select>
+    <select name="anio" onchange="this.form.submit()">
+      {% for numero in anios %}
+        <option value="{{ numero }}" {% if numero == anio %}selected{% endif %}>{{ numero }}</option>
+      {% endfor %}
+    </select>
+  </form>
+
+  {% if resumenes %}
+    <p class="subtitulo">
+      {{ total_personas }} persona{{ total_personas|pluralize }} con novedades para informar.
+    </p>
+    <table class="datos">
+      <thead>
+        <tr>
+          <th>Docente</th><th>Planilla</th><th>Licencias</th>
+          <th>Inasist. justificadas</th><th>Injustificadas</th>
+          <th>Tardanzas</th><th>Días sin goce</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for resumen in resumenes %}
+          <tr>
+            <td>
+              <strong>{{ resumen.legajo.nombre_completo }}</strong>
+              {% if resumen.es_mixto %}<div class="secundario">personal mixto</div>{% endif %}
+            </td>
+            <td>{{ resumen.detalle_fuentes|default:"—" }}</td>
+            <td class="secundario">
+              {% for item in resumen.licencias %}
+                {{ item.tipo }} · {{ item.dias }} día{{ item.dias|pluralize }}
+                {% if not item.con_goce %}<span class="etiqueta alerta">sin goce</span>{% endif %}
+                {% if not forloop.last %}<br>{% endif %}
+              {% empty %}—{% endfor %}
+            </td>
+            <td>{{ resumen.ausencias_justificadas }}</td>
+            <td>
+              {% if resumen.ausencias_injustificadas %}
+                <span class="etiqueta alerta">{{ resumen.ausencias_injustificadas }}</span>
+              {% else %}0{% endif %}
+            </td>
+            <td>{{ resumen.tardanzas }}</td>
+            <td>{{ resumen.dias_sin_goce }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="pie">
+      Este resumen es la base de las novedades que se le pasan a quien liquida.
+      La compilación y el cierre del período llegan en la próxima fase.
+    </p>
+  {% else %}
+    <div class="aviso">No hay novedades registradas en este mes.</div>
+  {% endif %}
+{% endblock %}

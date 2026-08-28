@@ -53,7 +53,27 @@ def inicio(request):
         "cursos": cursos.select_related("nivel", "turno", "esquema_horario")[:12],
     }
     contexto.update(_resumen_de_personal(institucion))
+    contexto.update(_situacion_del_dia(institucion))
     return render(request, "core/inicio.html", contexto)
+
+
+def _situacion_del_dia(institucion) -> dict:
+    """Lo que la secretaría necesita ver hoy: licencias, coberturas y clases."""
+    from datetime import date
+
+    from asistencia.parte import coberturas_pendientes, parte_diario
+    from licencias.models import licencias_vigentes, suplencias_por_vencer
+
+    hoy = date.today()
+    parte = parte_diario(institucion, hoy)
+    return {
+        "licencias_en_curso": licencias_vigentes(institucion, hoy).count(),
+        "horas_sin_cobertura": len(parte.sin_cobertura),
+        "coberturas_pendientes": len(coberturas_pendientes(institucion, hoy)),
+        "suplencias_por_vencer": list(suplencias_por_vencer(institucion)),
+        "parte_sin_registrar": parte.sin_registrar if parte.hay_clases else 0,
+        "hay_clases_hoy": parte.hay_clases,
+    }
 
 
 def _resumen_de_personal(institucion) -> dict:
