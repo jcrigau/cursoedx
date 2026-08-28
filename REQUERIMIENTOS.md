@@ -1,6 +1,6 @@
 # SGE — Sistema de Gestión para Secretaría Escolar
 
-> **Documento de requerimientos** · Versión 1.1 · Agosto 2026
+> **Documento de requerimientos** · Versión 1.2 · Agosto 2026
 > Nombre comercial: a definir (SGE es nombre de trabajo).
 > Este es un documento vivo: se actualiza a medida que se toman decisiones. Sirve como fuente de verdad para las sesiones de desarrollo con Claude Code.
 
@@ -170,10 +170,11 @@ Los roles se asignan **por institución** (una misma persona podría ser docente
 **Funciones:**
 
 - **Catálogo de tipos de licencia** configurable: código, denominación, referencia normativa (artículo/inciso del régimen de San Luis en el primer cliente), con/sin goce de haberes, **si impacta en haberes** (descuento/pago adicional), tope de días por año/por caso, si requiere certificado, si es de corto o largo tratamiento.
-- **Precarga del catálogo con los motivos y artículos reales en uso** (tabla de la secretaría, ver Anexo A.3): Art. 76 Enfermedad/Estudio médico, Art. 83 Maternidad, Art. 91 Atención de Familiar, Art. 93.1 Matrimonio (12 días), Art. 93.2 Fallecimiento Familiar, Art. 93.3 Nacimiento de Hijo (padre), Art. 93.4 Razones Particulares, Art. 94.1 Exámenes, Art. 97 Congresos y Jornadas, Art. 98 Deportiva, Art. 100 Cargo de Mayor Jerarquía, Art. 107 Binomio Madre-Hijo, Licencias Especiales (art. variable, en general las únicas **sin goce**), Relevo de funciones. En general las licencias son **con goce** ("muy pocas sin goce, se pagan"). Falta confirmar topes de días por tipo (§8). Tardanza/Retiro anticipado figura en la tabla actual pero se registra por el módulo de asistencia (M3), no como licencia.
+- **Precarga del catálogo con los motivos y artículos reales en uso** (tabla de la secretaría, ver Anexo A.3): Art. 76 Enfermedad/Estudio médico, Art. 83 Maternidad, Art. 91 Atención de Familiar, Art. 93.1 Matrimonio (12 días), Art. 93.2 Fallecimiento Familiar, Art. 93.3 Nacimiento de Hijo (padre), Art. 93.4 Razones Particulares, Art. 94.1 Exámenes, Art. 97 Congresos y Jornadas, Art. 98 Deportiva, Art. 100 Cargo de Mayor Jerarquía, Art. 107 Binomio Madre-Hijo, Licencias Especiales (art. variable, en general las únicas **sin goce**), Relevo de funciones. En general las licencias son **con goce** ("muy pocas sin goce, se pagan"). Los topes principales ya están relevados en A.3; faltan solo los de los motivos menos usados. Tardanza/Retiro anticipado figura en la tabla actual pero se registra por el módulo de asistencia (M3), no como licencia.
 - Solicitud de licencia: por secretaría (v1) o por el docente desde el portal (fase 2), sobre uno o más cargos del legajo, con período desde/hasta, adjuntos (certificados médicos) y observaciones.
 - Flujo de estados: solicitada → aprobada/rechazada (directivo) → en curso → finalizada; prórrogas/extensiones encadenadas.
-- Control automático de **topes** por tipo y año, con aviso al cargar.
+- Control automático de **topes** al cargar: por año, por caso y por **días consecutivos** (p. ej. Exámenes: 20/año y máx. 5 seguidos), con aviso cuando la solicitud excede el saldo.
+- **Extensiones con aval:** los tipos que lo permiten (p. ej. Enfermedad más allá de los 60 días anuales, con **junta médica**) se registran como prórroga encadenada con el respaldo adjunto.
 - Impacto automático: los días de licencia justifican las ausencias del período y generan la **novedad** correspondiente (con o sin goce).
 
 ### M5 · Suplencias
@@ -277,7 +278,7 @@ erDiagram
 **Campos clave por entidad (resumen):**
 
 - `CARGO`: tipo (cargo_base | horas_catedra | horas_reloj), unidad_hora (40' | 60'), horas_semanales, situacion_revista (titular | provisional | suplente), **fuente_pago (subvencionado | interno)**, fecha_alta, fecha_baja, resolucion (número, fecha, adjunto).
-- `TIPO_LICENCIA`: codigo, nombre, referencia_normativa, con_goce (bool), tope_dias_anual, requiere_certificado.
+- `TIPO_LICENCIA`: codigo, nombre, referencia_normativa, con_goce (bool), impacta_haberes (bool), tope_dias_anual, tope_dias_por_caso, tope_dias_consecutivos, extensible_con_aval (p. ej. junta médica), requiere_certificado.
 - `DDJJ_DISPONIBILIDAD`: legajo, periodo_academico, bloques_no_disponibles, observaciones, archivo adjunto.
 - `HORARIO_VERSION`: periodo_academico, estado (borrador | vigente | historico), vigencia_desde, vigencia_hasta.
 - `ASISTENCIA_REGISTRO`: legajo, cargo, fecha, estado (presente | ausente | tarde | retiro | parcial), horas_afectadas, licencia_id (nullable → injustificada si es null y ausente).
@@ -351,7 +352,7 @@ Cada fase termina con algo usable en la escuela real. Sirven como unidades de tr
 ## 8. Preguntas abiertas (resolver antes o durante cada fase)
 
 1. ~~**Planilla del liquidador**~~ → **RESUELTA**: formulario y planilla relevados, ver Anexo A. Queda pendiente para el prefill v2 obtener los **entry IDs** del Google Form (se sacan del link "Obtener enlace completado previamente" del formulario). *(F4 v2)*
-2. ~~**Régimen de licencias**~~ → **RESUELTA en lo esencial**: catálogo con artículos relevado de la tabla de la secretaría (Anexo A.3); en general con goce, muy pocas sin goce (las "Especiales"). Queda confirmar **topes de días por tipo** al precargar el catálogo en F3.
+2. ~~**Régimen de licencias**~~ → **RESUELTA**: catálogo con artículos y topes relevado (Anexo A.3) — Enfermedad 60/año + junta médica, Maternidad 6 meses, Atención Familiar 30, R. Particulares 5, Exámenes 20/año máx. 5 seguidos, Matrimonio 12. Solo restan topes de motivos poco usados (Fallecimiento, Nacimiento, Congresos, Deportiva, Binomio), a completar al precargar en F3.
 3. ~~**Formato del contralor estatal**~~ → **RESUELTA**: no existe rendición propia de la escuela al estado — el liquidador arma la Planilla Oficial y la Interna; la escuela solo informa ausencias, altas y bajas. Un formato estatal directo solo se agregaría para otra escuela cliente (F6).
 4. ~~**Estructura horaria**~~ → **RESUELTA en lo esencial**: turno mañana; hora cátedra 40' (docentes) y hora reloj 60' (preceptores); horas de a pares (2×40') con recreos variables; almuerzo según el curso. Queda cargar la grilla real (horarios exactos por día/curso) como configuración al implementar F0, con la grilla de la escuela a la vista.
 5. ~~**POF**~~ → **RESUELTA**: no hay documento POF único — la planta consta por **resoluciones individuales por cargo**; se modelan como datos y adjunto de cada cargo (M1).
@@ -409,24 +410,24 @@ El formulario repite la misma sección de campos para cada nivel (en primario "C
 
 Cruce de dos fuentes reales: la tabla **"Motivos Licencia"** que usa la secretaría (con los artículos del régimen aplicable) y la frecuencia observada en las 693 respuestas del form. Los nombres se normalizan (el form tiene typos como "Jonadas" y "Cargo Mayo"). Regla general: **casi todas con goce**; las "Especiales" son las únicas habitualmente sin goce. Topes de días por tipo: a confirmar al precargar (§8.2).
 
-| Motivo | Artículo | Frecuencia relevada | Notas |
-|---|---|---|---|
-| Enfermedad / Estudio médico | Art. 76 | muy alta (~180) | Distinguir corto y largo tratamiento. |
-| Maternidad | Art. 83 | baja (~5) | |
-| Atención de Familiar | Art. 91 | alta (~95) | |
-| Matrimonio | Art. 93.1 | baja (~2) | 12 días según observaciones. |
-| Fallecimiento Familiar | Art. 93.2 | baja (~6) | |
-| Nacimiento de Hijo (padre) | Art. 93.3 | — | No apareció en el período relevado. |
-| Razones Particulares | Art. 93.4 | alta (~100) | En el form: "R. Particulares" / "Particular". |
-| Exámenes | Art. 94.1 | media (~18) | En el uso actual incluye exámenes médicos y de estudio. |
-| Congresos y Jornadas | Art. 97 | alta (~80) | |
-| Deportiva | Art. 98 | — | |
-| Cargo de Mayor Jerarquía | Art. 100 | baja (~4) | |
-| Binomio Madre-Hijo | Art. 107 | — | |
-| Licencias Especiales | variable | media (~15) | En el form: "Lic. Esp. sin Goce de Haberes" → **sin goce**, impacta haberes. |
-| Estudios / Investigación | a confirmar | media (~11) | Mapear al artículo correspondiente al precargar. |
-| Relevo de funciones | — | — | Situación especial de servicio, no una ausencia común. |
-| Tardanza / Retiro anticipado | — | — | Figura en la tabla actual, pero el sistema lo registra por asistencia (M3), no como licencia. |
+| Motivo | Artículo | Tope de días | Frecuencia | Notas |
+|---|---|---|---|---|
+| Enfermedad / Estudio médico | Art. 76 | **60/año**, extendibles por **junta médica** | muy alta (~180) | El exceso de 60 pasa a largo tratamiento con aval de junta. |
+| Maternidad | Art. 83 | **6 meses** | baja (~5) | |
+| Atención de Familiar | Art. 91 | **30/año** | alta (~95) | |
+| Matrimonio | Art. 93.1 | **12 por caso** | baja (~2) | |
+| Fallecimiento Familiar | Art. 93.2 | a confirmar | baja (~6) | |
+| Nacimiento de Hijo (padre) | Art. 93.3 | a confirmar | — | No apareció en el período relevado. |
+| Razones Particulares | Art. 93.4 | **5/año** | alta (~100) | En el form: "R. Particulares" / "Particular". |
+| Exámenes | Art. 94.1 | **20/año, máx. 5 consecutivos** | media (~18) | Requiere control de tope anual **y** de días seguidos. |
+| Congresos y Jornadas | Art. 97 | a confirmar | alta (~80) | |
+| Deportiva | Art. 98 | a confirmar | — | |
+| Cargo de Mayor Jerarquía | Art. 100 | mientras dure el otro cargo | baja (~4) | |
+| Binomio Madre-Hijo | Art. 107 | a confirmar | — | |
+| Licencias Especiales | variable | variable | media (~15) | En el form: "Lic. Esp. sin Goce de Haberes" → **sin goce**, impacta haberes. |
+| Estudios / Investigación | a confirmar | a confirmar | media (~11) | Mapear al artículo correspondiente al precargar. |
+| Relevo de funciones | — | — | — | Situación especial de servicio, no una ausencia común. |
+| Tardanza / Retiro anticipado | — | — | — | Figura en la tabla actual, pero el sistema lo registra por asistencia (M3), no como licencia. |
 
 ### A.4 Reglas derivadas del relevamiento
 
