@@ -112,6 +112,7 @@ def personal(request):
     """
     consulta = request.GET.get("q", "").strip()
     solo = request.GET.get("solo", "activos")
+    materia_id = request.GET.get("materia", "")
 
     personas = (
         Legajo.objects.del_contexto()
@@ -131,6 +132,22 @@ def personal(request):
             or contiene(legajo.cuil, consulta)
         ]
 
+    materias = list(Materia.objects.del_contexto().order_by("nombre"))
+    if materia_id.isdigit():
+        # La unión de lo que declaró y lo que dicta hoy: el mismo criterio que
+        # usa la búsqueda de reemplazos.
+        elegida = int(materia_id)
+        personas = [
+            legajo
+            for legajo in personas
+            if any(materia.pk == elegida for materia in legajo.materias_que_puede_dar.all())
+            or any(
+                cargo.materia_id == elegida
+                for cargo in legajo.cargos.all()
+                if cargo.fecha_baja is None
+            )
+        ]
+
     hoy = date.today()
     de_licencia = {licencia.legajo_id for licencia in licencias_vigentes(request.institucion, hoy)}
     for legajo in personas:
@@ -148,6 +165,8 @@ def personal(request):
             "personas": personas,
             "consulta": consulta,
             "solo": solo,
+            "materias": materias,
+            "materia_elegida": int(materia_id) if materia_id.isdigit() else None,
             "puede_editar": request.user.has_perm("legajos.change_legajo"),
         },
     )

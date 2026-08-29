@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load materias %}
 
 {% block titulo %}Personal · SGE{% endblock %}
 
@@ -17,6 +18,14 @@
       <input type="radio" name="solo" value="todos" {% if solo != "activos" %}checked{% endif %}>
       Todos
     </label>
+    <select name="materia" aria-label="Filtrar por materia" onchange="this.form.submit()">
+      <option value="">Todas las materias</option>
+      {% for materia in materias %}
+        <option value="{{ materia.pk }}" {% if materia.pk == materia_elegida %}selected{% endif %}>
+          {{ materia.nombre }}
+        </option>
+      {% endfor %}
+    </select>
     <button type="submit" class="boton">Filtrar</button>
     <span style="margin-left:auto" class="acciones-fila">
       <a class="ficha" href="{% url 'exportar_personal' %}">Bajar Excel</a>
@@ -52,7 +61,9 @@
             </td>
             <td>
               {% for materia in legajo.materias_que_puede_dar.all %}
-                <span class="etiqueta materia">{{ materia.nombre }}</span>
+                <a class="etiqueta materia {{ materia|color_materia }}"
+                   href="?materia={{ materia.pk }}&solo={{ solo }}"
+                   title="Ver a todos los que pueden dar {{ materia.nombre }}">{{ materia.nombre }}</a>
               {% empty %}
                 <span class="secundario">sin declarar</span>
               {% endfor %}

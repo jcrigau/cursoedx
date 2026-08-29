@@ -117,3 +117,33 @@ class TestLaFicha:
         client.force_login(secretaria)
 
         assert client.get(reverse("ficha_persona", args=[ajena.pk])).status_code == 404
+
+
+class TestFiltroPorMateria:
+    def test_filtra_por_lo_declarado(self, client, con_personal, secretaria):
+        con_personal["persona"].materias_que_puede_dar.add(con_personal["quimica"])
+        Legajo.objects.create(
+            institucion=con_personal["institucion"],
+            apellido="Otro",
+            nombre="Docente",
+            cuil="20-30000002-1",
+            fecha_ingreso=date.today(),
+        )
+        client.force_login(secretaria)
+
+        cuerpo = client.get(
+            reverse("personal"), {"materia": con_personal["quimica"].pk}
+        ).content.decode()
+
+        assert "Benítez" in cuerpo
+        assert "Otro" not in cuerpo
+
+    def test_el_color_es_estable_por_materia(self):
+        from legajos.templatetags.materias import color_materia
+
+        class Falsa:
+            pk = 11
+
+        assert color_materia(Falsa()) == color_materia(Falsa())
+        assert color_materia(Falsa()) == "tono-3"
+        assert color_materia(None) == ""

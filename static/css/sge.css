@@ -915,3 +915,26 @@ a.boton:hover { color: #fff; text-decoration: none; }
 .dias-del-mes { margin-top: 0.25rem; font-size: 0.8rem; }
 .dias-del-mes summary { cursor: pointer; color: var(--acento); font-weight: 600; }
 .dias-del-mes ul { margin: 0.25rem 0 0; padding-left: 1rem; color: var(--tinta-suave); }
+
+/* --- Un color por materia ----------------------------------------------- */
+/* Ocho tonos verificados para daltonismo (y el nombre siempre escrito: el
+   color ayuda a encontrar, nunca es la única seña). El tono se asigna por la
+   materia y no cambia: Química es del mismo color en todas las pantallas. */
+
+.etiqueta.materia {
+  border: 1px solid var(--tono, var(--borde));
+  background: color-mix(in srgb, var(--tono, var(--borde)) 12%, #ffffff);
+  color: color-mix(in srgb, var(--tono, var(--tinta)) 72%, #000000);
+}
+
+.etiqueta.materia.tono-0 { --tono: #2a78d6; }
+.etiqueta.materia.tono-1 { --tono: #eb6834; }
+.etiqueta.materia.tono-2 { --tono: #1baf7a; }
+.etiqueta.materia.tono-3 { --tono: #eda100; }
+.etiqueta.materia.tono-4 { --tono: #e87ba4; }
+.etiqueta.materia.tono-5 { --tono: #008300; }
+.etiqueta.materia.tono-6 { --tono: #4a3aa7; }
+.etiqueta.materia.tono-7 { --tono: #e34948; }
+
+a.etiqueta.materia { text-decoration: none; cursor: pointer; }
+a.etiqueta.materia:hover { filter: brightness(0.94); }

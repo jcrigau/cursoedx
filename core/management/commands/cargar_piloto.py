@@ -330,6 +330,7 @@ class Command(BaseCommand):
         if opciones["con_planta"]:
             self._crear_planta_docente(institucion, niveles[TipoNivel.SECUNDARIO], ciclo)
         self._crear_licencias(institucion)
+        self._declarar_materias(institucion)
         docente = self._dar_acceso_al_portal(institucion, opciones)
 
         self.stdout.write("")
@@ -846,6 +847,52 @@ class Command(BaseCommand):
                     observaciones="No hubo suplente disponible.",
                 )
             self._informar("Licencia", corta, True)
+
+    def _declarar_materias(self, institucion):
+        """Cada docente queda habilitado en lo que ya dicta.
+
+        Es el piso obvio: quien da Química puede dar Química. Sobre eso, a
+        algunos se les agrega una materia afín que hoy no dictan, para que la
+        búsqueda de reemplazos tenga el caso interesante: el habilitado sin
+        horas. En una escuela real esto se completa a mano, en Personal.
+        """
+        from legajos.models import Cargo
+
+        con_materia = (
+            Cargo.objects.filter(institucion=institucion, materia__isnull=False)
+            .select_related("legajo", "materia")
+            .order_by("id")
+        )
+        declaradas = 0
+        for cargo in con_materia:
+            if not cargo.legajo.materias_que_puede_dar.filter(pk=cargo.materia_id).exists():
+                cargo.legajo.materias_que_puede_dar.add(cargo.materia)
+                declaradas += 1
+
+        # Materias afines: quien da una ciencia queda habilitado en la otra.
+        afinidades = [
+            ("Biología", "Química"),
+            ("Química", "Biología"),
+            ("Historia", "Geografía"),
+            ("Geografía", "Historia"),
+        ]
+        materias = {
+            materia.nombre: materia for materia in Materia.objects.filter(institucion=institucion)
+        }
+        for da, tambien in afinidades:
+            origen, extra = materias.get(da), materias.get(tambien)
+            if origen is None or extra is None:
+                continue
+            docente = (
+                Legajo.objects.filter(institucion=institucion, cargos__materia=origen)
+                .order_by("apellido")
+                .first()
+            )
+            if docente is not None:
+                docente.materias_que_puede_dar.add(extra)
+
+        if declaradas:
+            self.stdout.write(f"  + {declaradas} habilitaciones de materia declaradas")
 
     def _dar_acceso_al_portal(self, institucion, opciones):
         """Le crea usuario al primer docente, para poder probar el portal."""
