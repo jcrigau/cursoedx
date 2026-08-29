@@ -18,12 +18,35 @@
   {% endif %}
 
   {% if pendientes %}
-    <div class="aviso warning">
-      Hay licencias sin resolver la cobertura:
-      {% for licencia, cargo in pendientes %}
-        {{ licencia.legajo.nombre_completo }} ({{ cargo.descripcion }}){% if not forloop.last %};{% endif %}
-      {% endfor %}.
-      Hay que designar suplente o dejar constancia de que el curso queda sin clase.
+    <div class="aviso warning no-imprimir">
+      <strong>Licencias sin resolver la cobertura.</strong>
+      Hay que designar suplente, o dejar constancia de que el curso queda sin clase.
+      <table class="datos compacta">
+        <tbody>
+          {% for licencia, cargo in pendientes %}
+            <tr>
+              <td>
+                <strong>{{ licencia.legajo.nombre_completo }}</strong>
+                <div class="secundario">{{ cargo.descripcion }} · {{ licencia.tipo }}</div>
+              </td>
+              <td class="acciones-fila">
+                {% if puede_cubrir %}
+                  <a class="ficha" href="{% url 'admin:licencias_cobertura_add' %}?licencia={{ licencia.pk }}&cargo={{ cargo.pk }}&tipo=SUPLENTE&fecha_inicio={{ licencia.fecha_inicio|date:'Y-m-d' }}&fecha_fin={{ licencia.fecha_fin|date:'Y-m-d' }}">
+                    Designar suplente
+                  </a>
+                  <form method="post" action="{% url 'dejar_sin_cobertura' %}" style="display:inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="licencia" value="{{ licencia.pk }}">
+                    <input type="hidden" name="cargo" value="{{ cargo.pk }}">
+                    <input type="hidden" name="siguiente" value="{{ request.get_full_path }}">
+                    <button type="submit" class="ficha como-boton">Dejar sin cubrir</button>
+                  </form>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
   {% endif %}
 
@@ -77,6 +100,12 @@
                   <div class="secundario">
                     <span class="etiqueta alerta">avisó que no viene</span>
                     {{ linea.aviso.get_motivo_display|lower }}
+                    {% if puede_cubrir %}
+                      <a class="enlace-accion no-imprimir"
+                         href="{% url 'admin:licencias_licencia_add' %}?legajo={{ linea.legajo.pk }}&fecha_inicio={{ fecha|date:'Y-m-d' }}&fecha_fin={{ fecha|date:'Y-m-d' }}">
+                        cargar la licencia →
+                      </a>
+                    {% endif %}
                   </div>
                 {% elif linea.fichada %}
                   <div class="secundario">

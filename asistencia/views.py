@@ -38,6 +38,9 @@ def parte_del_dia(request):
     parte = parte_diario(request.institucion, fecha)
     contexto = {
         "parte": parte,
+        # Decidir coberturas y cargar licencias es del directivo y de
+        # secretaría; el resto ve el parte pero no lo resuelve desde acá.
+        "puede_cubrir": request.user.has_perm("licencias.add_cobertura"),
         "fecha": fecha,
         "dia_anterior": fecha - timedelta(days=1),
         "dia_siguiente": fecha + timedelta(days=1),

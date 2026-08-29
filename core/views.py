@@ -68,6 +68,7 @@ def inicio(request):
     # El liquidador entra a descargar lo que ya se cerró: el estado de la
     # escuela —personal, documentación, cursos— no es asunto suyo.
     contexto["ve_la_escuela"] = _trabaja_en_la_escuela(request.user, institucion)
+    contexto["puede_cubrir"] = request.user.has_perm("licencias.change_cobertura")
     contexto["pendientes"] = pendientes_de(
         institucion,
         request.user,

@@ -571,3 +571,21 @@ tr.hora-con_novedad td:first-child { box-shadow: inset 3px 0 0 #b58020; }
 }
 
 .menu .volver-al-inicio:hover { background: rgba(255, 255, 255, 0.26); }
+
+/* Acciones dentro de una fila: resolver sin salir de la pantalla donde
+   apareció el problema. */
+.acciones-fila { white-space: nowrap; }
+.acciones-fila form { display: inline; }
+.acciones-fila > * + * { margin-left: 0.35rem; }
+.acciones-fila input[type="date"] { padding: 0.25rem 0.4rem; font-size: 0.85rem; }
+
+.ficha.como-boton {
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+table.datos.compacta { margin: 0.5rem 0 0; background: transparent; }
+table.datos.compacta td { border-color: rgba(0, 0, 0, 0.06); }
+
+.enlace-accion { font-weight: 600; white-space: nowrap; }

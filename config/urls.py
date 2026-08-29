@@ -7,6 +7,7 @@ from asistencia import views as asistencia_views
 from core import views as core_views
 from horarios import views as horarios_views
 from legajos import views as legajos_views
+from licencias import views as licencias_views
 from novedades import views as novedades_views
 from portal import views as portal_views
 
@@ -30,6 +31,21 @@ urlpatterns = [
     ),
     path("asistencia/", asistencia_views.parte_del_dia, name="parte_diario"),
     path("asistencia/cursos/", asistencia_views.cursos_del_dia, name="cursos_del_dia"),
+    path(
+        "licencias/sin-cobertura/",
+        licencias_views.dejar_sin_cobertura,
+        name="dejar_sin_cobertura",
+    ),
+    path(
+        "licencias/suplencia/<int:pk>/extender/",
+        licencias_views.extender_suplencia,
+        name="extender_suplencia",
+    ),
+    path(
+        "licencias/suplencia/<int:pk>/cesar/",
+        licencias_views.cesar_suplencia,
+        name="cesar_suplencia",
+    ),
     path("asistencia/resumen/", asistencia_views.resumen_del_mes, name="resumen_asistencia"),
     path("novedades/", novedades_views.periodos, name="novedades_periodos"),
     path("novedades/<int:anio>/<int:mes>/", novedades_views.detalle, name="novedades_detalle"),

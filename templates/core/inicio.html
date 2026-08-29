@@ -92,7 +92,12 @@
 
   {% if suplencias_por_vencer %}
     <table class="datos">
-      <thead><tr><th>Suplente</th><th>Cargo</th><th>Termina</th><th>Titular</th></tr></thead>
+      <thead>
+        <tr>
+          <th>Suplente</th><th>Cargo</th><th>Termina</th><th>Titular</th>
+          {% if puede_cubrir %}<th class="no-imprimir">Resolver</th>{% endif %}
+        </tr>
+      </thead>
       <tbody>
         {% for cobertura in suplencias_por_vencer %}
           <tr>
@@ -100,10 +105,30 @@
             <td>{{ cobertura.cargo.descripcion }}</td>
             <td>{{ cobertura.fecha_fin|date:"d/m/Y" }}</td>
             <td class="secundario">{{ cobertura.cargo.legajo.nombre_completo }}</td>
+            {% if puede_cubrir %}
+              <td class="acciones-fila no-imprimir">
+                <form method="post" action="{% url 'extender_suplencia' cobertura.pk %}" style="display:inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="siguiente" value="{{ request.get_full_path }}">
+                  <input type="date" name="hasta" value="{{ cobertura.licencia.fecha_fin|date:'Y-m-d' }}"
+                         aria-label="Extender hasta">
+                  <button type="submit" class="ficha como-boton">Extender</button>
+                </form>
+                <form method="post" action="{% url 'cesar_suplencia' cobertura.pk %}" style="display:inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="siguiente" value="{{ request.get_full_path }}">
+                  <button type="submit" class="ficha como-boton">Cesar hoy</button>
+                </form>
+              </td>
+            {% endif %}
           </tr>
         {% endfor %}
       </tbody>
     </table>
+    <p class="pie no-imprimir">
+      Extender corre también la baja del cargo del suplente. Cesar la registra
+      hoy, y esa baja aparece sola al compilar el mes.
+    </p>
   {% endif %}
 
   {% if documentos_vencidos or documentos_por_vencer %}
