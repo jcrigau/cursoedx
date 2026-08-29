@@ -211,8 +211,8 @@
       <span class="detalle">Y qué no hace, que es igual de importante</span></li>
     <li>Entrar
       <span class="detalle">Usuarios, roles y qué ve cada uno</span></li>
-    <li>Dónde está cada cosa
-      <span class="detalle">El mapa de pantallas</span></li>
+    <li>El tablero, y dónde está cada cosa
+      <span class="detalle">Cada puesto entra y ve lo suyo</span></li>
     <li>Puesta en marcha
       <span class="detalle">Lo que se carga una vez al año</span></li>
     <li>El personal
@@ -221,8 +221,8 @@
       <span class="detalle">De la disponibilidad al horario publicado</span></li>
     <li>Licencias y coberturas
       <span class="detalle">Quién falta y qué se hace con sus horas</span></li>
-    <li>El parte diario
-      <span class="detalle">La pantalla de todos los días</span></li>
+    <li>El día: el parte y los cursos
+      <span class="detalle">Las dos pantallas de todas las mañanas</span></li>
     <li>El cierre del mes
       <span class="detalle">Las novedades para la liquidación</span></li>
     <li>El portal del docente
@@ -351,6 +351,17 @@
   </p>
 </div>
 
+<div class="clave">
+  <span class="titulo">El color dice en qué escuela estás</span>
+  <p>
+    Cada institución tiene su color y su emblema, y con ellos se pinta el
+    encabezado de todas las pantallas mientras se trabaja en ella. La escuela
+    de prueba es <strong>naranja, con una naranja por emblema</strong>: si ves
+    ese color, lo que estás mirando no son los datos reales. Se configura en
+    <em>Administración → Instituciones → Identidad visual</em>.
+  </p>
+</div>
+
 <h2>Al pie de cada pantalla</h2>
 <p>
   Abajo de todo figura la versión del sistema, por ejemplo
@@ -359,27 +370,79 @@
   Haciendo clic ahí se abre una pantalla con más detalle.
 </p>
 
-<h1><span class="numero">3</span>Dónde está cada cosa</h1>
-<p class="bajada">El mapa de pantallas.</p>
+<h1><span class="numero">3</span>El tablero, y dónde está cada cosa</h1>
+<p class="bajada">Cada puesto entra y ve lo suyo.</p>
 
+<h2>Lo que tenés para resolver</h2>
 <p>
-  Arriba, en la barra oscura, están las tres pantallas del uso diario:
-  <strong>Parte diario</strong>, <strong>Resumen del mes</strong> y
-  <strong>Novedades</strong>. A la derecha, <strong>Administración</strong>:
-  ahí se carga y se edita todo lo demás.
+  La pantalla que aparece al entrar no es la misma para todos: muestra
+  <strong>lo que le toca a cada puesto</strong>, y cada línea lleva al lugar
+  exacto donde se resuelve. La idea es que nadie tenga que aprender el mapa del
+  sistema para hacer su trabajo.
 </p>
 
+<table>
+  <thead><tr><th>Puesto</th><th>Qué le aparece</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="camino">Dirección</td>
+      <td>Las licencias esperando aprobación —con el botón que las abre ya
+          filtradas— y las que están aprobadas pero sin decidir la cobertura.</td>
+    </tr>
+    <tr>
+      <td class="camino">Secretaría</td>
+      <td>Las horas que hoy quedan sin docente, las coberturas sin decidir,
+          quién falta marcar en el parte, la documentación vencida, y en qué
+          punto está el cierre del mes.</td>
+    </tr>
+    <tr>
+      <td class="camino">Liquidación</td>
+      <td>Los meses ya cerrados, listos para descargar. Nada más: el estado de
+          la escuela no es asunto suyo.</td>
+    </tr>
+    <tr>
+      <td class="camino">Docente</td>
+      <td>No pasa por acá: entra y va derecho a su portal.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="clave">
+  <span class="titulo">El pendiente del mes se va corriendo solo</span>
+  <p>
+    A la secretaría le dice, según corresponda, <em>«El mes está sin
+    compilar»</em>, después <em>«Novedades sin informar»</em>, y al final
+    <em>«El mes está sin cerrar»</em>. Es el mismo pendiente que avanza a
+    medida que se trabaja, así que alcanza con seguirlo.
+  </p>
+</div>
+
 <p>
-  La regla simple es esta: <em>lo que se hace todos los días está en la barra;
-  lo que se carga de vez en cuando está en Administración.</em>
+  Si no hay nada, dice <em>«Al día»</em>. El borde rojo marca lo que deja a un
+  curso sin clase o frena la liquidación; el otro color es trabajo normal.
 </p>
 
-<h2>Quiero hacer… ¿dónde voy?</h2>
+<h2>Volver al tablero</h2>
+<p>
+  Desde cualquier pantalla hay un botón para volver: en la barra de arriba dice
+  <strong>Inicio</strong>, y dentro del panel de administración,
+  <strong>← Volver al tablero</strong>. Es la maniobra más frecuente del día:
+  resolver algo y volver a ver qué queda.
+</p>
+
+<h2>El resto de las pantallas</h2>
+<p>
+  Arriba, en la barra oscura, está el trabajo diario. A la derecha,
+  <strong>Administración</strong>: ahí se carga y se edita todo lo demás. Cada
+  puesto ve solo los accesos que puede abrir.
+</p>
+
 <table>
   <thead>
     <tr><th>Quiero…</th><th>Voy a…</th></tr>
   </thead>
   <tbody>
+    <tr><td>Ver qué cursos se quedan sin clase hoy</td><td class="camino">Cursos de hoy</td></tr>
     <tr><td>Marcar quién faltó hoy</td><td class="camino">Parte diario</td></tr>
     <tr><td>Ver cuántas faltas lleva alguien este mes</td><td class="camino">Resumen del mes</td></tr>
     <tr><td>Preparar lo que se le manda al liquidador</td><td class="camino">Novedades</td></tr>
@@ -394,12 +457,11 @@
   </tbody>
 </table>
 
-<h2>El tablero de inicio</h2>
 <p>
-  La pantalla que aparece al entrar resume el día: cuántos están de licencia,
-  qué falta resolver, qué documentación está por vencer, y el estado de la
-  puesta en marcha. Es el lugar desde donde se detectan las cosas antes de que
-  se conviertan en problema.
+  Dentro de Administración, el <strong>menú de la izquierda</strong> tiene todo
+  lo que se carga, queda fijo mientras se recorre un listado largo, y arriba
+  tiene un buscador: escribir <em>licencia</em>, <em>curso</em> o
+  <em>cargo</em> deja a la vista solo lo que corresponde.
 </p>
 
 <h1><span class="numero">4</span>Puesta en marcha</h1>
@@ -677,8 +739,15 @@
   cargo</strong>. Se puede cubrir uno y otro no.
 </p>
 
-<h1><span class="numero">8</span>El parte diario</h1>
-<p class="bajada">La pantalla de todos los días.</p>
+<h1><span class="numero">8</span>El día: el parte y los cursos</h1>
+<p class="bajada">Las dos pantallas de todas las mañanas.</p>
+
+<p>
+  Son los mismos datos vistos de dos maneras. El <strong>parte</strong>
+  ordena por persona y responde «quién falta». <strong>Cursos de hoy</strong>
+  ordena por curso y responde «qué cursos se quedan sin clase, y a qué hora».
+  Salen del mismo cruce, así que nunca pueden decir cosas distintas.
+</p>
 
 <p>
   Es la pantalla que más se usa, y la que menos trabajo lleva. Se abre desde
@@ -728,6 +797,40 @@
   Arriba hay una barra para moverse de día: día anterior, día siguiente, un
   calendario para saltar a cualquier fecha, y un botón para volver a hoy. Sirve
   para completar un día que quedó pendiente.
+</p>
+
+<h2>Los cursos hoy</h2>
+<p>
+  Una tarjeta por curso, con sus horas, la materia y el docente que la da. Es
+  la mirada de preceptoría: de un vistazo se ve qué cursos hay que cubrir y a
+  qué hora. Arriba resume, por ejemplo, <em>«6 horas sin docente en 3
+  cursos»</em>.
+</p>
+
+<table>
+  <thead><tr><th>Color</th><th>Qué significa</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="camino">Rojo</td>
+      <td>Nadie da esa hora: licencia sin cubrir, licencia sin resolver, o el
+          docente marcado ausente en el parte. <strong>El curso se queda sin
+          clase.</strong></td>
+    </tr>
+    <tr>
+      <td class="camino">Color de la escuela</td>
+      <td>La cubre un suplente. Debajo figura a quién reemplaza.</td>
+    </tr>
+    <tr>
+      <td class="camino">Ámbar</td>
+      <td>Hay algo que mirar pero el curso tiene clase: una llegada tarde, un
+          retiro anticipado, o un aviso del portal todavía sin resolver.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>
+  Se actualiza al instante: si marcás una ausencia en el parte, esa hora cambia
+  de color acá.
 </p>
 
 <h2>El resumen del mes</h2>
@@ -921,6 +1024,21 @@
           tres es.</td>
     </tr>
     <tr>
+      <td>El tablero no me muestra lo que espero</td>
+      <td>Muestra lo del <strong>puesto</strong> de quien entró. Si falta algo,
+          revisá el rol en <em>Administración → Membresías</em>.</td>
+    </tr>
+    <tr>
+      <td>Un docente entra y va a parar al portal</td>
+      <td>Es a propósito: su trabajo está ahí. El tablero de la escuela no le
+          sirve.</td>
+    </tr>
+    <tr>
+      <td>Las pantallas están de otro color</td>
+      <td>Estás en otra escuela. El color y el emblema son de la institución
+          activa; el naranja con la naranja es la de prueba.</td>
+    </tr>
+    <tr>
       <td>Algo anda distinto que ayer</td>
       <td>Mirar la versión al pie de la pantalla, y compararla con la de la
           otra computadora. Casi siempre es eso.</td>
@@ -964,6 +1082,9 @@
     <tr><td class="camino">Cobertura</td>
         <td>Qué se hace con las horas de alguien de licencia: suplente
             designado, o sin cubrir.</td></tr>
+    <tr><td class="camino">Tablero</td>
+        <td>La pantalla de entrada. Muestra lo que tiene para resolver el
+            puesto de quien entró, con el link a donde se resuelve.</td></tr>
     <tr><td class="camino">Parte diario</td>
         <td>Quién tenía que estar hoy y qué pasó con cada uno. Se calcula, no
             se guarda.</td></tr>
