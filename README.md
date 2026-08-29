@@ -96,6 +96,16 @@ cp .env.example .env      # completar SGE_SECRET_KEY
 docker compose up --build
 ```
 
+## Versión
+
+La versión que está corriendo se ve al pie de cualquier pantalla, y con más
+detalle en **Estado del sistema** (`/sistema/`): revisión exacta del código,
+base de datos, y qué dependencias opcionales están instaladas. Desde la
+terminal, `python manage.py mostrar_version`. El historial está en
+[CHANGELOG.md](CHANGELOG.md).
+
+Es lo primero que conviene mirar cuando algo anda distinto en dos lugares.
+
 ## Desarrollo
 
 ```bash

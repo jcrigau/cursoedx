@@ -401,3 +401,16 @@ tr.informada td { opacity: 0.6; }
   font-size: 0.85rem;
   margin-top: 2.5rem;
 }
+
+/* Pie con la versión: presente en todas las pantallas, sin robar atención. */
+.pie-version {
+  max-width: 68rem;
+  margin: 3rem auto 1.5rem;
+  padding: 1rem 1.5rem 0;
+  border-top: 1px solid var(--borde);
+  color: var(--tinta-suave);
+  font-size: 0.8rem;
+}
+
+.pie-version a { color: inherit; text-decoration: none; }
+.pie-version a:hover { color: var(--acento); text-decoration: underline; }

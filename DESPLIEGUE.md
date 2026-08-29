@@ -152,9 +152,13 @@ pip install -r requirements.txt
 python manage.py migrate
 python manage.py collectstatic --noinput
 python manage.py sincronizar_permisos
+python manage.py mostrar_version   # confirmar qué quedó instalado
 ```
 
 Y **Reload** en la pestaña Web.
+
+Después del Reload, `/sistema/` muestra lo mismo desde el navegador. Si la
+revisión que figura ahí no es la que acabás de subir, el Reload no tomó.
 
 ### Qué esperar de la cuenta gratuita
 

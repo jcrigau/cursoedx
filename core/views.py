@@ -2,12 +2,14 @@
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from .middleware import CLAVE_SESION
+from .version import informacion
 
 
 @login_required
@@ -128,3 +130,21 @@ def cambiar_institucion(request):
     request.session[CLAVE_SESION] = elegida.pk
     messages.success(request, f"Trabajando en {elegida}.")
     return HttpResponseRedirect(destino)
+
+
+@login_required
+def estado_del_sistema(request):
+    """Qué versión está corriendo y con qué anda.
+
+    Es la pantalla que se mira antes de reportar un problema: dice la versión,
+    la revisión exacta del código y qué dependencias opcionales están
+    instaladas, que es de donde salen la mitad de las diferencias entre un
+    servidor y otro.
+
+    La ve quien entra al panel de administración —secretaría y directivo—:
+    dice con qué base corre y qué direcciones acepta, que no es información
+    para el resto.
+    """
+    if not request.user.is_staff:
+        raise PermissionDenied
+    return render(request, "core/sistema.html", {"sistema": informacion()})

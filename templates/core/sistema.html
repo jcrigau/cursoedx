@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block titulo %}Estado del sistema · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Estado del sistema</h1>
+  <p class="subtitulo">
+    Lo que hay que mirar antes de reportar un problema. Si el sistema está en
+    más de un lugar —el servidor y una PC—, comparar estas dos pantallas suele
+    explicar la diferencia.
+  </p>
+
+  <h2>Versión</h2>
+  <table class="datos">
+    <tbody>
+      <tr><th>Versión</th><td><strong>{{ sistema.version }}</strong> — {{ sistema.fase }}</td></tr>
+      <tr><th>Revisión del código</th><td><code>{{ sistema.revision }}</code></td></tr>
+      <tr><th>Fecha de esa revisión</th><td>{{ sistema.fecha_revision }}</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Dónde está corriendo</h2>
+  <table class="datos">
+    <tbody>
+      <tr><th>Base de datos</th><td>{{ sistema.base_de_datos }}</td></tr>
+      <tr><th>Direcciones habilitadas</th><td>{{ sistema.hosts_permitidos }}</td></tr>
+      <tr><th>Zona horaria</th><td>{{ sistema.zona_horaria }}</td></tr>
+      <tr>
+        <th>Modo</th>
+        <td>
+          {% if sistema.modo_depuracion %}
+            <span class="etiqueta alerta">depuración</span>
+            Muestra los errores en pantalla. No corresponde en un servidor con datos reales.
+          {% else %}
+            <span class="etiqueta">producción</span>
+          {% endif %}
+        </td>
+      </tr>
+      <tr><th>Django</th><td>{{ sistema.django }} sobre Python {{ sistema.python }}</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Funciones que dependen de librerías pesadas</h2>
+  <p class="pie">
+    Estas se pueden instalar o no según el hospedaje. Que falte alguna no rompe
+    nada: el sistema sigue andando con la alternativa que se indica.
+  </p>
+  <table class="datos">
+    <thead>
+      <tr><th>Librería</th><th>Para qué</th><th>Estado</th></tr>
+    </thead>
+    <tbody>
+      {% for dependencia in sistema.opcionales %}
+        <tr>
+          <td><strong>{{ dependencia.nombre }}</strong></td>
+          <td>{{ dependencia.para }}</td>
+          <td>
+            {% if dependencia.disponible %}
+              <span class="etiqueta">instalada</span>
+            {% else %}
+              <span class="etiqueta alerta">no está</span>
+              <div class="secundario">{{ dependencia.sin_ella }}</div>
+            {% endif %}
+          </td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}

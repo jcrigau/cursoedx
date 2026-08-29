@@ -32,6 +32,14 @@ código.
   congelado y reapertura, exportación a Excel/CSV/PDF y acceso del liquidador.
 - Siguiente: **F5 (portal docente)**.
 
+## Versionado
+
+`core/version.py` tiene el número; la minor sube al **terminar cada fase**, y
+se anota en `CHANGELOG.md` en el mismo commit. El 1.0 queda para cuando el
+sistema esté en uso diario en una escuela. La revisión de git se resuelve sola
+y degrada a «desconocida» si no hay repositorio: es un dato de diagnóstico y
+nunca puede tumbar una pantalla.
+
 ## Comandos
 
 ```bash

@@ -92,6 +92,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "core.context_processors.institucion_actual",
+                "core.context_processors.version_del_sistema",
             ],
         },
     },

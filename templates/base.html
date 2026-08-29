@@ -54,5 +54,13 @@
 
   {% block contenido %}{% endblock %}
 </main>
+
+<footer class="pie-version no-imprimir">
+  {% if user.is_staff %}
+    <a href="{% url 'estado_del_sistema' %}">{{ version_sge }}</a>
+  {% else %}
+    <span>{{ version_sge }}</span>
+  {% endif %}
+</footer>
 </body>
 </html>
