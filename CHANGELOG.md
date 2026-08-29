@@ -26,6 +26,14 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
 - **Manual de la secretaría** en PDF, generado desde el propio sistema
   (`generar_manual`), y **control de versiones** visible al pie de cada
   pantalla y en `/sistema/`.
+- **La semana que viene**, **la ficha de la persona**, y el **resumen del mes
+  abrible** día por día.
+- **El personal por planilla**: se baja el Excel, se corrige o se agregan
+  filas, y se vuelve a subir. El CUIL identifica; nada se borra por faltar.
+- **El resumen del día por correo** (`enviar_resumen_diario`, para programar
+  a las 7:00) y **el año nuevo copiado del anterior** (`abrir_ciclo`).
+- **Cabos sueltos**: los avisos viejos sin licencia cargada aparecen en el
+  tablero. **Lo último que pasó**: la bitácora, legible, en el inicio.
 - **«Cubrir ahora»**: desde cada hora en rojo, la lista de posibles reemplazos
   con filtros —está en la escuela, da la materia, disponible—, designación en
   un clic, y el aviso al suplente por email o WhatsApp.

@@ -160,6 +160,21 @@ Y **Reload** en la pestaña Web.
 Después del Reload, `/sistema/` muestra lo mismo desde el navegador. Si la
 revisión que figura ahí no es la que acabás de subir, el Reload no tomó.
 
+### El resumen diario por correo
+
+Con el correo configurado en el `.env` (las variables `SGE_EMAIL_*`), el
+sistema puede mandarle a secretaría y dirección el día por delante: quién
+falta, qué horas quedan sin cubrir, qué hay para aprobar.
+
+En PythonAnywhere: pestaña **Tasks** → *Create a new scheduled task*, a las
+**10:00 UTC** (las 7:00 de Argentina), con este comando:
+
+```
+cd /home/USUARIO/medguard/escolarapp && .venv/bin/python manage.py enviar_resumen_diario
+```
+
+Probalo primero a mano con `--probar`, que muestra el mensaje sin enviarlo.
+
 ### Qué esperar de la cuenta gratuita
 
 - La app se "duerme" si no se usa y tarda unos segundos en despertar.

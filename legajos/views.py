@@ -255,3 +255,65 @@ def ficha(request, pk: int):
             "puede_editar": request.user.has_perm("legajos.change_legajo"),
         },
     )
+
+
+@login_required
+@permission_required("legajos.view_legajo", raise_exception=True)
+def exportar_personal(request):
+    """Descarga la planta en Excel, lista para corregir y volver a subir."""
+    from io import BytesIO
+
+    from . import planilla
+
+    libro = planilla.exportar(request.institucion)
+    contenido = BytesIO()
+    libro.save(contenido)
+
+    registrar_auditoria(
+        AccionAuditada.EXPORTACION,
+        institucion=request.institucion,
+        usuario=request.user,
+        modelo="Legajo",
+        descripcion="Exportó la planilla del personal",
+    )
+    respuesta = HttpResponse(
+        contenido.getvalue(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    respuesta["Content-Disposition"] = 'attachment; filename="personal.xlsx"'
+    return respuesta
+
+
+@login_required
+@permission_required("legajos.add_legajo", raise_exception=True)
+def importar_personal(request):
+    """Sube la planilla corregida: actualiza, crea, y observa lo dudoso."""
+    from . import planilla
+
+    resultado = None
+    if request.method == "POST":
+        archivo = request.FILES.get("archivo")
+        if archivo is None:
+            messages.error(request, "Elegí el archivo .xlsx que descargaste de acá.")
+        else:
+            resultado = planilla.importar(request.institucion, archivo)
+            registrar_auditoria(
+                AccionAuditada.MODIFICACION,
+                institucion=request.institucion,
+                usuario=request.user,
+                modelo="Legajo",
+                descripcion=(
+                    f"Importó la planilla del personal: {resultado.creados} altas, "
+                    f"{resultado.actualizados} actualizados"
+                ),
+            )
+            if resultado.total:
+                messages.success(
+                    request,
+                    f"Listo: {resultado.creados} persona{'s' if resultado.creados != 1 else ''} "
+                    f"nueva{'s' if resultado.creados != 1 else ''} y "
+                    f"{resultado.actualizados} actualizada"
+                    f"{'s' if resultado.actualizados != 1 else ''}.",
+                )
+
+    return render(request, "legajos/importar.html", {"resultado": resultado})

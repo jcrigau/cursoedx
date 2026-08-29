@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block titulo %}Importar el personal · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>El personal, por planilla</h1>
+  <p class="subtitulo">Se baja la lista, se corrige en Excel, y se vuelve a subir.</p>
+
+  <div class="tarjeta">
+    <ol class="pasos">
+      <li><strong>1.</strong>&nbsp;
+        <a href="{% url 'exportar_personal' %}">Descargar la lista actual (.xlsx)</a> —
+        si la escuela está vacía, baja la planilla con los encabezados solos.
+      </li>
+      <li><strong>2.</strong>&nbsp;Corregí o agregá filas en Excel. La identidad es el
+        <strong>CUIL</strong>: con el mismo CUIL se actualiza, con uno nuevo se crea.
+      </li>
+      <li><strong>3.</strong>&nbsp;Subila acá abajo.</li>
+    </ol>
+
+    <form method="post" enctype="multipart/form-data" class="navegacion-fecha">
+      {% csrf_token %}
+      <input type="file" name="archivo" accept=".xlsx" required>
+      <button type="submit" class="boton">Importar</button>
+    </form>
+  </div>
+
+  <div class="aviso">
+    <strong>Lo que la importación nunca hace:</strong> no borra a nadie —una fila
+    que falta no es una baja; las bajas se hacen en el sistema, con su motivo— y
+    no toca los cargos: materia, curso, fuente de pago y situación de revista se
+    cargan acá adentro, donde cada campo valida.
+  </div>
+
+  {% if resultado %}
+    <h2>Resultado</h2>
+    <div class="grilla-indicadores">
+      <div class="tarjeta indicador">
+        <div class="numero">{{ resultado.creados }}</div>
+        <div class="rotulo">Personas nuevas</div>
+      </div>
+      <div class="tarjeta indicador">
+        <div class="numero">{{ resultado.actualizados }}</div>
+        <div class="rotulo">Actualizadas</div>
+      </div>
+      <div class="tarjeta indicador {% if resultado.observaciones %}pendiente{% endif %}">
+        <div class="numero">{{ resultado.observaciones|length }}</div>
+        <div class="rotulo">Observaciones</div>
+      </div>
+    </div>
+
+    {% if resultado.observaciones %}
+      <table class="datos">
+        <tbody>
+          {% for observacion in resultado.observaciones %}
+            <tr><td>{{ observacion }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <p class="pie">
+        Lo observado no se tocó: corregí esas filas en el Excel y volvé a subirlo.
+        Subir dos veces no duplica nada.
+      </p>
+    {% endif %}
+  {% endif %}
+{% endblock %}

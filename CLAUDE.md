@@ -53,6 +53,8 @@ python manage.py sincronizar_permisos                 # tras agregar modelos
 python manage.py generar_horario 1 --segundos 60      # generar un horario
 python manage.py cargar_catalogo_licencias            # régimen de San Luis
 python manage.py generar_manual                       # el manual de la secretaría en PDF
+python manage.py enviar_resumen_diario --probar      # el correo de las 7:00
+python manage.py abrir_ciclo 2027                    # el año nuevo, copiado del anterior
 python manage.py runserver
 pytest
 ```

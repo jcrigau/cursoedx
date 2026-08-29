@@ -22,6 +22,8 @@ urlpatterns = [
     ),
     path("sistema/", core_views.estado_del_sistema, name="estado_del_sistema"),
     path("personal/", legajos_views.personal, name="personal"),
+    path("personal/exportar/", legajos_views.exportar_personal, name="exportar_personal"),
+    path("personal/importar/", legajos_views.importar_personal, name="importar_personal"),
     path("personal/<int:pk>/", legajos_views.ficha, name="ficha_persona"),
     path("personal/<int:pk>/materias/", legajos_views.materias_de, name="materias_de"),
     path(
