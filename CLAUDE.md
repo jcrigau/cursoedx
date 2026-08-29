@@ -112,6 +112,13 @@ instituciones expone datos laborales de otra escuela.
 - La compilación es **idempotente**: cada novedad automática lleva
   `clave_origen`, así recompilar actualiza en vez de duplicar y no pisa lo
   cargado a mano ni lo ya congelado por un cierre.
+- El **cuadro por curso** (`asistencia.parte.cuadro_del_dia`) sale del mismo
+  cruce que el parte diario: son los mismos datos ordenados al revés —por curso
+  en vez de por persona— y por eso no pueden contradecirse. Si se toca uno, se
+  toca el otro.
+- El **color y el emblema son de la institución**, no del sistema: pintan las
+  pantallas mientras esa escuela está activa, y sin institución activa no se
+  aplica ninguno. Es lo que evita cargar datos reales en la escuela de prueba.
 - Las columnas del export viven en `novedades/exportar.py`: si otra escuela usa
   otra planilla, se cambia solo ahí.
 

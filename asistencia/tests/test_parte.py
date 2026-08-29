@@ -3,11 +3,12 @@
 Es la pantalla que la secretaría abre todas las mañanas, así que lo que se
 prueba acá es que el cruce salga bien: el titular de licencia no aparece, el
 suplente ocupa su lugar y las horas que nadie cubre quedan a la vista.
+
+La escuela con horario publicado y los ayudantes viven en ``conftest.py``,
+porque el cuadro por curso los usa igual.
 """
 
 from datetime import date, time, timedelta
-
-import pytest
 
 from asistencia.models import EstadoAsistencia, RegistroAsistencia
 from asistencia.parte import coberturas_pendientes, parte_diario, version_vigente
@@ -23,70 +24,9 @@ from horarios.tests.conftest import (
     designar,
 )
 from legajos.models import Legajo
-from licencias.models import Cobertura, EstadoLicencia, Licencia, TipoCobertura, TipoLicencia
+from licencias.models import Cobertura, TipoCobertura
 
-
-def fecha_con_clases(escuela, version) -> date:
-    """Una fecha del período en la que efectivamente hay clases.
-
-    No se puede fijar un día de antemano: el generador concentra las horas en
-    los días que le convienen, así que la fecha se deduce del horario generado.
-    """
-    dias = sorted({a.dia_semana for a in version.asignaciones.all()})
-    fecha = escuela["periodo"].fecha_inicio
-    while fecha.weekday() not in dias:
-        fecha += timedelta(days=1)
-    return fecha
-
-
-def fecha_sin_clases(escuela, version) -> date:
-    """Un día del período en el que no hay ninguna clase."""
-    dias = {a.dia_semana for a in version.asignaciones.all()}
-    fecha = escuela["periodo"].fecha_inicio
-    while fecha.weekday() in dias:
-        fecha += timedelta(days=1)
-    return fecha
-
-
-@pytest.fixture
-def con_horario_publicado(escuela):
-    """Una escuela con horario vigente: un curso, una materia, una docente."""
-    esquema = crear_esquema(escuela, horas_por_dia=4, dias=3)
-    curso = crear_curso(escuela, esquema)
-    materia = crear_materia(escuela, "Matemática")
-    crear_plan(curso, materia, 4)
-    docente = crear_docente(escuela, "Titular", 1)
-    cargo = designar(escuela, docente, materia, curso)
-
-    version = crear_version(escuela)
-    generar(version, Parametros(max_horas_dia_materia=4, segundos_limite=5))
-    version.publicar()
-
-    return {
-        "escuela": escuela,
-        "curso": curso,
-        "materia": materia,
-        "docente": docente,
-        "cargo": cargo,
-        "version": version,
-        "fecha": fecha_con_clases(escuela, version),
-        "fecha_libre": fecha_sin_clases(escuela, version),
-    }
-
-
-def dar_licencia(datos, desde=None, hasta=None):
-    escuela = datos["escuela"]
-    tipo = TipoLicencia.objects.create(
-        institucion=escuela["institucion"], nombre="Enfermedad", codigo="Art. 76"
-    )
-    return Licencia.objects.create(
-        institucion=escuela["institucion"],
-        legajo=datos["docente"],
-        tipo=tipo,
-        fecha_inicio=desde or datos["fecha"],
-        fecha_fin=hasta or datos["fecha"],
-        estado=EstadoLicencia.APROBADA,
-    )
+from .conftest import dar_licencia, fecha_con_clases
 
 
 class TestArmadoDelParte:

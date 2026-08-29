@@ -1,5 +1,7 @@
 """Modelos base: institución, usuarios, roles y auditoría."""
 
+from urllib.parse import quote
+
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.core.validators import RegexValidator
 from django.db import models
@@ -42,6 +44,11 @@ validador_cuit = RegexValidator(
     message="El CUIT/CUIL debe tener 11 dígitos (con o sin guiones).",
 )
 
+validador_color = RegexValidator(
+    regex=r"^#[0-9a-fA-F]{6}$",
+    message='El color va en hexadecimal de seis dígitos, por ejemplo "#c2560f".',
+)
+
 
 class Institucion(models.Model):
     """Una escuela. Es la raíz del aislamiento de datos del sistema."""
@@ -73,6 +80,25 @@ class Institucion(models.Model):
         help_text="Distancia máxima desde la escuela para considerar válida una fichada.",
     )
 
+    # Identidad visual. Con el sistema alojando varias escuelas, y con una de
+    # prueba conviviendo con la real, hay que poder ver de un vistazo dónde se
+    # está parado antes de cargar algo. Cuando no hay institución activa
+    # —el superusuario mirando algo que no es de ninguna escuela— no se aplica
+    # ningún color: la pantalla queda con el aspecto neutro del sistema.
+    color = models.CharField(
+        "color de la escuela",
+        max_length=7,
+        blank=True,
+        validators=[validador_color],
+        help_text='Hexadecimal, ej.: "#c2560f". Vacío deja el color del sistema.',
+    )
+    emblema = models.CharField(
+        "emblema",
+        max_length=4,
+        blank=True,
+        help_text="Un emoji que identifique a la escuela. Va en el encabezado y en la solapa.",
+    )
+
     activa = models.BooleanField("activa", default=True)
     creada_en = models.DateTimeField("creada en", auto_now_add=True)
 
@@ -83,6 +109,18 @@ class Institucion(models.Model):
 
     def __str__(self) -> str:
         return self.nombre_corto or self.nombre
+
+    @property
+    def icono_svg(self) -> str:
+        """El emblema como favicon, sin archivos ni pedidos al servidor."""
+        if not self.emblema:
+            return ""
+        emoji = quote(self.emblema)
+        return (
+            "data:image/svg+xml,"
+            "%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E"
+            f"%3Ctext y='.9em' font-size='90'%3E{emoji}%3C/text%3E%3C/svg%3E"
+        )
 
 
 class UsuarioManager(BaseUserManager):

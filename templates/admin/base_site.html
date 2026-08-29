@@ -1,0 +1,41 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% comment %}
+  El color y el emblema son de la escuela activa. Si no hay ninguna —el
+  superusuario mirando algo que no pertenece a una escuela en particular— no se
+  pinta nada y el panel queda con el aspecto neutro de siempre.
+{% endcomment %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/admin-sge.css' %}">
+  {% if institucion_actual.icono_svg %}
+    <link rel="icon" href="{{ institucion_actual.icono_svg }}">
+  {% endif %}
+  {% if institucion_actual.color %}
+    <style>
+      :root,
+      html[data-theme="light"],
+      html[data-theme="dark"] {
+        --primary: {{ institucion_actual.color }};
+        --secondary: {{ institucion_actual.color }};
+        --header-bg: {{ institucion_actual.color }};
+        --link-fg: {{ institucion_actual.color }};
+        --link-selected-fg: {{ institucion_actual.color }};
+        --default-button-bg: {{ institucion_actual.color }};
+      }
+    </style>
+  {% endif %}
+{% endblock %}
+
+{% block branding %}
+  <div id="site-name">
+    <a href="{% url 'admin:index' %}">
+      {% if institucion_actual.emblema %}{{ institucion_actual.emblema }} {% endif %}{{ site_header }}{% if institucion_actual %}<span class="escuela-actual">· {{ institucion_actual }}</span>{% endif %}
+    </a>
+  </div>
+  {% if user.is_anonymous %}{% include "admin/color_theme_toggle.html" %}{% endif %}
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

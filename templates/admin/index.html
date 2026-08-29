@@ -1,0 +1,89 @@
+{% extends "admin/base_site.html" %}
+{% load i18n log %}
+
+{% comment %}
+  Django reemplaza la portada del admin por una lista larga de todos los
+  modelos, y para eso esconde el menú lateral que sí muestra en el resto de las
+  pantallas. Acá se hace al revés: el menú lateral queda —así el admin se navega
+  igual en todos lados— y el centro se usa para lo que de verdad sirve al
+  entrar, que es ir al trabajo del día.
+{% endcomment %}
+
+{% block coltype %}colMS{% endblock %}
+{% block bodyclass %}{{ block.super }} dashboard{% endblock %}
+{% block nav-breadcrumbs %}{% endblock %}
+
+{% block content %}
+<div id="content-main">
+  <div class="portada-sge">
+    <p class="entrada">
+      El menú de la izquierda tiene todo lo que se carga y se edita. Estos son
+      los accesos al trabajo de todos los días.
+    </p>
+
+    <div class="accesos">
+      <a class="acceso" href="{% url 'cursos_del_dia' %}">
+        <span class="rotulo">Los cursos hoy</span>
+        <span class="detalle">Qué se dicta en cada hora y quién la da, curso por curso.</span>
+      </a>
+      <a class="acceso" href="{% url 'parte_diario' %}">
+        <span class="rotulo">Parte diario</span>
+        <span class="detalle">Quién tenía que venir y qué pasó con cada uno.</span>
+      </a>
+      <a class="acceso" href="{% url 'resumen_asistencia' %}">
+        <span class="rotulo">Resumen del mes</span>
+        <span class="detalle">Inasistencias, tardanzas y licencias acumuladas.</span>
+      </a>
+      <a class="acceso" href="{% url 'novedades_periodos' %}">
+        <span class="rotulo">Novedades</span>
+        <span class="detalle">El cierre mensual para el liquidador.</span>
+      </a>
+      <a class="acceso" href="{% url 'inicio' %}">
+        <span class="rotulo">Tablero</span>
+        <span class="detalle">La situación del día y lo que hay que resolver.</span>
+      </a>
+      <a class="acceso" href="{% url 'estado_del_sistema' %}">
+        <span class="rotulo">Estado del sistema</span>
+        <span class="detalle">Versión instalada y con qué está funcionando.</span>
+      </a>
+    </div>
+
+    <p class="pie-portada">
+      ¿Buscás algo puntual? El campo de arriba del menú filtra por nombre:
+      escribí <em>licencia</em>, <em>curso</em> o <em>cargo</em> y aparece solo
+      lo que corresponde.
+    </p>
+  </div>
+</div>
+{% endblock %}
+
+{% block sidebar %}
+<div id="content-related">
+  <div class="module" id="recent-actions-module">
+    <h2>{% translate 'Recent actions' %}</h2>
+    <h3>{% translate 'My actions' %}</h3>
+    {% get_admin_log 10 as admin_log for_user user %}
+    {% if not admin_log %}
+      <p>{% translate 'None available' %}</p>
+    {% else %}
+      <ul class="actionlist">
+        {% for entry in admin_log %}
+          <li class="{% if entry.is_addition %}addlink{% endif %}{% if entry.is_change %}changelink{% endif %}{% if entry.is_deletion %}deletelink{% endif %}">
+            {% if entry.is_deletion or not entry.get_admin_url %}
+              {{ entry.object_repr }}
+            {% else %}
+              <a href="{{ entry.get_admin_url }}">{{ entry.object_repr }}</a>
+            {% endif %}
+            <br>
+            {% if entry.content_type %}
+              <span class="mini quiet">{% filter capfirst %}{{ entry.content_type.name }}{% endfilter %}</span>
+            {% else %}
+              <span class="mini quiet">{% translate 'Unknown content' %}</span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

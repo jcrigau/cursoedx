@@ -10,13 +10,23 @@
   <link rel="apple-touch-icon" href="{% static 'portal/icono-192.png' %}">
   <link rel="stylesheet" href="{% static 'css/sge.css' %}">
   <link rel="stylesheet" href="{% static 'css/portal.css' %}">
+  {% if institucion_actual.color %}
+    <style>
+      :root {
+        --acento: {{ institucion_actual.color }};
+        --acento-claro: color-mix(in srgb, {{ institucion_actual.color }} 12%, #ffffff);
+      }
+    </style>
+  {% endif %}
 </head>
 <body class="portal">
 
 <header class="portal-barra">
   <div>
     <div class="saludo">{{ legajo.nombre|default:user.nombre }}</div>
-    <div class="escuela">{{ institucion_actual }}</div>
+    <div class="escuela">
+      {% if institucion_actual.emblema %}{{ institucion_actual.emblema }} {% endif %}{{ institucion_actual }}
+    </div>
   </div>
   <form method="post" action="{% url 'logout' %}">
     {% csrf_token %}

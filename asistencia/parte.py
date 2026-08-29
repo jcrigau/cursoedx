@@ -212,3 +212,151 @@ def coberturas_pendientes(institucion, fecha: date) -> list[Cobertura]:
             if cargo.id not in decididos:
                 pendientes.append((licencia, cargo))
     return pendientes
+
+
+# -- El día visto por curso ---------------------------------------------------
+#
+# El parte responde "quién tiene que venir hoy". Preceptoría necesita la otra
+# mirada: "qué pasa en cada curso, hora por hora". Son los mismos datos vistos
+# al revés, así que se arman del mismo cruce y no pueden contradecirse.
+
+
+class EstadoHora:
+    """Qué pasa con una hora de clase. El color de la pantalla sale de acá."""
+
+    NORMAL = "normal"
+    SUPLENTE = "suplente"
+    AUSENTE = "ausente"  # el docente no vino y nadie lo cubre
+    SIN_DOCENTE = "sin_docente"  # licencia que se decidió no cubrir
+    SIN_RESOLVER = "sin_resolver"  # licencia sin decidir la cobertura
+    SIN_DESIGNAR = "sin_designar"  # el horario dejó la hora sin docente
+    CON_NOVEDAD = "con_novedad"  # llegó tarde, se retiró antes
+
+    # Las que dejan al curso sin clase.
+    SIN_CLASE = {AUSENTE, SIN_DOCENTE, SIN_RESOLVER, SIN_DESIGNAR}
+
+
+@dataclass
+class HoraDelCurso:
+    """Una hora de un curso, con quién la da y qué pasó."""
+
+    hora_inicio: object
+    hora_fin: object
+    materia: str
+    docente: Legajo | None
+    estado: str
+    titular: Legajo | None = None  # cuando la cubre un suplente
+    nota: str = ""
+
+    @property
+    def sin_clase(self) -> bool:
+        return self.estado in EstadoHora.SIN_CLASE
+
+
+@dataclass
+class CuadroCurso:
+    """El día completo de un curso."""
+
+    curso: object
+    horas: list[HoraDelCurso] = field(default_factory=list)
+
+    @property
+    def sin_clase(self) -> int:
+        return sum(1 for hora in self.horas if hora.sin_clase)
+
+    @property
+    def tiene_problemas(self) -> bool:
+        return self.sin_clase > 0
+
+
+def cuadro_del_dia(institucion, fecha: date) -> list[CuadroCurso]:
+    """El día de cada curso, hora por hora, con el docente que la da."""
+    version = version_vigente(institucion, fecha)
+    if version is None:
+        return []
+
+    asignaciones = (
+        AsignacionHoraria.objects.filter(version=version, dia_semana=fecha.weekday())
+        .select_related("curso", "curso__nivel", "materia", "legajo", "cargo")
+        .order_by("curso__nivel__tipo", "curso__anio_estudio", "curso__division", "hora_inicio")
+    )
+
+    licencias = {
+        licencia.legajo_id: licencia for licencia in licencias_vigentes(institucion, fecha)
+    }
+    coberturas = {
+        cobertura.cargo_id: cobertura for cobertura in coberturas_vigentes(institucion, fecha)
+    }
+    registros = {
+        registro.legajo_id: registro
+        for registro in RegistroAsistencia.objects.filter(institucion=institucion, fecha=fecha)
+    }
+    avisados = set(
+        AvisoInasistencia.objects.filter(institucion=institucion, fecha=fecha)
+        .exclude(estado=EstadoAviso.ANULADO)
+        .values_list("legajo_id", flat=True)
+    )
+
+    cuadros: dict[int, CuadroCurso] = {}
+    for asignacion in asignaciones:
+        cuadro = cuadros.get(asignacion.curso_id)
+        if cuadro is None:
+            cuadro = CuadroCurso(curso=asignacion.curso)
+            cuadros[asignacion.curso_id] = cuadro
+        cuadro.horas.append(_hora_del_curso(asignacion, licencias, coberturas, registros, avisados))
+
+    return list(cuadros.values())
+
+
+def _hora_del_curso(asignacion, licencias, coberturas, registros, avisados) -> HoraDelCurso:
+    hora = HoraDelCurso(
+        hora_inicio=asignacion.hora_inicio,
+        hora_fin=asignacion.hora_fin,
+        materia=asignacion.materia.nombre,
+        docente=asignacion.legajo,
+        estado=EstadoHora.NORMAL,
+    )
+
+    if asignacion.legajo_id is None:
+        hora.estado = EstadoHora.SIN_DESIGNAR
+        hora.nota = "El horario no le asignó docente."
+        return hora
+
+    licencia = licencias.get(asignacion.legajo_id)
+    if licencia is not None:
+        cobertura = coberturas.get(asignacion.cargo_id)
+        if cobertura is not None and cobertura.tipo == TipoCobertura.SUPLENTE:
+            hora.docente = cobertura.suplente
+            hora.titular = asignacion.legajo
+            hora.estado = EstadoHora.SUPLENTE
+            hora.nota = str(licencia.tipo)
+            # Un suplente también puede faltar.
+            registro = registros.get(cobertura.suplente_id)
+            if registro is not None and registro.es_ausencia:
+                hora.estado = EstadoHora.AUSENTE
+                hora.nota = f"El suplente está {registro.get_estado_display().lower()}."
+            return hora
+
+        # Nadie da esa hora: el curso queda libre. El titular pasa a su
+        # lugar, para saber de quién eran las horas sin decir que las dio.
+        hora.estado = EstadoHora.SIN_DOCENTE if cobertura is not None else EstadoHora.SIN_RESOLVER
+        hora.titular = asignacion.legajo
+        hora.docente = None
+        hora.nota = str(licencia.tipo)
+        return hora
+
+    registro = registros.get(asignacion.legajo_id)
+    if registro is not None:
+        if registro.es_ausencia:
+            hora.estado = EstadoHora.AUSENTE
+            hora.nota = registro.observaciones or registro.get_estado_display()
+        else:
+            hora.estado = EstadoHora.CON_NOVEDAD
+            hora.nota = registro.get_estado_display()
+        return hora
+
+    if asignacion.legajo_id in avisados:
+        hora.estado = EstadoHora.CON_NOVEDAD
+        hora.nota = "Avisó que no venía."
+
+    return hora

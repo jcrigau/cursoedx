@@ -1,0 +1,60 @@
+/* Portada del admin: accesos al trabajo del día.
+   El listado completo de modelos vive en el menú lateral de Django, que en
+   esta pantalla queda visible igual que en el resto del panel. */
+
+.portada-sge { max-width: 52rem; }
+
+.portada-sge .entrada {
+  margin: 0 0 1.25rem;
+  color: var(--body-quiet-color);
+  font-size: 0.95rem;
+}
+
+.portada-sge .accesos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.75rem;
+}
+
+.portada-sge .acceso {
+  display: block;
+  padding: 0.85rem 1rem;
+  background: var(--body-bg);
+  border: 1px solid var(--hairline-color);
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.portada-sge .acceso:hover {
+  border-color: var(--link-fg);
+  box-shadow: 0 1px 2px rgba(22, 35, 46, 0.06), 0 4px 12px rgba(22, 35, 46, 0.04);
+}
+
+.portada-sge .rotulo {
+  display: block;
+  font-weight: 700;
+  color: var(--link-fg);
+  margin-bottom: 0.15rem;
+}
+
+.portada-sge .detalle {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--body-quiet-color);
+  line-height: 1.45;
+}
+
+.portada-sge .pie-portada {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--body-quiet-color);
+}
+
+/* En qué escuela se está trabajando, al lado de la marca del panel. */
+#branding .escuela-actual {
+  font-size: 0.72em;
+  font-weight: 400;
+  opacity: 0.85;
+  margin-left: 0.4em;
+}

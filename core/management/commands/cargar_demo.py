@@ -21,6 +21,7 @@ from django.core.management.base import BaseCommand, CommandError
 
 from asistencia.models import EstadoAsistencia, RegistroAsistencia
 from asistencia.parte import parte_diario
+from core.management.commands.cargar_piloto import NOMBRE_ESCUELA_DE_PRUEBA
 from core.models import Institucion, Usuario
 from core.tenancy import usar_institucion
 from estructura.models import PeriodoAcademico
@@ -84,7 +85,7 @@ class Command(BaseCommand):
             )
             self.stdout.write("")
 
-        institucion = Institucion.objects.filter(nombre="Instituto de ejemplo").first()
+        institucion = Institucion.objects.filter(nombre=NOMBRE_ESCUELA_DE_PRUEBA).first()
         if institucion is None:
             raise CommandError(
                 "No está la escuela de ejemplo. Corré primero «python manage.py cargar_piloto»."

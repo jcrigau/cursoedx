@@ -72,3 +72,36 @@ def test_el_estado_del_sistema_no_es_publico(client, db):
     )
     client.force_login(ajeno)
     assert client.get(reverse("estado_del_sistema")).status_code == 403
+
+
+class TestIdentidadVisual:
+    """El color y el emblema son de la escuela activa, no del sistema.
+
+    Es lo que evita cargar datos reales en la escuela de prueba: mientras se
+    trabaja en una, todas las pantallas están pintadas de su color. Sin escuela
+    activa —el superusuario mirando algo que no es de ninguna— no se pinta nada.
+    """
+
+    def test_el_color_de_la_escuela_se_aplica_a_la_pantalla(self, client, secretaria, institucion):
+        institucion.color = "#c2560f"
+        institucion.emblema = "🍊"
+        institucion.save()
+
+        client.force_login(secretaria)
+        cuerpo = client.get(reverse("inicio")).content.decode()
+
+        assert "--acento: #c2560f" in cuerpo
+        assert "🍊" in cuerpo
+
+    def test_sin_color_la_pantalla_queda_neutra(self, client, secretaria, institucion):
+        client.force_login(secretaria)
+        cuerpo = client.get(reverse("inicio")).content.decode()
+
+        assert "--acento:" not in cuerpo
+
+    def test_el_emblema_sirve_de_icono_sin_archivos(self, institucion):
+        institucion.emblema = "🍊"
+        assert institucion.icono_svg.startswith("data:image/svg+xml,")
+
+    def test_sin_emblema_no_hay_icono(self, institucion):
+        assert institucion.icono_svg == ""

@@ -15,6 +15,8 @@
   --ok: #2f6b3a;
   --sombra: 0 1px 2px rgba(22, 35, 46, 0.06), 0 4px 12px rgba(22, 35, 46, 0.04);
   --radio: 10px;
+  /* La barra superior toma el color de la escuela activa, si tiene. */
+  --barra: var(--tinta);
 }
 
 * { box-sizing: border-box; }
@@ -33,7 +35,7 @@ a { color: var(--acento); }
 /* Encabezado ------------------------------------------------------------ */
 
 .barra {
-  background: var(--tinta);
+  background: var(--barra);
   color: #fff;
   padding: 0.65rem 1.25rem;
   display: flex;
@@ -414,3 +416,88 @@ tr.informada td { opacity: 0.6; }
 
 .pie-version a { color: inherit; text-decoration: none; }
 .pie-version a:hover { color: var(--acento); text-decoration: underline; }
+
+/* --- El día visto por curso --------------------------------------------- */
+/* Una tarjeta por curso, en columnas: la escuela mira "qué pasa en 3°B",
+   no una tabla de 400 filas. El color marca la hora que queda sin clase. */
+
+.cursos-del-dia {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.curso-dia {
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  overflow: hidden;
+}
+
+.curso-dia.con-problemas { border-color: var(--alerta); }
+
+.curso-dia h2 {
+  margin: 0;
+  padding: 0.6rem 0.9rem;
+  font-size: 1rem;
+  background: var(--papel);
+  border-bottom: 1px solid var(--borde);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.curso-dia .etiqueta { font-size: 0.72rem; }
+
+table.horas-curso { margin: 0; font-size: 0.9rem; }
+table.horas-curso td { border-bottom: 1px solid var(--borde); vertical-align: top; }
+table.horas-curso tr:last-child td { border-bottom: 0; }
+
+.hora-reloj {
+  width: 3.4rem;
+  color: var(--tinta-suave);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.hora-docente { width: 42%; }
+.sin-nadie { color: var(--alerta); font-weight: 600; }
+
+/* Los estados. El rojo es "este curso no tiene clase a esa hora". */
+tr.hora-ausente,
+tr.hora-sin_docente,
+tr.hora-sin_resolver,
+tr.hora-sin_designar { background: var(--alerta-clara); }
+
+tr.hora-ausente td:first-child,
+tr.hora-sin_docente td:first-child,
+tr.hora-sin_resolver td:first-child,
+tr.hora-sin_designar td:first-child { box-shadow: inset 3px 0 0 var(--alerta); }
+
+tr.hora-suplente { background: var(--acento-claro); }
+tr.hora-suplente td:first-child { box-shadow: inset 3px 0 0 var(--acento); }
+
+tr.hora-con_novedad { background: #fdf6e8; }
+tr.hora-con_novedad td:first-child { box-shadow: inset 3px 0 0 #b58020; }
+
+.referencias { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.75rem 0 0; }
+.marca-hora {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  border: 1px solid var(--borde);
+}
+.marca-hora.suplente { background: var(--acento-claro); border-color: var(--acento); }
+.marca-hora.con_novedad { background: #fdf6e8; border-color: #b58020; }
+.marca-hora.ausente { background: var(--alerta-clara); border-color: var(--alerta); }
+
+/* El emblema de la escuela, al lado de la marca. Junto con el color, sirve
+   para saber de un vistazo en qué escuela se está trabajando —sobre todo para
+   no confundir la de prueba con la real. */
+.marca .emblema {
+  font-size: 1.15rem;
+  margin-right: 0.1rem;
+  line-height: 1;
+}

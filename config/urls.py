@@ -29,6 +29,7 @@ urlpatterns = [
         name="horario_docente",
     ),
     path("asistencia/", asistencia_views.parte_del_dia, name="parte_diario"),
+    path("asistencia/cursos/", asistencia_views.cursos_del_dia, name="cursos_del_dia"),
     path("asistencia/resumen/", asistencia_views.resumen_del_mes, name="resumen_asistencia"),
     path("novedades/", novedades_views.periodos, name="novedades_periodos"),
     path("novedades/<int:anio>/<int:mes>/", novedades_views.detalle, name="novedades_detalle"),

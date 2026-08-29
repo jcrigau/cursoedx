@@ -9,7 +9,7 @@ from django.shortcuts import render
 from django.urls import reverse
 
 from .models import EstadoAsistencia, RegistroAsistencia, buscar_licencia_que_justifica
-from .parte import coberturas_pendientes, parte_diario
+from .parte import coberturas_pendientes, cuadro_del_dia, parte_diario
 from .reportes import resumen_mensual
 
 PERMISO_VER = "asistencia.view_registroasistencia"
@@ -117,3 +117,28 @@ def resumen_del_mes(request):
         "total_personas": len(resumenes),
     }
     return render(request, "asistencia/resumen.html", contexto)
+
+
+@login_required
+@permission_required(PERMISO_VER, raise_exception=True)
+def cursos_del_dia(request):
+    """El día visto por curso: qué se dicta en cada hora y quién la da.
+
+    Es la mirada de preceptoría, la que el parte no da: el parte ordena por
+    persona y responde "quién falta"; esta ordena por curso y responde "qué
+    cursos se quedan sin clase, y a qué hora".
+    """
+    fecha = _fecha_pedida(request)
+    cuadros = cuadro_del_dia(request.institucion, fecha)
+
+    contexto = {
+        "fecha": fecha,
+        "hoy": date.today(),
+        "dia_anterior": fecha - timedelta(days=1),
+        "dia_siguiente": fecha + timedelta(days=1),
+        "cuadros": cuadros,
+        "horas_sin_clase": sum(cuadro.sin_clase for cuadro in cuadros),
+        "cursos_afectados": sum(1 for cuadro in cuadros if cuadro.tiene_problemas),
+        "parte": parte_diario(request.institucion, fecha) if not cuadros else None,
+    }
+    return render(request, "asistencia/cursos.html", contexto)

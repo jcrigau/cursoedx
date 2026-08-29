@@ -49,6 +49,10 @@ from licencias.models import (
     TipoLicencia,
 )
 
+# La escuela de ejemplo se llama así y se pinta de naranja a propósito: es la
+# señal de que lo que se está mirando no es la escuela real.
+NOMBRE_ESCUELA_DE_PRUEBA = "Escuela Orange"
+
 # Grilla del turno mañana: las horas van de a pares con recreos de duración
 # variable, y algunos cursos cortan para almorzar.
 GRILLA_MANIANA = [
@@ -289,11 +293,16 @@ class Command(BaseCommand):
         anio = opciones["anio"]
 
         institucion, creada = Institucion.objects.get_or_create(
-            nombre="Instituto de ejemplo",
+            nombre=NOMBRE_ESCUELA_DE_PRUEBA,
             defaults={
-                "nombre_corto": "Instituto",
+                "nombre_corto": "Orange",
                 "jurisdiccion": Jurisdiccion.SAN_LUIS,
                 "localidad": "San Luis",
+                # Naranja y una naranja: la escuela de ejemplo tiene que
+                # distinguirse de un vistazo de la real, para que nadie cargue
+                # datos verdaderos en la de prueba ni al revés.
+                "color": "#c2560f",
+                "emblema": "🍊",
                 # Ubicación aproximada, para poder probar el fichaje del portal.
                 "latitud": -33.301726,
                 "longitud": -66.337752,

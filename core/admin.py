@@ -92,13 +92,25 @@ class InlineInstitucional(MezclaInstitucional, admin.TabularInline):
 class InstitucionAdmin(admin.ModelAdmin):
     """Alta de escuelas: tarea del administrador del producto."""
 
-    list_display = ("nombre_corto", "nombre", "jurisdiccion", "localidad", "activa")
+    list_display = ("marca", "nombre", "jurisdiccion", "localidad", "activa")
     list_filter = ("activa", "jurisdiccion")
     search_fields = ("nombre", "nombre_corto", "cue", "cuit")
     fieldsets = (
         (None, {"fields": ("nombre", "nombre_corto", "activa")}),
         ("Identificación", {"fields": ("cue", "cuit", "jurisdiccion")}),
         ("Contacto", {"fields": ("domicilio", "localidad", "telefono", "email")}),
+        (
+            "Identidad visual",
+            {
+                "fields": ("color", "emblema"),
+                "description": (
+                    "Pintan el encabezado de todas las pantallas mientras se trabaja en "
+                    "esta escuela. Sirven para no confundirla con otra —sobre todo para "
+                    "distinguir la escuela de prueba de la real—. Vacíos dejan el aspecto "
+                    "neutro del sistema."
+                ),
+            },
+        ),
         (
             "Ubicación (para el fichaje del portal)",
             {
@@ -111,6 +123,10 @@ class InstitucionAdmin(admin.ModelAdmin):
             },
         ),
     )
+
+    @admin.display(description="escuela", ordering="nombre_corto")
+    def marca(self, obj):
+        return f"{obj.emblema} {obj.nombre_corto}".strip()
 
     def has_module_permission(self, request):
         return request.user.is_superuser

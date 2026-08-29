@@ -28,3 +28,4 @@ htmlcov/
 # Manual generado (se regenera con: python manage.py generar_manual)
 manual-sge*.pdf
 manual-sge*.html
+db.sqlite3*

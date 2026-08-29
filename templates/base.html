@@ -5,10 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block titulo %}SGE{% endblock %}</title>
   <link rel="stylesheet" href="{% static 'css/sge.css' %}">
+  {% if institucion_actual.icono_svg %}
+    <link rel="icon" href="{{ institucion_actual.icono_svg }}">
+  {% endif %}
+  {% if institucion_actual.color %}
+    {% comment %}
+      El color es de la escuela activa. Sin escuela activa —el superusuario
+      mirando algo que no es de ninguna— no se aplica ninguno y el sistema
+      queda con su aspecto neutro.
+    {% endcomment %}
+    <style>
+      :root {
+        --acento: {{ institucion_actual.color }};
+        --barra: {{ institucion_actual.color }};
+        /* El tono claro acompaña al color de la escuela. Si el navegador no
+           entiende color-mix, la línea se descarta y queda el del sistema. */
+        --acento-claro: color-mix(in srgb, {{ institucion_actual.color }} 12%, #ffffff);
+      }
+    </style>
+  {% endif %}
 </head>
 <body>
 <header class="barra">
-  <a href="{% url 'inicio' %}" class="marca">SGE<span>Gestión escolar</span></a>
+  <a href="{% url 'inicio' %}" class="marca">
+    {% if institucion_actual.emblema %}<span class="emblema">{{ institucion_actual.emblema }}</span>{% endif %}
+    SGE<span>Gestión escolar</span>
+  </a>
 
   {% if user.is_authenticated %}
     {% if instituciones_disponibles|length > 1 %}
@@ -30,6 +52,7 @@
 
     <nav class="menu">
       <a href="{% url 'parte_diario' %}">Parte diario</a>
+      <a href="{% url 'cursos_del_dia' %}">Cursos de hoy</a>
       <a href="{% url 'resumen_asistencia' %}">Resumen del mes</a>
       <a href="{% url 'novedades_periodos' %}">Novedades</a>
     </nav>

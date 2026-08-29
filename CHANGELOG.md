@@ -10,6 +10,25 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
 
 ---
 
+## Sin publicar
+
+- **Los cursos hoy**: el día visto por curso, hora por hora, con la materia y
+  el docente que la da. Las horas que quedan sin clase salen marcadas en rojo,
+  las cubiertas por un suplente en el color de la escuela. Sale del mismo cruce
+  que el parte diario, así que las dos pantallas no pueden contradecirse.
+- **Identidad visual por escuela**: color y emblema propios, que pintan el
+  encabezado de todas las pantallas mientras se trabaja en esa institución. La
+  escuela de ejemplo pasó a llamarse **Orange**, en naranja y con una naranja
+  por emblema, para que nunca se confunda con la real. Sin escuela activa no se
+  aplica ningún color.
+- **Portada del admin** con el mismo menú lateral que el resto del panel —
+  Django lo escondía solo ahí— y accesos directos al trabajo del día.
+- **Manual de la secretaría** en PDF, generado desde el propio sistema
+  (`generar_manual`), y **control de versiones** visible al pie de cada
+  pantalla y en `/sistema/`.
+- **cargar_demo**: deja la escuela de ejemplo en marcha, con horario publicado,
+  parte del día y mes de novedades compilado.
+
 ## 0.5.0 — Portal docente (F5)
 
 Cada docente entra con su usuario y ve lo suyo, sin pasar por secretaría.

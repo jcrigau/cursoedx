@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block titulo %}Cursos del {{ fecha|date:"d/m/Y" }} · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Los cursos hoy</h1>
+  <p class="subtitulo">{{ fecha|date:"l j \d\e F \d\e Y"|capfirst }}</p>
+
+  <form method="get" class="navegacion-fecha no-imprimir">
+    <a class="ficha" href="?fecha={{ dia_anterior|date:'Y-m-d' }}">← Día anterior</a>
+    <input type="date" name="fecha" value="{{ fecha|date:'Y-m-d' }}" onchange="this.form.submit()">
+    <a class="ficha" href="?fecha={{ dia_siguiente|date:'Y-m-d' }}">Día siguiente →</a>
+    {% if fecha != hoy %}<a class="ficha" href="?fecha={{ hoy|date:'Y-m-d' }}">Hoy</a>{% endif %}
+  </form>
+
+  {% if not cuadros %}
+    <div class="aviso warning">
+      {% if parte.aviso %}{{ parte.aviso }}{% else %}No hay clases este día.{% endif %}
+    </div>
+  {% else %}
+
+    {% if horas_sin_clase %}
+      <div class="aviso warning">
+        <strong>{{ horas_sin_clase }}</strong> hora{{ horas_sin_clase|pluralize }} sin docente
+        en {{ cursos_afectados }} curso{{ cursos_afectados|pluralize }}.
+        Están marcadas en rojo más abajo.
+      </div>
+    {% else %}
+      <div class="aviso">Todos los cursos tienen docente en todas sus horas.</div>
+    {% endif %}
+
+    <p class="referencias no-imprimir">
+      <span class="marca-hora suplente">suplente</span>
+      <span class="marca-hora con_novedad">con novedad</span>
+      <span class="marca-hora ausente">sin docente</span>
+    </p>
+
+    <div class="cursos-del-dia">
+      {% for cuadro in cuadros %}
+        <section class="curso-dia {% if cuadro.tiene_problemas %}con-problemas{% endif %}">
+          <h2>
+            {{ cuadro.curso }}
+            {% if cuadro.sin_clase %}
+              <span class="etiqueta alerta">{{ cuadro.sin_clase }} sin docente</span>
+            {% endif %}
+          </h2>
+          <table class="datos horas-curso">
+            <tbody>
+              {% for hora in cuadro.horas %}
+                <tr class="hora-{{ hora.estado }}">
+                  <td class="hora-reloj">{{ hora.hora_inicio|time:"H:i" }}</td>
+                  <td>
+                    <strong>{{ hora.materia }}</strong>
+                    {% if hora.nota %}<div class="secundario">{{ hora.nota }}</div>{% endif %}
+                  </td>
+                  <td class="hora-docente">
+                    {% if hora.docente %}
+                      {{ hora.docente.nombre_completo }}
+                      {% if hora.titular %}
+                        <div class="secundario">cubre a {{ hora.titular.nombre_completo }}</div>
+                      {% endif %}
+                    {% else %}
+                      <span class="sin-nadie">
+                        {% if hora.estado == "sin_designar" %}sin designar{% else %}curso libre{% endif %}
+                      </span>
+                      {% if hora.titular %}
+                        <div class="secundario">de {{ hora.titular.nombre_completo }}</div>
+                      {% endif %}
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </section>
+      {% endfor %}
+    </div>
+
+    <p class="pie no-imprimir">
+      Se arma con el horario vigente, las licencias del día y lo que esté
+      marcado en el <a href="{% url 'parte_diario' %}?fecha={{ fecha|date:'Y-m-d' }}">parte
+      diario</a>. Si marcás una ausencia allá, acá se ve al instante.
+    </p>
+  {% endif %}
+{% endblock %}
