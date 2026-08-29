@@ -420,12 +420,28 @@ class Command(BaseCommand):
                 self.stdout.write(f"    {paso}")
             self.stdout.write("")
 
+        self.stdout.write(self.style.MIGRATE_HEADING("Con qué entrar"))
+        for prefijo, rol, _nombre, _apellido in PUESTOS:
+            self.stdout.write(f"  {rol.label:24} {prefijo}@{dominio}")
+        self.stdout.write(f"  {'Docente (portal)':24} docente@{dominio}")
+        self.stdout.write("")
+
         if opciones["password"]:
-            self.stdout.write("Los cuatro entran con la contraseña que pasaste en --password.")
+            # Se repite la contraseña textual a propósito: es el dato que más
+            # se pierde entre el resto de la salida, y sin él no se entra.
+            self.stdout.write(
+                f"  Contraseña de los cuatro: {self.style.SUCCESS(opciones['password'])}"
+            )
+            self.stdout.write(
+                "  (es la que pasaste en --password; para cambiarla, volvé a correr "
+                "este comando con --sin-demo y otra)"
+            )
         else:
             self.stdout.write(
-                self.style.WARNING(
-                    "Sin --password no se puede iniciar sesión. Asigná una con "
-                    "«python manage.py changepassword EMAIL»."
+                self.style.ERROR(
+                    "  No pasaste --password, así que las contraseñas quedaron como "
+                    "estaban.\n"
+                    "  Para ponerles una: python manage.py cargar_escenario --sin-demo "
+                    "--password LA-QUE-QUIERAS"
                 )
             )
