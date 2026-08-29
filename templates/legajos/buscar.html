@@ -50,7 +50,7 @@
               {% endif %}
             </td>
             <td class="acciones-fila no-imprimir">
-              <a class="ficha" href="{% url 'admin:legajos_legajo_change' legajo.pk %}">Abrir el legajo</a>
+              <a class="ficha" href="{% url 'ficha_persona' legajo.pk %}">Abrir la ficha</a>
               <a class="ficha" href="{% url 'certificacion_servicios' legajo.pk %}">Certificar</a>
             </td>
           </tr>

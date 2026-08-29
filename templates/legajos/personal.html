@@ -59,10 +59,10 @@
               {% endif %}
             </td>
             <td class="acciones-fila no-imprimir">
+              <a class="ficha" href="{% url 'ficha_persona' legajo.pk %}">Ficha</a>
               {% if puede_editar %}
                 <a class="ficha" href="{% url 'materias_de' legajo.pk %}">Materias</a>
               {% endif %}
-              <a class="ficha" href="{% url 'admin:legajos_legajo_change' legajo.pk %}">Legajo</a>
             </td>
           </tr>
         {% endfor %}

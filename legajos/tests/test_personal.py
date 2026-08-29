@@ -90,3 +90,30 @@ class TestMateriasQuePuedeDar:
         )
 
         assert con_personal["persona"].materias_que_puede_dar.count() == 0
+
+
+class TestLaFicha:
+    def test_muestra_a_la_persona_completa(self, client, con_personal, secretaria):
+        persona = con_personal["persona"]
+        persona.materias_que_puede_dar.add(con_personal["quimica"])
+        client.force_login(secretaria)
+
+        cuerpo = client.get(reverse("ficha_persona", args=[persona.pk])).content.decode()
+
+        assert "Benítez" in cuerpo
+        assert "Química" in cuerpo
+        assert "Certificación de servicios" in cuerpo
+
+    def test_no_muestra_gente_de_otra_escuela(
+        self, client, con_personal, otra_institucion, secretaria
+    ):
+        ajena = Legajo.objects.create(
+            institucion=otra_institucion,
+            apellido="Ajena",
+            nombre="Otra",
+            cuil="20-99999999-1",
+            fecha_ingreso=date.today(),
+        )
+        client.force_login(secretaria)
+
+        assert client.get(reverse("ficha_persona", args=[ajena.pk])).status_code == 404

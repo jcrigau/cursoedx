@@ -192,3 +192,66 @@ def materias_de(request, pk: int):
         "legajos/materias.html",
         {"legajo": legajo, "materias": materias},
     )
+
+
+@login_required
+@permission_required("legajos.view_legajo", raise_exception=True)
+def ficha(request, pk: int):
+    """La persona completa, para leer.
+
+    El formulario del panel es para cargar; esta pantalla es para responder
+    «¿qué pasa con Herrera?» sin editar nada: sus datos, sus cargos, su año
+    —licencias, ausencias, suplencias que hizo— y su antigüedad, con los
+    botones de lo que se hace con una persona: certificar, habilitar materias,
+    editar.
+    """
+    legajo = get_object_or_404(
+        Legajo.objects.del_contexto().prefetch_related(
+            "cargos__materia", "cargos__curso", "materias_que_puede_dar", "documentos__tipo"
+        ),
+        pk=pk,
+    )
+    hoy = date.today()
+    inicio_del_anio = hoy.replace(month=1, day=1)
+
+    licencias = list(
+        legajo.licencias.filter(fecha_fin__gte=inicio_del_anio)
+        .select_related("tipo")
+        .order_by("-fecha_inicio")
+    )
+    ausencias = list(
+        legajo.asistencias.filter(fecha__gte=inicio_del_anio)
+        .select_related("licencia")
+        .order_by("-fecha")
+    )
+    suplencias_hechas = list(
+        legajo.suplencias.filter(fecha_fin__gte=inicio_del_anio)
+        .select_related("cargo__legajo", "cargo__materia", "cargo__curso")
+        .order_by("-fecha_inicio")
+    )
+    licencia_de_hoy = next(
+        (
+            licencia
+            for licencia in licencias
+            if licencia.estado == "APROBADA" and licencia.fecha_inicio <= hoy <= licencia.fecha_fin
+        ),
+        None,
+    )
+
+    return render(
+        request,
+        "legajos/ficha.html",
+        {
+            "legajo": legajo,
+            "hoy": hoy,
+            "licencia_de_hoy": licencia_de_hoy,
+            "cargos_vigentes": list(legajo.cargos_vigentes()),
+            "licencias": licencias,
+            "ausencias": ausencias,
+            "suplencias_hechas": suplencias_hechas,
+            "antiguedad_total": calcular_antiguedad(legajo),
+            "antiguedad_aca": antiguedad_en_la_institucion(legajo),
+            "documentos": list(legajo.documentos.all()),
+            "puede_editar": request.user.has_perm("legajos.change_legajo"),
+        },
+    )

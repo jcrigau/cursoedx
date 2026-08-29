@@ -56,6 +56,9 @@ class ResumenDocente:
     horas_no_dictadas: int = 0
     licencias: list[LicenciaDelMes] = field(default_factory=list)
     fuentes: set = field(default_factory=set)
+    # Los registros del parte que suman a cada número: son la respuesta a
+    # «¿3 inasistencias? ¿qué días?» sin salir de la pantalla.
+    registros: list = field(default_factory=list)
 
     @property
     def tiene_novedades(self) -> bool:
@@ -103,6 +106,7 @@ def resumen_mensual(institucion, anio: int, mes: int) -> list[ResumenDocente]:
 
     for registro in registros:
         actual = fila(registro.legajo)
+        actual.registros.append(registro)
         if registro.estado == EstadoAsistencia.AUSENTE:
             if registro.justificada:
                 actual.ausencias_justificadas += 1

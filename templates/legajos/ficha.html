@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block titulo %}{{ legajo.nombre_completo }} · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>{{ legajo.nombre_completo }}</h1>
+  <p class="subtitulo">
+    {{ legajo.cuil }} · {{ legajo.get_estado_display|lower }}
+    {% if licencia_de_hoy %}
+      · <span class="etiqueta alerta">hoy de licencia</span>
+      {{ licencia_de_hoy.tipo }} hasta el {{ licencia_de_hoy.fecha_fin|date:"d/m/Y" }}
+    {% endif %}
+  </p>
+
+  <p class="acciones no-imprimir">
+    <a class="ficha" href="{% url 'certificacion_servicios' legajo.pk %}">Certificación de servicios</a>
+    {% if puede_editar %}
+      <a class="ficha" href="{% url 'materias_de' legajo.pk %}">Materias que puede dar</a>
+      <a class="ficha" href="{% url 'admin:legajos_legajo_change' legajo.pk %}">Editar el legajo</a>
+    {% endif %}
+  </p>
+
+  <div class="ficha-columnas">
+    <section>
+      <h2>Datos</h2>
+      <table class="datos">
+        <tbody>
+          <tr><th>Contacto</th>
+              <td>{{ legajo.email|default:"—" }}<div class="secundario">{{ legajo.telefono }}</div></td></tr>
+          <tr><th>Ingreso</th><td>{{ legajo.fecha_ingreso|date:"d/m/Y" }}</td></tr>
+          <tr><th>Antigüedad total</th><td>{{ antiguedad_total }}</td></tr>
+          <tr><th>En esta escuela</th><td>{{ antiguedad_aca }}</td></tr>
+          <tr>
+            <th>Puede dar</th>
+            <td>
+              {% for materia in legajo.materias_que_puede_dar.all %}
+                <span class="etiqueta materia">{{ materia.nombre }}</span>
+              {% empty %}<span class="secundario">sin declarar</span>{% endfor %}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>Cargos vigentes ({{ cargos_vigentes|length }})</h2>
+      <table class="datos">
+        <tbody>
+          {% for cargo in cargos_vigentes %}
+            <tr>
+              <td>{{ cargo.descripcion }}</td>
+              <td class="secundario">{{ cargo.get_situacion_revista_display }}</td>
+              <td class="secundario">{{ cargo.get_fuente_pago_display|cut:" (lo paga el estado)"|cut:" (lo paga la escuela)" }}</td>
+            </tr>
+          {% empty %}
+            <tr><td class="secundario">Sin cargos vigentes.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+
+      {% if documentos %}
+        <h2>Documentación</h2>
+        <table class="datos">
+          <tbody>
+            {% for documento in documentos %}
+              <tr>
+                <td>{{ documento.tipo }}</td>
+                <td class="secundario">
+                  {% if documento.fecha_vencimiento %}vence el {{ documento.fecha_vencimiento|date:"d/m/Y" }}{% else %}sin vencimiento{% endif %}
+                </td>
+                <td>
+                  {% if documento.esta_vencido %}<span class="etiqueta alerta">vencido</span>
+                  {% elif documento.por_vencer %}<span class="etiqueta alerta">por vencer</span>
+                  {% else %}<span class="etiqueta">al día</span>{% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+    </section>
+
+    <section>
+      <h2>Su año</h2>
+
+      {% if not licencias and not ausencias and not suplencias_hechas %}
+        <div class="aviso">Sin novedades este año: ni licencias, ni ausencias, ni suplencias.</div>
+      {% endif %}
+
+      {% if licencias %}
+        <h3>Licencias</h3>
+        <table class="datos">
+          <tbody>
+            {% for licencia in licencias %}
+              <tr>
+                <td>{{ licencia.fecha_inicio|date:"d/m" }}–{{ licencia.fecha_fin|date:"d/m" }}</td>
+                <td>{{ licencia.tipo.codigo }} <span class="secundario">{{ licencia.tipo.nombre }}</span></td>
+                <td>
+                  {% if licencia.estado == "APROBADA" %}<span class="etiqueta">aprobada</span>
+                  {% elif licencia.estado == "SOLICITADA" %}<span class="etiqueta alerta">solicitada</span>
+                  {% else %}<span class="secundario">{{ licencia.get_estado_display|lower }}</span>{% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+
+      {% if ausencias %}
+        <h3>Lo marcado en el parte</h3>
+        <table class="datos">
+          <tbody>
+            {% for registro in ausencias %}
+              <tr>
+                <td>{{ registro.fecha|date:"d/m" }}</td>
+                <td>{{ registro.get_estado_display }}</td>
+                <td>
+                  {% if registro.es_ausencia %}
+                    {% if registro.justificada %}<span class="etiqueta">justificada</span>
+                    {% else %}<span class="etiqueta alerta">injustificada</span>{% endif %}
+                  {% endif %}
+                  {% if registro.observaciones %}<div class="secundario">{{ registro.observaciones }}</div>{% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+
+      {% if suplencias_hechas %}
+        <h3>Suplencias que hizo</h3>
+        <table class="datos">
+          <tbody>
+            {% for cobertura in suplencias_hechas %}
+              <tr>
+                <td>{{ cobertura.fecha_inicio|date:"d/m" }}–{{ cobertura.fecha_fin|date:"d/m" }}</td>
+                <td>{{ cobertura.cargo.descripcion }}</td>
+                <td class="secundario">por {{ cobertura.cargo.legajo.nombre_completo }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+    </section>
+  </div>
+{% endblock %}

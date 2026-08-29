@@ -37,6 +37,23 @@
             <td>
               <strong>{{ resumen.legajo.nombre_completo }}</strong>
               {% if resumen.es_mixto %}<div class="secundario">personal mixto</div>{% endif %}
+              {% if resumen.registros %}
+                <details class="dias-del-mes no-imprimir">
+                  <summary>ver los días</summary>
+                  <ul>
+                    {% for registro in resumen.registros %}
+                      <li>
+                        {{ registro.fecha|date:"d/m" }} · {{ registro.get_estado_display|lower }}
+                        {% if registro.horas_afectadas %}· {{ registro.horas_afectadas }} hs{% endif %}
+                        {% if registro.es_ausencia %}
+                          {% if registro.justificada %}(justificada: {{ registro.licencia.tipo.codigo }}){% else %}(injustificada){% endif %}
+                        {% endif %}
+                        {% if registro.observaciones %}— {{ registro.observaciones }}{% endif %}
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </details>
+              {% endif %}
             </td>
             <td>{{ resumen.detalle_fuentes|default:"—" }}</td>
             <td class="secundario">
