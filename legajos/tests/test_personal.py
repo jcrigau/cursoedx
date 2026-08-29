@@ -173,6 +173,25 @@ class TestLaFicha:
         assert "Ver archivo" in cuerpo
         assert "/media/documentos/" in cuerpo
 
+    def test_muestra_la_foto_carnet(self, client, con_personal, secretaria, settings, tmp_path):
+        from io import BytesIO
+
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from PIL import Image
+
+        settings.MEDIA_ROOT = tmp_path
+        contenido = BytesIO()
+        Image.new("RGB", (4, 4), "orange").save(contenido, format="JPEG")
+        persona = con_personal["persona"]
+        persona.foto = SimpleUploadedFile("carnet.jpg", contenido.getvalue())
+        persona.save()
+        client.force_login(secretaria)
+
+        cuerpo = client.get(reverse("ficha_persona", args=[persona.pk])).content.decode()
+
+        assert "foto-carnet" in cuerpo
+        assert "/media/fotos/" in cuerpo
+
     def test_no_muestra_gente_de_otra_escuela(
         self, client, con_personal, otra_institucion, secretaria
     ):

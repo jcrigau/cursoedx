@@ -4,14 +4,21 @@
 {% block titulo %}{{ legajo.nombre_completo }} · SGE{% endblock %}
 
 {% block contenido %}
-  <h1>{{ legajo.nombre_completo }}</h1>
-  <p class="subtitulo">
-    {{ legajo.cuil }} · {{ legajo.get_plantel_display|lower }} · {{ legajo.get_estado_display|lower }}
-    {% if licencia_de_hoy %}
-      · <span class="etiqueta alerta">hoy de licencia</span>
-      {{ licencia_de_hoy.tipo }} hasta el {{ licencia_de_hoy.fecha_fin|date:"d/m/Y" }}
+  <div class="ficha-encabezado">
+    {% if legajo.foto %}
+      <img class="foto-carnet" src="{{ legajo.foto.url }}" alt="Foto de {{ legajo.nombre_completo }}">
     {% endif %}
-  </p>
+    <div>
+      <h1>{{ legajo.nombre_completo }}</h1>
+      <p class="subtitulo">
+        {{ legajo.cuil }} · {{ legajo.get_plantel_display|lower }} · {{ legajo.get_estado_display|lower }}
+        {% if licencia_de_hoy %}
+          · <span class="etiqueta alerta">hoy de licencia</span>
+          {{ licencia_de_hoy.tipo }} hasta el {{ licencia_de_hoy.fecha_fin|date:"d/m/Y" }}
+        {% endif %}
+      </p>
+    </div>
+  </div>
 
   <p class="acciones no-imprimir">
     <a class="ficha" href="{% url 'certificacion_servicios' legajo.pk %}">Certificación de servicios</a>

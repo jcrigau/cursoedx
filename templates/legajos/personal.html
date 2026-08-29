@@ -57,11 +57,18 @@
         {% for legajo in personas %}
           <tr>
             <td>
-              <strong>{{ legajo.nombre_completo }}</strong>
-              <div class="secundario">
-                {{ legajo.cuil }}
-                {% if legajo.plantel != "DOCENTE" %} · {{ legajo.get_plantel_display|lower }}{% endif %}
-                {% if legajo.estado != "ACTIVO" %} · {{ legajo.get_estado_display|lower }}{% endif %}
+              <div class="persona-con-foto">
+                {% if legajo.foto %}
+                  <img class="foto-carnet chica" src="{{ legajo.foto.url }}" alt="" loading="lazy">
+                {% endif %}
+                <div>
+                  <strong>{{ legajo.nombre_completo }}</strong>
+                  <div class="secundario">
+                    {{ legajo.cuil }}
+                    {% if legajo.plantel != "DOCENTE" %} · {{ legajo.get_plantel_display|lower }}{% endif %}
+                    {% if legajo.estado != "ACTIVO" %} · {{ legajo.get_estado_display|lower }}{% endif %}
+                  </div>
+                </div>
               </div>
             </td>
             <td class="secundario">

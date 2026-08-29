@@ -54,6 +54,15 @@ class Legajo(ModeloInstitucional):
     )
     apellido = models.CharField("apellido", max_length=100)
     nombre = models.CharField("nombre", max_length=100)
+    foto = models.ImageField(
+        "foto",
+        upload_to="fotos/",
+        blank=True,
+        help_text=(
+            "Tipo carnet, cuadrada (4x4). JPG o PNG; si no es exactamente "
+            "cuadrada, se recorta al mostrarla."
+        ),
+    )
     cuil = models.CharField("CUIL", max_length=13, validators=[validador_cuit])
     dni = models.CharField("DNI", max_length=15, blank=True)
     fecha_nacimiento = models.DateField("fecha de nacimiento", null=True, blank=True)

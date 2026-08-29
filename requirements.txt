@@ -12,3 +12,6 @@ weasyprint>=62
 ortools>=9.10
 # Exportación de las novedades a Excel.
 openpyxl>=3.1
+# Fotos del personal (validación de imagen en el legajo). WeasyPrint ya la
+# trae de arrastre, pero el campo la necesita aunque no haya PDFs.
+Pillow>=10.0

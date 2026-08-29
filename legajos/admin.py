@@ -102,7 +102,7 @@ class LegajoAdmin(AdminInstitucional):
     inlines = [CargoInline, DocumentoInline, TituloInline, ServicioAnteriorInline]
 
     fieldsets = (
-        (None, {"fields": ("numero", "apellido", "nombre", "estado")}),
+        (None, {"fields": ("numero", "apellido", "nombre", "foto", "estado")}),
         ("Identificación", {"fields": ("cuil", "dni", "fecha_nacimiento", "obra_social")}),
         ("Contacto", {"fields": ("email", "telefono", "domicilio", "localidad")}),
         ("En la institución", {"fields": ("plantel", "fecha_ingreso", "usuario", "observaciones")}),
