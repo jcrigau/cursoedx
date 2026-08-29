@@ -5,6 +5,16 @@ import pytest
 from core.models import Institucion, Membresia, Rol, Usuario
 
 
+@pytest.fixture(autouse=True)
+def media_en_temporal(settings, tmp_path):
+    """Los archivos subidos en las pruebas van a un directorio descartable.
+
+    Sin esto, cargar_piloto (que ahora adjunta fotos) y cualquier prueba que
+    suba un archivo dejarían basura en el media/ real del proyecto.
+    """
+    settings.MEDIA_ROOT = tmp_path / "media"
+
+
 @pytest.fixture
 def institucion(db):
     return Institucion.objects.create(nombre="Escuela Uno", nombre_corto="Uno")

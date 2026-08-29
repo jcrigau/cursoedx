@@ -1,10 +1,20 @@
 {% extends "base.html" %}
+{% load static %}
 
 {% block titulo %}Materias de {{ legajo.apellido }} · SGE{% endblock %}
 
 {% block contenido %}
-  <h1>¿Qué materias puede dar?</h1>
-  <p class="subtitulo">{{ legajo.nombre_completo }}</p>
+  <div class="ficha-encabezado">
+    {% if legajo.foto %}
+      <img class="foto-carnet" src="{{ legajo.foto.url }}" alt="Foto de {{ legajo.nombre_completo }}">
+    {% else %}
+      <img class="foto-carnet" src="{% static 'img/persona.svg' %}" alt="Sin foto cargada">
+    {% endif %}
+    <div>
+      <h1>¿Qué materias puede dar?</h1>
+      <p class="subtitulo">{{ legajo.nombre_completo }}</p>
+    </div>
+  </div>
 
   <div class="aviso">
     Tildá todas las que esta persona esté en condiciones de dar, aunque este año

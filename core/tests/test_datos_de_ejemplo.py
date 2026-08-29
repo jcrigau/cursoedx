@@ -60,6 +60,21 @@ def test_el_piloto_trae_personal_de_todos_los_planteles():
 
 
 @pytest.mark.django_db
+def test_el_piloto_trae_las_fotos_de_carnet():
+    """Las caras del repositorio se adjuntan solas, sin pisar ni duplicar."""
+    call_command("cargar_piloto", verbosity=0)
+
+    ferreyra = Legajo.objects.get(apellido="Ferreyra")
+    assert ferreyra.foto, "la foto de ejemplo tendría que haberse adjuntado"
+    primera = ferreyra.foto.name
+
+    call_command("cargar_piloto", verbosity=0)
+
+    ferreyra.refresh_from_db()
+    assert ferreyra.foto.name == primera  # no se duplica ni se reemplaza
+
+
+@pytest.mark.django_db
 def test_la_escuela_de_ejemplo_se_distingue_a_la_vista():
     call_command("cargar_piloto", verbosity=0)
 

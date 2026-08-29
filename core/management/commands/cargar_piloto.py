@@ -353,6 +353,7 @@ class Command(BaseCommand):
             self._crear_planta_docente(institucion, niveles[TipoNivel.SECUNDARIO], ciclo)
         self._crear_licencias(institucion)
         self._declarar_materias(institucion)
+        self._cargar_fotos(institucion)
         docente = self._dar_acceso_al_portal(institucion, opciones)
 
         self.stdout.write("")
@@ -921,6 +922,38 @@ class Command(BaseCommand):
 
         if declaradas:
             self.stdout.write(f"  + {declaradas} habilitaciones de materia declaradas")
+
+    def _cargar_fotos(self, institucion):
+        """Las caras del personal de ejemplo que vienen con el repositorio.
+
+        Cada archivo de ``fotos_piloto/`` se llama «apellido--nombre.jpg», sin
+        tildes. Solo se le pone a quien no tiene foto: una cargada a mano no
+        se pisa, y volver a correr el comando no duplica nada.
+        """
+        from pathlib import Path
+
+        from django.core.files import File
+
+        from core.texto import sin_tildes
+
+        carpeta = Path(__file__).parent / "fotos_piloto"
+        if not carpeta.is_dir():
+            return
+
+        cargadas = 0
+        for legajo in Legajo.objects.filter(institucion=institucion, foto=""):
+            nombre_archivo = (
+                f"{sin_tildes(legajo.apellido).replace(' ', '-')}--"
+                f"{sin_tildes(legajo.nombre).replace(' ', '-')}.jpg"
+            )
+            archivo = carpeta / nombre_archivo
+            if not archivo.exists():
+                continue
+            with archivo.open("rb") as contenido:
+                legajo.foto.save(nombre_archivo, File(contenido), save=True)
+            cargadas += 1
+        if cargadas:
+            self.stdout.write(f"  + {cargadas} fotos de carnet")
 
     def _dar_acceso_al_portal(self, institucion, opciones):
         """Le crea usuario al primer docente, para poder probar el portal."""
