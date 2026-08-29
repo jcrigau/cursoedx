@@ -51,6 +51,7 @@ python manage.py cargar_demo --password una-clave     # además: horario, parte 
 python manage.py sincronizar_permisos                 # tras agregar modelos
 python manage.py generar_horario 1 --segundos 60      # generar un horario
 python manage.py cargar_catalogo_licencias            # régimen de San Luis
+python manage.py generar_manual                       # el manual de la secretaría en PDF
 python manage.py runserver
 pytest
 ```

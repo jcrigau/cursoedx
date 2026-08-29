@@ -24,3 +24,7 @@ htmlcov/
 .idea/
 .vscode/
 .DS_Store
+
+# Manual generado (se regenera con: python manage.py generar_manual)
+manual-sge*.pdf
+manual-sge*.html

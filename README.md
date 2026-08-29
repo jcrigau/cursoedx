@@ -104,6 +104,10 @@ base de datos, y qué dependencias opcionales están instaladas. Desde la
 terminal, `python manage.py mostrar_version`. El historial está en
 [CHANGELOG.md](CHANGELOG.md).
 
+El **manual de uso de la secretaría** se genera desde el propio sistema, así
+que sale con la versión de lo que está instalado:
+`python manage.py generar_manual`. La fuente es `templates/docs/manual.html`.
+
 Es lo primero que conviene mirar cuando algo anda distinto en dos lugares.
 
 ## Desarrollo

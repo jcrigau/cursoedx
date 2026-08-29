@@ -1,0 +1,998 @@
+{% load static %}<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<title>Manual del SGE</title>
+<style>
+  @page {
+    size: A4;
+    margin: 2.2cm 2cm 1.8cm;
+    @bottom-center {
+      content: counter(page);
+      font-family: "DejaVu Sans", sans-serif;
+      font-size: 8.5pt;
+      color: #7b8a97;
+    }
+    @bottom-right {
+      content: "SGE {{ version }}";
+      font-family: "DejaVu Sans", sans-serif;
+      font-size: 8pt;
+      color: #9aa8b4;
+    }
+  }
+  @page :first { margin: 0; @bottom-center { content: ""; } @bottom-right { content: ""; } }
+
+  :root {
+    --tinta: #12212e;
+    --tinta-suave: #4a5c6b;
+    --acento: #0f6b62;
+    --borde: #dfe5e9;
+    --fondo-suave: #f4f7f8;
+    --alerta: #a8443a;
+    --alerta-clara: #fbeae8;
+  }
+
+  body {
+    font-family: "DejaVu Sans", sans-serif;
+    font-size: 10pt;
+    line-height: 1.55;
+    color: var(--tinta);
+    margin: 0;
+  }
+
+  /* --- Portada --- */
+  .portada {
+    height: 297mm;
+    padding: 6cm 2.5cm 2.5cm;
+    background: var(--acento);
+    color: #fff;
+    box-sizing: border-box;
+    page-break-after: always;
+  }
+  .portada .marca { font-size: 40pt; font-weight: 700; letter-spacing: -1px; margin: 0; }
+  .portada h1 {
+    font-size: 22pt;
+    font-weight: 400;
+    margin: 0.2cm 0 1.2cm;
+    line-height: 1.3;
+    color: inherit;
+    /* La regla general de h1 salta de página; en la portada, no. */
+    page-break-before: avoid;
+  }
+  .portada .linea { width: 3cm; height: 3px; background: rgba(255,255,255,0.55); margin-bottom: 1.2cm; }
+  .portada p { font-size: 11pt; line-height: 1.6; max-width: 12cm; opacity: 0.93; }
+  .portada .datos { margin-top: 3.5cm; font-size: 9.5pt; opacity: 0.85; }
+
+  /* --- Índice --- */
+  .indice { page-break-after: always; }
+  .indice ol { list-style: none; padding: 0; margin: 0; counter-reset: seccion; }
+  .indice li {
+    counter-increment: seccion;
+    padding: 0.28cm 0;
+    border-bottom: 1px solid var(--borde);
+    font-size: 10.5pt;
+  }
+  .indice li::before {
+    content: counter(seccion) ".";
+    display: inline-block;
+    width: 1.1cm;
+    color: var(--acento);
+    font-weight: 700;
+  }
+  .indice .detalle { display: block; margin-left: 1.1cm; color: var(--tinta-suave); font-size: 9pt; }
+
+  /* --- Estructura --- */
+  h1 {
+    font-size: 17pt;
+    color: var(--acento);
+    margin: 0 0 0.15cm;
+    page-break-after: avoid;
+    page-break-before: always;
+  }
+  h1.primera { page-break-before: avoid; }
+  h1 .numero { color: #b9c6cd; margin-right: 0.25cm; }
+  h1 + .bajada {
+    color: var(--tinta-suave);
+    font-size: 10.5pt;
+    margin: 0 0 0.7cm;
+    page-break-after: avoid;
+  }
+  h2 {
+    font-size: 12pt;
+    margin: 0.75cm 0 0.2cm;
+    page-break-after: avoid;
+  }
+  h3 { font-size: 10.5pt; margin: 0.5cm 0 0.1cm; page-break-after: avoid; }
+  p { margin: 0 0 0.35cm; }
+  ul, ol { margin: 0 0 0.4cm; padding-left: 0.7cm; }
+  li { margin-bottom: 0.12cm; }
+  strong { font-weight: 700; }
+  code {
+    font-family: "DejaVu Sans Mono", monospace;
+    font-size: 8.5pt;
+    background: var(--fondo-suave);
+    padding: 0 0.12cm;
+    border-radius: 2px;
+  }
+
+  /* --- Tablas --- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0.2cm 0 0.5cm;
+    font-size: 9pt;
+    page-break-inside: avoid;
+  }
+  th, td {
+    text-align: left;
+    padding: 0.18cm 0.25cm;
+    border-bottom: 1px solid var(--borde);
+    vertical-align: top;
+  }
+  th {
+    background: var(--fondo-suave);
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    color: var(--tinta-suave);
+  }
+  td.camino { white-space: nowrap; font-weight: 700; }
+
+  /* --- Recuadros --- */
+  .clave, .ojo, .nota {
+    padding: 0.3cm 0.4cm;
+    margin: 0.35cm 0 0.5cm;
+    page-break-inside: avoid;
+    font-size: 9.5pt;
+  }
+  .clave { background: var(--fondo-suave); border-left: 3px solid var(--acento); }
+  .ojo { background: var(--alerta-clara); border-left: 3px solid var(--alerta); }
+  .nota { background: #fff; border: 1px solid var(--borde); }
+  .clave .titulo, .ojo .titulo {
+    display: block;
+    font-weight: 700;
+    font-size: 8pt;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.1cm;
+  }
+  .clave .titulo { color: var(--acento); }
+  .ojo .titulo { color: var(--alerta); }
+  .clave p:last-child, .ojo p:last-child, .nota p:last-child { margin-bottom: 0; }
+
+  /* --- Pasos numerados --- */
+  ol.pasos { counter-reset: paso; list-style: none; padding-left: 0; }
+  ol.pasos > li {
+    counter-increment: paso;
+    padding-left: 0.85cm;
+    position: relative;
+    margin-bottom: 0.3cm;
+    page-break-inside: avoid;
+  }
+  ol.pasos > li::before {
+    content: counter(paso);
+    position: absolute;
+    left: 0;
+    top: 0.02cm;
+    width: 0.55cm;
+    height: 0.55cm;
+    background: var(--acento);
+    color: #fff;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 8.5pt;
+    font-weight: 700;
+    line-height: 0.55cm;
+  }
+  ol.pasos strong { display: block; }
+</style>
+</head>
+<body>
+
+<div class="portada">
+  <p class="marca">SGE</p>
+  <h1>Manual de la secretaría<br>Sistema de gestión escolar</h1>
+  <div class="linea"></div>
+  <p>
+    Cómo se usa el sistema día a día: el legajo del personal, el horario,
+    las licencias, el parte diario y las novedades que se le pasan al
+    liquidador todos los meses.
+  </p>
+  <div class="datos">
+    Versión {{ version }} — {{ fase }}<br>
+    {{ fecha }}
+  </div>
+</div>
+
+<div class="indice">
+  <h1 class="primera" style="page-break-before: avoid">Contenido</h1>
+  <ol>
+    <li>Qué hace este sistema
+      <span class="detalle">Y qué no hace, que es igual de importante</span></li>
+    <li>Entrar
+      <span class="detalle">Usuarios, roles y qué ve cada uno</span></li>
+    <li>Dónde está cada cosa
+      <span class="detalle">El mapa de pantallas</span></li>
+    <li>Puesta en marcha
+      <span class="detalle">Lo que se carga una vez al año</span></li>
+    <li>El personal
+      <span class="detalle">Legajos, cargos, documentación, antigüedad</span></li>
+    <li>Los horarios
+      <span class="detalle">De la disponibilidad al horario publicado</span></li>
+    <li>Licencias y coberturas
+      <span class="detalle">Quién falta y qué se hace con sus horas</span></li>
+    <li>El parte diario
+      <span class="detalle">La pantalla de todos los días</span></li>
+    <li>El cierre del mes
+      <span class="detalle">Las novedades para la liquidación</span></li>
+    <li>El portal del docente
+      <span class="detalle">Lo que cada uno ve desde su celular</span></li>
+    <li>Cuando algo no sale
+      <span class="detalle">Síntomas frecuentes y qué mirar</span></li>
+    <li>Glosario
+      <span class="detalle">Las palabras que usa el sistema</span></li>
+  </ol>
+</div>
+
+<h1><span class="numero">1</span>Qué hace este sistema</h1>
+<p class="bajada">Y qué no hace, que es igual de importante.</p>
+
+<p>
+  El SGE reúne en un solo lugar cuatro cosas que hoy viven separadas: los
+  legajos del personal, el horario del colegio, quién falta cada día, y las
+  novedades que se le pasan al liquidador a fin de mes.
+</p>
+
+<p>
+  La diferencia con hacerlo a mano no está en cargar los datos —eso hay que
+  hacerlo igual— sino en que <strong>cada cosa se apoya en la anterior</strong>.
+  El parte diario sale del horario. Las novedades del mes salen del parte y de
+  las licencias. Nada se vuelve a tipear, y por lo tanto nada se puede tipear
+  distinto en dos lugares.
+</p>
+
+<div class="ojo">
+  <span class="titulo">El sistema no liquida sueldos</span>
+  <p>
+    Arma las novedades —altas, bajas, licencias, inasistencias— y las entrega
+    separadas por planilla. El cálculo de haberes lo sigue haciendo el
+    liquidador con lo que se le entrega. Eso no cambia.
+  </p>
+</div>
+
+<h2>Los cuatro módulos</h2>
+<table>
+  <thead>
+    <tr><th>Módulo</th><th>Para qué</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="camino">Legajos</td>
+      <td>El personal: datos, cargos, documentación con vencimientos, títulos,
+          antigüedad y certificación de servicios.</td>
+    </tr>
+    <tr>
+      <td class="camino">Horarios</td>
+      <td>La disponibilidad de cada docente y el horario del colegio, que el
+          sistema arma solo tratando de que cada uno venga la menor cantidad
+          de días.</td>
+    </tr>
+    <tr>
+      <td class="camino">Asistencia</td>
+      <td>Licencias por artículo con sus topes, quién cubre cada ausencia, y
+          el parte de cada día.</td>
+    </tr>
+    <tr>
+      <td class="camino">Novedades</td>
+      <td>El resumen del mes, separado en planilla Oficial e Interna, listo
+          para exportar.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>El orden natural del trabajo</h2>
+<ol class="pasos">
+  <li><strong>Una vez al año</strong>
+    Se carga la estructura del colegio y se revisan los legajos.</li>
+  <li><strong>Al empezar cada período</strong>
+    Se piden las declaraciones de disponibilidad, se genera el horario y se
+    publica.</li>
+  <li><strong>Todos los días</strong>
+    Se abre el parte y se marcan las novedades. Cinco minutos.</li>
+  <li><strong>A fin de mes</strong>
+    Se compila, se revisa, se exporta y se cierra.</li>
+</ol>
+
+<h1><span class="numero">2</span>Entrar</h1>
+<p class="bajada">Usuarios, roles y qué ve cada uno.</p>
+
+<p>
+  Se entra con <strong>correo electrónico y contraseña</strong>, no con nombre
+  de usuario. Cada persona tiene el suyo: el sistema registra quién hizo cada
+  cosa, y eso no funciona con una cuenta compartida.
+</p>
+
+<h2>Los cuatro roles</h2>
+<table>
+  <thead>
+    <tr><th>Rol</th><th>Qué puede hacer</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td class="camino">Secretaría</td>
+      <td>Todo: carga y edita legajos, horarios, licencias, el parte y las
+          novedades. Es el rol de trabajo.</td>
+    </tr>
+    <tr>
+      <td class="camino">Directivo</td>
+      <td>Consulta todo y, además, <strong>aprueba o rechaza licencias</strong>
+          y decide las coberturas.</td>
+    </tr>
+    <tr>
+      <td class="camino">Docente</td>
+      <td>Entra al portal: su horario, su legajo, sus licencias. Avisa
+          inasistencias y ficha. No ve nada de los demás.</td>
+    </tr>
+    <tr>
+      <td class="camino">Liquidador</td>
+      <td>Ve y descarga las novedades de los meses cerrados. No ve borradores
+          ni legajos.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="clave">
+  <span class="titulo">Cada escuela ve solo lo suyo</span>
+  <p>
+    El sistema puede alojar varias instituciones. Ninguna consulta cruza de
+    una a otra: si alguien tiene acceso a dos escuelas, arriba a la izquierda
+    le aparece un selector para cambiar, y todo lo que ve en pantalla
+    corresponde a la que esté elegida.
+  </p>
+</div>
+
+<h2>Al pie de cada pantalla</h2>
+<p>
+  Abajo de todo figura la versión del sistema, por ejemplo
+  <code>SGE {{ version }} · a1b2c3d</code>. Sirve para el soporte: cuando algo
+  no anda como se espera, ese número dice exactamente qué está corriendo.
+  Haciendo clic ahí se abre una pantalla con más detalle.
+</p>
+
+<h1><span class="numero">3</span>Dónde está cada cosa</h1>
+<p class="bajada">El mapa de pantallas.</p>
+
+<p>
+  Arriba, en la barra oscura, están las tres pantallas del uso diario:
+  <strong>Parte diario</strong>, <strong>Resumen del mes</strong> y
+  <strong>Novedades</strong>. A la derecha, <strong>Administración</strong>:
+  ahí se carga y se edita todo lo demás.
+</p>
+
+<p>
+  La regla simple es esta: <em>lo que se hace todos los días está en la barra;
+  lo que se carga de vez en cuando está en Administración.</em>
+</p>
+
+<h2>Quiero hacer… ¿dónde voy?</h2>
+<table>
+  <thead>
+    <tr><th>Quiero…</th><th>Voy a…</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Marcar quién faltó hoy</td><td class="camino">Parte diario</td></tr>
+    <tr><td>Ver cuántas faltas lleva alguien este mes</td><td class="camino">Resumen del mes</td></tr>
+    <tr><td>Preparar lo que se le manda al liquidador</td><td class="camino">Novedades</td></tr>
+    <tr><td>Dar de alta a un docente nuevo</td><td class="camino">Administración → Legajos</td></tr>
+    <tr><td>Agregarle horas a alguien</td><td class="camino">Administración → Cargos</td></tr>
+    <tr><td>Cargar una licencia</td><td class="camino">Administración → Licencias</td></tr>
+    <tr><td>Designar un suplente</td><td class="camino">Administración → Coberturas de licencias</td></tr>
+    <tr><td>Generar o publicar el horario</td><td class="camino">Administración → Versiones de horario</td></tr>
+    <tr><td>Cargar la disponibilidad de un docente</td><td class="camino">Administración → Declaraciones de disponibilidad</td></tr>
+    <tr><td>Crear un curso o una materia</td><td class="camino">Administración → Cursos / Materias</td></tr>
+    <tr><td>Sacar una certificación de servicios</td><td class="camino">Administración → Legajos → la persona</td></tr>
+  </tbody>
+</table>
+
+<h2>El tablero de inicio</h2>
+<p>
+  La pantalla que aparece al entrar resume el día: cuántos están de licencia,
+  qué falta resolver, qué documentación está por vencer, y el estado de la
+  puesta en marcha. Es el lugar desde donde se detectan las cosas antes de que
+  se conviertan en problema.
+</p>
+
+<h1><span class="numero">4</span>Puesta en marcha</h1>
+<p class="bajada">Lo que se carga una vez al año, en este orden.</p>
+
+<p>
+  Cada cosa de esta lista se apoya en la anterior, así que conviene seguir el
+  orden. Todo se hace desde <strong>Administración</strong>.
+</p>
+
+<ol class="pasos">
+  <li><strong>Niveles</strong>
+    Inicial, primario, secundario. Solo los que tenga la escuela.</li>
+  <li><strong>Ciclo lectivo</strong>
+    El año, con fecha de inicio y de fin. Se marca como activo.</li>
+  <li><strong>Períodos académicos</strong>
+    Los cuatrimestres o trimestres dentro del ciclo. El horario se genera por
+    período, así que si las materias cambian a mitad de año, esto es lo que lo
+    permite.</li>
+  <li><strong>Turnos</strong>
+    Mañana, tarde. Con la hora en que empieza y termina.</li>
+  <li><strong>Esquemas horarios</strong>
+    La forma de la jornada. Suele haber más de uno: <em>con almuerzo</em> y
+    <em>sin almuerzo</em>, por ejemplo.</li>
+  <li><strong>Bloques horarios</strong>
+    Dentro de cada esquema, las horas y los recreos con su horario real. No se
+    asume que todos los días sean iguales.</li>
+  <li><strong>Cursos</strong>
+    1°A, 1°B… Cada uno con su nivel, su turno y el esquema horario que sigue.</li>
+  <li><strong>Materias</strong>
+    El listado de espacios curriculares.</li>
+  <li><strong>Plan de estudios</strong>
+    Qué materia se dicta en qué curso y con cuántas horas semanales. De acá
+    sale lo que después el generador tiene que ubicar.</li>
+</ol>
+
+<div class="clave">
+  <span class="titulo">Por qué los bloques llevan horario real</span>
+  <p>
+    Dos cursos con esquemas distintos tienen bloques distintos a la misma hora
+    del reloj. El sistema detecta los choques comparando <strong>horarios
+    reales</strong>, no números de hora: así un docente nunca queda asignado a
+    dos cursos que se superponen, aunque sigan esquemas diferentes.
+  </p>
+</div>
+
+<h1><span class="numero">5</span>El personal</h1>
+<p class="bajada">Legajos, cargos, documentación y antigüedad.</p>
+
+<h2>El legajo</h2>
+<p>
+  Un legajo por persona, con sus datos: nombre, CUIL, fecha de ingreso, datos
+  de contacto. El legajo es la persona; lo que hace en la escuela son sus
+  <strong>cargos</strong>.
+</p>
+
+<h2>Los cargos</h2>
+<p>
+  Acá está lo importante del módulo. Una persona puede tener varios cargos a
+  la vez —horas en distintos cursos, un cargo de preceptor— y cada uno lleva
+  sus propios datos:
+</p>
+
+<table>
+  <thead><tr><th>Campo</th><th>Qué significa</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="camino">Tipo</td>
+      <td>Cargo base, horas cátedra (40 minutos) u horas reloj (60 minutos).</td>
+    </tr>
+    <tr>
+      <td class="camino">Situación de revista</td>
+      <td>Titular, interino o suplente. Es lo que después figura en la
+          certificación de servicios.</td>
+    </tr>
+    <tr>
+      <td class="camino">Fuente de pago</td>
+      <td><strong>Subvencionado</strong> (lo paga el Estado) o
+          <strong>interno</strong> (lo paga la escuela).</td>
+    </tr>
+    <tr>
+      <td class="camino">Alta y baja</td>
+      <td>Desde cuándo y hasta cuándo. La baja lleva motivo: cese, renuncia,
+          fin de suplencia.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="ojo">
+  <span class="titulo">La fuente de pago es del cargo, nunca de la persona</span>
+  <p>
+    Este es el punto donde más se equivoca al cargar, y el que después produce
+    los errores en la liquidación. Una persona no es "subvencionada" o
+    "interna": <strong>cada uno de sus cargos lo es</strong>.
+  </p>
+  <p>
+    Quien tiene cargos de las dos fuentes es el caso <em>mixto</em>, y no
+    necesita ninguna marca especial: el sistema lo resuelve solo. Si esa
+    persona toma una licencia, va a generar <strong>dos líneas</strong> en las
+    novedades, una para cada planilla. Eso es correcto, no es un error.
+  </p>
+</div>
+
+<h2>Documentación</h2>
+<p>
+  Cada legajo puede tener documentación cargada con su fecha de vencimiento:
+  apto psicofísico, certificado de antecedentes, lo que corresponda. El
+  tablero de inicio muestra un aviso de <strong>documentación a reclamar</strong>
+  cuando algo está por vencer o ya venció, así no hay que ir a buscarlo.
+</p>
+
+<h2>Antigüedad</h2>
+<p>
+  Se calcula sola, a partir de los cargos y de los servicios anteriores que se
+  hayan cargado.
+</p>
+
+<div class="clave">
+  <span class="titulo">Los períodos se unen antes de contarse</span>
+  <p>
+    Si alguien tuvo tres cargos simultáneos durante 2020, eso es
+    <strong>un año</strong> de antigüedad, no tres. El sistema une los períodos
+    que se solapan antes de sumar, que es como corresponde y como se suele
+    equivocar cuando se hace a mano.
+  </p>
+</div>
+
+<h2>Certificación de servicios</h2>
+<p>
+  Desde el legajo de cada persona se genera la certificación en PDF, con el
+  detalle de sus cargos y la distinción entre titular y suplente. Es un
+  documento para imprimir y firmar.
+</p>
+
+<h1><span class="numero">6</span>Los horarios</h1>
+<p class="bajada">De la disponibilidad al horario publicado.</p>
+
+<p>
+  El generador es lo que más trabajo ahorra, pero necesita que antes estén
+  cargados el plan de estudios (sección 4) y los cargos de cada docente
+  (sección 5). Sin eso no tiene qué ubicar ni con quién.
+</p>
+
+<h2>Paso 1 · Las declaraciones de disponibilidad</h2>
+<p>
+  Cada docente declara cuándo <strong>no</strong> puede venir, y por qué:
+  trabaja en otra escuela, estudia, tiene un impedimento personal. Se cargan en
+  <em>Administración → Declaraciones de disponibilidad</em>, con las franjas
+  correspondientes.
+</p>
+<p>
+  Las franjas se distinguen entre las que son un impedimento real —el
+  generador no las va a pisar— y las que son una preferencia, que trata de
+  respetar pero puede ceder si no hay otra salida.
+</p>
+
+<h2>Paso 2 · Crear la versión</h2>
+<p>
+  En <em>Versiones de horario</em> se crea una versión nueva para el período,
+  con un nombre que sirva para reconocerla: "Borrador 1", "Con los cambios de
+  mayo". Se pueden tener varias y compararlas.
+</p>
+
+<h2>Paso 3 · Generar</h2>
+<p>
+  Con la versión seleccionada en el listado, se elige la acción
+  <strong>«Generar el horario (puede tardar)»</strong>.
+</p>
+<p>
+  El sistema busca la mejor combinación posible priorizando, en este orden:
+  que nadie tenga dos clases a la vez, que se respeten las franjas
+  declaradas, y —el objetivo principal que pidió la escuela— que
+  <strong>cada docente venga la menor cantidad de días</strong>. Después
+  intenta evitar las horas libres en el medio del día.
+</p>
+<p>
+  Al terminar informa cuántas horas ubicó y el promedio de días por docente.
+  Si algo impide generar —falta el plan de estudios, no hay cargos para una
+  materia, las franjas declaradas no dejan lugar— lo dice con el detalle de
+  qué falta.
+</p>
+
+<h2>Paso 4 · Revisar y ajustar</h2>
+<p>
+  El resultado se mira por curso y por docente. Lo que esté bien y no se quiera
+  perder se puede <strong>bloquear</strong>: al volver a generar, esas
+  asignaciones quedan fijas y el sistema reacomoda el resto alrededor.
+</p>
+
+<h2>Paso 5 · Publicar</h2>
+<p>
+  Cuando la versión está lista, se usa la acción
+  <strong>«Publicar como horario vigente»</strong>. La versión anterior del
+  mismo período pasa a histórica automáticamente.
+</p>
+
+<div class="ojo">
+  <span class="titulo">Sin horario publicado no hay parte diario</span>
+  <p>
+    Generar no es publicar. Mientras la versión esté en borrador, el parte
+    diario va a decir que no hay un horario vigente para el período, porque no
+    tiene de dónde saber quién tenía que venir. Publicar es el paso que
+    enciende todo lo demás.
+  </p>
+</div>
+
+<h2>Las grillas</h2>
+<p>
+  Desde la versión publicada se abren las grillas <strong>por curso</strong>
+  —para pegar en el aula— y <strong>por docente</strong> —para entregarle a
+  cada uno—. Ambas se exportan a PDF.
+</p>
+
+<h1><span class="numero">7</span>Licencias y coberturas</h1>
+<p class="bajada">Quién falta, y qué se hace con sus horas.</p>
+
+<h2>El catálogo</h2>
+<p>
+  El sistema trae cargado el régimen de licencias con sus artículos y topes:
+  Art. 76 (enfermedad), Art. 91 (atención de familiar), Art. 93.4 (razones
+  particulares), Art. 94.1 (exámenes), y el resto. Cada tipo indica cuántos
+  días permite y si impacta o no en los haberes.
+</p>
+<p>
+  Se revisa desde <em>Administración → Tipos de licencia</em>. Si la escuela
+  usa un régimen distinto, se edita ahí y todo lo demás se acomoda.
+</p>
+
+<h2>Cargar una licencia</h2>
+<ol class="pasos">
+  <li><strong>Administración → Licencias → Agregar</strong>
+    Se elige la persona, el tipo de licencia y el período: desde y hasta.</li>
+  <li><strong>Se guarda como pendiente</strong>
+    El sistema avisa si el pedido supera el tope del artículo.</li>
+  <li><strong>Se aprueba o se rechaza</strong>
+    Desde el listado, con la acción «Aprobar las licencias seleccionadas».
+    Recién aprobada empieza a tener efecto en el parte y en las novedades.</li>
+</ol>
+
+<h2>La cobertura: una decisión aparte</h2>
+<p>
+  Que alguien esté de licencia no dice qué pasa con sus horas. Eso se registra
+  por separado, en <em>Coberturas de licencias</em>, y hay dos caminos:
+</p>
+
+<table>
+  <thead><tr><th>Decisión</th><th>Qué significa</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="camino">Suplente</td>
+      <td>Se designa a alguien. El sistema le crea automáticamente el cargo
+          que va a ocupar, copiado del titular, y de ahí sale el alta que
+          después aparece en las novedades del mes.</td>
+    </tr>
+    <tr>
+      <td class="camino">Sin cobertura</td>
+      <td>No se consigue o no corresponde suplente. Los alumnos de esas horas
+          quedan libres, y queda constancia de por qué.</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="clave">
+  <span class="titulo">Registrar que no se cubre también sirve</span>
+  <p>
+    Es información que la escuela necesita: qué cursos quedaron sin clase y por
+    qué motivo. Si no se registra nada, el parte va a mostrar esas horas como
+    <em>sin resolver</em>, que es distinto de <em>alumnos libres</em>: la
+    primera es una tarea pendiente, la segunda una decisión tomada.
+  </p>
+</div>
+
+<p>
+  Una licencia que afecta varios cargos lleva <strong>una cobertura por
+  cargo</strong>. Se puede cubrir uno y otro no.
+</p>
+
+<h1><span class="numero">8</span>El parte diario</h1>
+<p class="bajada">La pantalla de todos los días.</p>
+
+<p>
+  Es la pantalla que más se usa, y la que menos trabajo lleva. Se abre desde
+  <strong>Parte diario</strong> en la barra de arriba.
+</p>
+
+<h2>Qué muestra</h2>
+<p>
+  El parte <strong>se arma solo</strong>, cruzando el horario vigente con las
+  licencias y las coberturas del día. Muestra:
+</p>
+<ul>
+  <li>El personal que debía asistir, con cuántas horas tiene y en qué cursos.</li>
+  <li>Los suplentes, indicando a quién cubren.</li>
+  <li>Las horas que quedan sin docente, con el curso y la materia.</li>
+  <li>Quién avisó desde el portal que no venía, y quién fichó su entrada.</li>
+</ul>
+
+<div class="clave">
+  <span class="titulo">El parte no se guarda: se calcula</span>
+  <p>
+    Cada vez que se abre, se vuelve a armar con la información del momento. Lo
+    único que se guarda son <strong>las novedades del día</strong>: quién
+    faltó, quién llegó tarde. Por eso si mañana se aprueba una licencia con
+    fecha de ayer, el parte de ayer se corrige solo.
+  </p>
+</div>
+
+<h2>Qué hay que marcar</h2>
+<p>
+  Solo lo que pasó fuera de lo normal. En cada línea se elige el estado
+  —ausente, llegada tarde, ausencia parcial, retiro anticipado—, y si
+  corresponde, cuántas horas no dio y una observación.
+</p>
+<p>
+  <strong>Lo que quede sin marcar se toma como presente.</strong> No hay que
+  confirmar uno por uno a los que vinieron.
+</p>
+<p>
+  Quien tiene licencia aprobada <strong>ni siquiera aparece</strong> en la
+  lista para marcar: ya se sabe que no viene y por qué. Aparece, en cambio, el
+  suplente que lo cubre.
+</p>
+
+<h2>Otros días</h2>
+<p>
+  Arriba hay una barra para moverse de día: día anterior, día siguiente, un
+  calendario para saltar a cualquier fecha, y un botón para volver a hoy. Sirve
+  para completar un día que quedó pendiente.
+</p>
+
+<h2>El resumen del mes</h2>
+<p>
+  En <strong>Resumen del mes</strong> está el acumulado por persona:
+  inasistencias justificadas e injustificadas, tardanzas, licencias. Es lo que
+  conviene mirar antes de compilar las novedades.
+</p>
+
+<h1><span class="numero">9</span>El cierre del mes</h1>
+<p class="bajada">Las novedades para la liquidación.</p>
+
+<p>
+  Se entra desde <strong>Novedades</strong>. Cada mes es un período con su
+  propio estado: abierto, cerrado o reabierto.
+</p>
+
+<h2>Paso 1 · Compilar</h2>
+<p>
+  El botón <strong>«Compilar el mes»</strong> recorre todo lo que ya está
+  cargado —altas, bajas, licencias, suplencias, inasistencias— y arma las
+  líneas del informe.
+</p>
+
+<div class="ojo">
+  <span class="titulo">Cada línea va a la planilla del cargo que la originó</span>
+  <p>
+    No a la de la persona. Por eso una licencia sobre dos cargos de distinta
+    fuente de pago genera <strong>dos líneas</strong>: una a Oficial y otra a
+    Interna. Es exactamente el caso donde se cometían los errores al hacerlo a
+    mano.
+  </p>
+</div>
+
+<h2>Paso 2 · Revisar</h2>
+<p>
+  Las novedades se muestran agrupadas por persona, con su destino, y arriba los
+  totales: cuántas hay que informar, cuántas van a cada planilla, cuántas
+  quedan pendientes.
+</p>
+<p>
+  Se pueden agregar novedades a mano si hubo algo que el sistema no puede
+  saber. Esas quedan marcadas como cargadas manualmente.
+</p>
+
+<div class="clave">
+  <span class="titulo">Volver a compilar es seguro</span>
+  <p>
+    Se puede compilar todas las veces que haga falta. Cada novedad automática
+    recuerda de qué hecho salió, así que una segunda compilación
+    <strong>actualiza en vez de duplicar</strong>. Y nunca toca lo que se
+    cargó a mano ni lo que ya quedó congelado por un cierre.
+  </p>
+</div>
+
+<h2>Paso 3 · Marcar las informadas</h2>
+<p>
+  Mientras se cargan en la planilla del liquidador, se van tildando y se usa el
+  botón <strong>«Marcar las tildadas como informadas»</strong>. Es una lista de
+  control para no perder el hilo si hay que interrumpir.
+</p>
+
+<h2>Paso 4 · Exportar</h2>
+<p>
+  Tres formatos, con las columnas de la planilla del liquidador:
+  <strong>Excel</strong> para pegar directo, <strong>CSV</strong> si el
+  liquidador lo prefiere, y <strong>PDF</strong> para el archivo de la escuela.
+</p>
+
+<h2>Paso 5 · Cerrar</h2>
+<p>
+  Cerrar el período congela las novedades: es la constancia de lo que se
+  informó para liquidar ese mes.
+</p>
+<p>
+  Si después hay que corregir algo, se puede <strong>reabrir</strong>, pero
+  hay que escribir el motivo, y queda registrado quién lo hizo y cuándo. Es
+  a propósito: son datos que ya se usaron para pagar sueldos.
+</p>
+
+<h1><span class="numero">10</span>El portal del docente</h1>
+<p class="bajada">Lo que cada uno ve desde su celular.</p>
+
+<p>
+  Se entra por la misma dirección del sistema agregando <code>/portal/</code>
+  al final. Cada docente ve <strong>solo lo suyo</strong>.
+</p>
+
+<table>
+  <thead><tr><th>Pantalla</th><th>Qué muestra</th></tr></thead>
+  <tbody>
+    <tr><td class="camino">Hoy</td>
+        <td>Sus clases del día, el botón para fichar, y sus avisos.</td></tr>
+    <tr><td class="camino">Mi horario</td>
+        <td>Su grilla semanal completa, del horario vigente.</td></tr>
+    <tr><td class="camino">Mi legajo</td>
+        <td>Sus datos, sus cargos y su documentación, con lo que esté por
+            vencer.</td></tr>
+    <tr><td class="camino">Mis licencias</td>
+        <td>Las que tomó, con su estado.</td></tr>
+  </tbody>
+</table>
+
+<h2>Avisar una inasistencia</h2>
+<p>
+  El docente informa que no va a venir y el motivo. El aviso aparece en el
+  parte del día, junto a su nombre, antes de que llegue el certificado.
+</p>
+<p>
+  <strong>Un aviso no es una licencia.</strong> Es información temprana para
+  que la secretaría pueda organizar la cobertura. La licencia se carga después,
+  con el certificado en la mano.
+</p>
+
+<h2>Fichar</h2>
+<p>
+  Un botón registra la entrada y otro la salida, tomando la ubicación del
+  teléfono y comparándola con la de la escuela. En el parte figura la hora de
+  llegada, y si la marca se hizo lejos, a cuántos metros.
+</p>
+
+<div class="clave">
+  <span class="titulo">La fichada se guarda siempre</span>
+  <p>
+    Esté dentro del radio de la escuela o no, y aunque el teléfono no haya
+    podido dar la ubicación. La geolocalización falla por mil motivos —el GPS,
+    el permiso del navegador, estar bajo techo— y no se le puede negar a nadie
+    la constancia de que llegó. Lo que queda es el dato para que la escuela lo
+    revise.
+  </p>
+</div>
+
+<h2>Instalarlo en el teléfono</h2>
+<p>
+  Desde el navegador del celular, en el menú, la opción
+  <em>Agregar a la pantalla de inicio</em>. Queda como una aplicación más, con
+  su ícono. No hay que bajar nada de ninguna tienda.
+</p>
+
+<h1><span class="numero">11</span>Cuando algo no sale</h1>
+<p class="bajada">Los síntomas más frecuentes y qué mirar.</p>
+
+<table>
+  <thead><tr><th>Lo que pasa</th><th>Por qué, y qué hacer</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>El parte dice <em>«No hay un horario vigente para este período»</em></td>
+      <td>La versión de horario está generada pero no publicada. Hay que usar
+          la acción «Publicar como horario vigente».</td>
+    </tr>
+    <tr>
+      <td>El parte dice <em>«No hay clases este día»</em></td>
+      <td>Es sábado, domingo, o el horario no ubicó ninguna hora ese día.
+          Normal.</td>
+    </tr>
+    <tr>
+      <td>Una persona no aparece en el parte</td>
+      <td>Tiene licencia aprobada ese día —y por eso no hay que marcarla— o el
+          horario no le asignó horas ese día de la semana.</td>
+    </tr>
+    <tr>
+      <td>Aparecen horas <em>«sin resolver»</em></td>
+      <td>Hay una licencia sin decidir la cobertura. Hay que designar suplente
+          o dejar constancia de que el curso queda sin clase.</td>
+    </tr>
+    <tr>
+      <td>Una licencia no aparece en las novedades</td>
+      <td>O no está aprobada, o el mes no se volvió a compilar después de
+          cargarla. Compilar de nuevo es seguro.</td>
+    </tr>
+    <tr>
+      <td>Una persona genera dos líneas iguales</td>
+      <td>Tiene cargos de las dos fuentes de pago. <strong>Es correcto</strong>:
+          una va a Oficial y la otra a Interna.</td>
+    </tr>
+    <tr>
+      <td>No se puede editar el mes</td>
+      <td>Está cerrado. Se reabre escribiendo el motivo, que queda
+          registrado.</td>
+    </tr>
+    <tr>
+      <td>Los PDF salen como página web</td>
+      <td>El servidor no tiene instaladas las librerías para componerlos. El
+          documento es el mismo: se guarda con <strong>Ctrl+P → Guardar como
+          PDF</strong>.</td>
+    </tr>
+    <tr>
+      <td>El generador de horarios no aparece o falla</td>
+      <td>Falta el plan de estudios, faltan cargos para alguna materia, o las
+          franjas declaradas no dejan lugar. El propio sistema dice cuál de las
+          tres es.</td>
+    </tr>
+    <tr>
+      <td>Algo anda distinto que ayer</td>
+      <td>Mirar la versión al pie de la pantalla, y compararla con la de la
+          otra computadora. Casi siempre es eso.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h1><span class="numero">12</span>Glosario</h1>
+<p class="bajada">Las palabras que usa el sistema.</p>
+
+<table>
+  <tbody>
+    <tr><td class="camino">Ciclo lectivo</td>
+        <td>El año escolar, con su fecha de inicio y de fin.</td></tr>
+    <tr><td class="camino">Período académico</td>
+        <td>Cada cuatrimestre o trimestre dentro del ciclo. El horario se
+            genera por período.</td></tr>
+    <tr><td class="camino">Esquema horario</td>
+        <td>La forma de la jornada de un curso: con almuerzo, sin almuerzo.
+            Define sus bloques.</td></tr>
+    <tr><td class="camino">Bloque</td>
+        <td>Una hora de clase o un recreo, con su horario real de inicio y
+            fin.</td></tr>
+    <tr><td class="camino">Plan de estudios</td>
+        <td>Qué materia se dicta en qué curso y con cuántas horas
+            semanales.</td></tr>
+    <tr><td class="camino">DDJJ</td>
+        <td>Declaración jurada de disponibilidad: cuándo un docente no puede
+            venir, y por qué.</td></tr>
+    <tr><td class="camino">Versión de horario</td>
+        <td>Un horario completo para un período. Puede estar en borrador, ser
+            el vigente, o quedar histórico.</td></tr>
+    <tr><td class="camino">Situación de revista</td>
+        <td>Titular, interino o suplente. Es del cargo.</td></tr>
+    <tr><td class="camino">Fuente de pago</td>
+        <td>Quién paga ese cargo: el Estado (subvencionado) o la escuela
+            (interno).</td></tr>
+    <tr><td class="camino">Mixto</td>
+        <td>Una persona con cargos de las dos fuentes. No es un campo: sale
+            solo de sus cargos.</td></tr>
+    <tr><td class="camino">Cobertura</td>
+        <td>Qué se hace con las horas de alguien de licencia: suplente
+            designado, o sin cubrir.</td></tr>
+    <tr><td class="camino">Parte diario</td>
+        <td>Quién tenía que estar hoy y qué pasó con cada uno. Se calcula, no
+            se guarda.</td></tr>
+    <tr><td class="camino">Novedad</td>
+        <td>Una línea del informe mensual: un alta, una baja, una licencia,
+            una inasistencia.</td></tr>
+    <tr><td class="camino">Compilar</td>
+        <td>Armar las novedades del mes desde lo que ya está cargado. Se puede
+            repetir.</td></tr>
+    <tr><td class="camino">Planilla Oficial / Interna</td>
+        <td>Las dos planillas del liquidador. Cada novedad va a la que
+            corresponde según la fuente de pago del cargo.</td></tr>
+    <tr><td class="camino">Cierre</td>
+        <td>Congelar las novedades del mes. Reabrirlo exige un motivo y queda
+            registrado.</td></tr>
+  </tbody>
+</table>
+
+<div class="nota" style="margin-top:1.2cm">
+  <p>
+    <strong>Manual del SGE — versión {{ version }}</strong> ({{ fase }}).
+    Generado el {{ fecha }}.
+  </p>
+  <p style="margin-bottom:0">
+    Este manual se genera desde el propio sistema, así que acompaña a la
+    versión instalada. Para volver a generarlo:
+    <code>python manage.py generar_manual</code>.
+  </p>
+</div>
+
+</body>
+</html>
