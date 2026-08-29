@@ -52,6 +52,11 @@ from licencias.models import (
 # La escuela de ejemplo se llama así y se pinta de naranja a propósito: es la
 # señal de que lo que se está mirando no es la escuela real.
 NOMBRE_ESCUELA_DE_PRUEBA = "Escuela Orange"
+COLOR_ESCUELA_DE_PRUEBA = "#c2560f"
+EMBLEMA_ESCUELA_DE_PRUEBA = "🍊"
+
+# Cómo se llamó antes, para reconocerla en una instalación que ya venía andando.
+NOMBRES_ANTERIORES = ["Instituto de ejemplo"]
 
 # Grilla del turno mañana: las horas van de a pares con recreos de duración
 # variable, y algunos cursos cortan para almorzar.
@@ -292,23 +297,7 @@ class Command(BaseCommand):
     def handle(self, *args, **opciones):
         anio = opciones["anio"]
 
-        institucion, creada = Institucion.objects.get_or_create(
-            nombre=NOMBRE_ESCUELA_DE_PRUEBA,
-            defaults={
-                "nombre_corto": "Orange",
-                "jurisdiccion": Jurisdiccion.SAN_LUIS,
-                "localidad": "San Luis",
-                # Naranja y una naranja: la escuela de ejemplo tiene que
-                # distinguirse de un vistazo de la real, para que nadie cargue
-                # datos verdaderos en la de prueba ni al revés.
-                "color": "#c2560f",
-                "emblema": "🍊",
-                # Ubicación aproximada, para poder probar el fichaje del portal.
-                "latitud": -33.301726,
-                "longitud": -66.337752,
-                "radio_fichaje_metros": 200,
-            },
-        )
+        institucion, creada = self._escuela_de_prueba()
         self._informar("Institución", institucion, creada)
 
         usuario = self._crear_usuario(institucion, opciones)
@@ -334,6 +323,37 @@ class Command(BaseCommand):
             )
 
     # -- pasos ----------------------------------------------------------------
+
+    def _escuela_de_prueba(self):
+        """La escuela de ejemplo, creada o puesta al día.
+
+        Se busca también por los nombres que tuvo antes: una instalación que ya
+        venía andando tiene que quedar renombrada y repintada, no convivir con
+        una segunda escuela vacía al lado.
+        """
+        institucion = Institucion.objects.filter(
+            nombre__in=[NOMBRE_ESCUELA_DE_PRUEBA, *NOMBRES_ANTERIORES]
+        ).first()
+        creada = institucion is None
+        if creada:
+            institucion = Institucion(
+                jurisdiccion=Jurisdiccion.SAN_LUIS,
+                localidad="San Luis",
+                # Ubicación aproximada, para poder probar el fichaje del portal.
+                latitud=-33.301726,
+                longitud=-66.337752,
+                radio_fichaje_metros=200,
+            )
+
+        # La identidad se reescribe siempre, incluso sobre una escuela que ya
+        # existía: es lo único que distingue la de prueba de la real, y no
+        # puede quedar librado a que alguien la haya editado.
+        institucion.nombre = NOMBRE_ESCUELA_DE_PRUEBA
+        institucion.nombre_corto = "Orange"
+        institucion.color = COLOR_ESCUELA_DE_PRUEBA
+        institucion.emblema = EMBLEMA_ESCUELA_DE_PRUEBA
+        institucion.save()
+        return institucion, creada
 
     def _crear_usuario(self, institucion, opciones):
         usuario, creado = Usuario.objects.get_or_create(
@@ -578,40 +598,56 @@ class Command(BaseCommand):
             if materia is None:
                 continue
 
-            docente, acumuladas = None, 0
+            # El número del docente cuenta dentro de su materia, no sobre el
+            # total: así la misma corrida sobre la misma escuela vuelve a dar
+            # exactamente las mismas personas, y recargar no duplica la planta.
+            numero, docente, acumuladas = 0, None, 0
             for curso in cursos:
                 # Un docente no toma más de TOPE_HORAS_DOCENTE horas.
                 if docente is None or acumuladas + horas > TOPE_HORAS_DOCENTE:
-                    docente = self._docente_inventado(institucion, indice_materia, creados, hoy)
-                    if docente is None:
-                        break
-                    creados += 1
+                    docente, nuevo_docente = self._docente_inventado(
+                        institucion, indice_materia, numero, hoy
+                    )
+                    orden = indice_materia * 10 + numero
+                    numero += 1
                     acumuladas = 0
-                    self._cargar_ddjj(institucion, docente, periodos, creados)
+                    if nuevo_docente:
+                        creados += 1
+                        self._cargar_ddjj(institucion, docente, periodos, orden)
 
-                Cargo.objects.create(
+                Cargo.objects.get_or_create(
                     institucion=institucion,
                     legajo=docente,
-                    tipo=TipoCargoLegajo.HORAS_CATEDRA,
-                    nivel=nivel,
                     materia=materia,
                     curso=curso,
-                    horas_semanales=horas,
-                    situacion_revista=SituacionRevista.TITULAR
-                    if creados % 3
-                    else SituacionRevista.PROVISIONAL,
-                    fuente_pago=FuentePago.SUBVENCIONADO if creados % 4 else FuentePago.INTERNO,
-                    fecha_alta=hoy - timedelta(days=400 + creados * 30),
+                    defaults={
+                        "tipo": TipoCargoLegajo.HORAS_CATEDRA,
+                        "nivel": nivel,
+                        "horas_semanales": horas,
+                        "situacion_revista": SituacionRevista.TITULAR
+                        if orden % 3
+                        else SituacionRevista.PROVISIONAL,
+                        "fuente_pago": FuentePago.SUBVENCIONADO
+                        if orden % 4
+                        else FuentePago.INTERNO,
+                        "fecha_alta": hoy - timedelta(days=400 + orden * 30),
+                    },
                 )
                 acumuladas += horas
 
         self.stdout.write(f"  + {creados} docentes con sus cargos y declaraciones juradas")
 
     def _docente_inventado(self, institucion, indice_materia, numero, hoy):
+        """Un docente de la planta de ejemplo. Devuelve (legajo, si es nuevo).
+
+        El CUIL sale de la materia y del número dentro de ella, así que es el
+        mismo en cada corrida: volver a cargar el piloto reencuentra a la misma
+        persona en lugar de inventar otra.
+        """
         apellido = APELLIDOS[(indice_materia * 7 + numero) % len(APELLIDOS)]
         nombre = NOMBRES[(indice_materia * 5 + numero) % len(NOMBRES)]
         cuil = f"27-{30000000 + indice_materia * 1000 + numero:08d}-1"
-        legajo, creado = Legajo.objects.get_or_create(
+        return Legajo.objects.get_or_create(
             institucion=institucion,
             cuil=cuil,
             defaults={
@@ -620,7 +656,6 @@ class Command(BaseCommand):
                 "fecha_ingreso": hoy - timedelta(days=400 + numero * 30),
             },
         )
-        return legajo if creado else None
 
     def _cargar_ddjj(self, institucion, docente, periodos, numero):
         """Le carga compromisos en otra escuela, como pasa en la realidad."""
@@ -726,24 +761,32 @@ class Command(BaseCommand):
 
     def _dar_acceso_al_portal(self, institucion, opciones):
         """Le crea usuario al primer docente, para poder probar el portal."""
-        # Se elige alguien que esté trabajando: si estuviera de licencia, el
-        # portal mostraría eso y no se vería el fichaje ni el horario.
-        hoy = date.today()
-        legajo = (
-            Legajo.objects.filter(institucion=institucion, cargos__isnull=False, usuario=None)
-            .exclude(
-                licencias__estado=EstadoLicencia.APROBADA,
-                licencias__fecha_inicio__lte=hoy,
-                licencias__fecha_fin__gte=hoy,
+        email = f"docente@{opciones['email'].split('@')[-1]}"
+        usuario = Usuario.objects.filter(email=email).first()
+
+        # Si ya se corrió antes, el usuario del portal ya tiene su legajo. Hay
+        # que quedarse con ese: Legajo.usuario es uno a uno, y asignárselo a
+        # otra persona rompe con un error de clave duplicada.
+        legajo = Legajo.objects.filter(institucion=institucion, usuario=usuario).first()
+
+        if legajo is None:
+            # Se elige alguien que esté trabajando: si estuviera de licencia, el
+            # portal mostraría eso y no se vería el fichaje ni el horario.
+            hoy = date.today()
+            legajo = (
+                Legajo.objects.filter(institucion=institucion, cargos__isnull=False, usuario=None)
+                .exclude(
+                    licencias__estado=EstadoLicencia.APROBADA,
+                    licencias__fecha_inicio__lte=hoy,
+                    licencias__fecha_fin__gte=hoy,
+                )
+                .distinct()
+                .order_by("apellido", "nombre")
+                .first()
             )
-            .distinct()
-            .order_by("apellido", "nombre")
-            .first()
-        )
         if legajo is None:
             return None
 
-        email = f"docente@{opciones['email'].split('@')[-1]}"
         usuario, creado = Usuario.objects.get_or_create(
             email=email,
             defaults={"nombre": legajo.nombre, "apellido": legajo.apellido},
