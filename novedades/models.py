@@ -276,6 +276,49 @@ class Novedad(ModeloInstitucional):
         if self.fecha_fin and self.fecha and self.fecha_fin < self.fecha:
             raise ValidationError({"fecha_fin": "El fin no puede ser anterior al inicio."})
 
+    def de_donde_salio(self) -> dict | None:
+        """El hecho que originó esta novedad, en castellano y con su link.
+
+        La pregunta inevitable frente al mes compilado es «¿y este renglón de
+        dónde salió?». La respuesta ya está guardada en ``clave_origen``, que
+        es lo que hace idempotente la compilación; acá se traduce a algo que
+        se pueda leer y abrir.
+        """
+        if self.origen != Origen.AUTOMATICA or not self.clave_origen:
+            return None
+
+        from django.urls import NoReverseMatch, reverse
+
+        partes = self.clave_origen.split(":")
+        tipo = partes[0]
+        identificador = partes[1] if len(partes) > 1 else ""
+
+        textos = {
+            "cargo_alta": "el alta del cargo",
+            "cargo_baja": "la baja del cargo",
+            "licencia": "la licencia cargada",
+            "inasistencia": "lo marcado en el parte",
+            "tardanzas": "las tardanzas marcadas en el parte",
+        }
+        destinos = {
+            "cargo_alta": "admin:legajos_cargo_change",
+            "cargo_baja": "admin:legajos_cargo_change",
+            "licencia": "admin:licencias_licencia_change",
+            "inasistencia": "admin:asistencia_registroasistencia_change",
+        }
+
+        texto = textos.get(tipo)
+        if texto is None:
+            return None
+
+        url = ""
+        if tipo in destinos and identificador.isdigit():
+            try:
+                url = reverse(destinos[tipo], args=[identificador])
+            except NoReverseMatch:
+                url = ""
+        return {"texto": texto, "url": url}
+
 
 def periodo_de(institucion, anio: int, mes: int, crear: bool = True):
     """Devuelve (y crea si hace falta) el período de un mes."""

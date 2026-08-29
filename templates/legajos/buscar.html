@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block titulo %}Buscar personas · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Buscar una persona</h1>
+  <p class="subtitulo">Por apellido, nombre o CUIL.</p>
+
+  <form method="get" class="navegacion-fecha no-imprimir">
+    <input type="search" name="q" value="{{ consulta }}" autofocus
+           placeholder="Escribí un apellido…" style="min-width:20rem">
+    <button type="submit" class="boton">Buscar</button>
+  </form>
+
+  {% if consulta and not encontrados %}
+    <div class="aviso warning">No hay nadie que coincida con «{{ consulta }}».</div>
+  {% endif %}
+
+  {% if encontrados %}
+    <table class="datos">
+      <thead>
+        <tr><th>Persona</th><th>CUIL</th><th>Cargos vigentes</th><th>Hoy</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for legajo in encontrados %}
+          <tr>
+            <td>
+              <strong>{{ legajo.nombre_completo }}</strong>
+              <div class="secundario">{{ legajo.get_estado_display }}</div>
+            </td>
+            <td class="secundario">{{ legajo.cuil }}</td>
+            <td>
+              {% for cargo in legajo.cargos.all %}
+                {% if not cargo.fecha_baja %}
+                  <div class="secundario">{{ cargo.descripcion }}</div>
+                {% endif %}
+              {% empty %}
+                <span class="secundario">sin cargos</span>
+              {% endfor %}
+            </td>
+            <td>
+              {% if legajo.licencia_de_hoy %}
+                <span class="etiqueta alerta">de licencia</span>
+                <div class="secundario">
+                  {{ legajo.licencia_de_hoy.tipo }} ·
+                  hasta el {{ legajo.licencia_de_hoy.fecha_fin|date:"d/m/Y" }}
+                </div>
+              {% else %}
+                <span class="secundario">trabajando</span>
+              {% endif %}
+            </td>
+            <td class="acciones-fila no-imprimir">
+              <a class="ficha" href="{% url 'admin:legajos_legajo_change' legajo.pk %}">Abrir el legajo</a>
+              <a class="ficha" href="{% url 'certificacion_servicios' legajo.pk %}">Certificar</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+{% endblock %}

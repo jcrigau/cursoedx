@@ -66,6 +66,12 @@
       {% endif %}
     </nav>
 
+    {% if perms.legajos.view_legajo %}
+      <form method="get" action="{% url 'buscar_personas' %}" class="buscador">
+        <input type="search" name="q" placeholder="Buscar una persona…" aria-label="Buscar una persona">
+      </form>
+    {% endif %}
+
     <div class="barra-derecha">
       {% if user.is_staff %}<a href="{% url 'admin:index' %}">Administración</a>{% endif %}
       <span>{{ user.nombre_completo }}</span>

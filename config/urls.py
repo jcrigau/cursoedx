@@ -15,6 +15,7 @@ urlpatterns = [
     path("", core_views.inicio, name="inicio"),
     path("institucion/cambiar/", core_views.cambiar_institucion, name="cambiar_institucion"),
     path("sistema/", core_views.estado_del_sistema, name="estado_del_sistema"),
+    path("legajos/buscar/", legajos_views.buscar, name="buscar_personas"),
     path(
         "legajos/<int:pk>/certificacion/",
         legajos_views.certificacion_servicios,
