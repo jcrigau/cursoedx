@@ -422,13 +422,37 @@
   curso sin clase o frena la liquidación; el otro color es trabajo normal.
 </p>
 
+<h2>La semana que viene</h2>
+<p>
+  En la barra, <strong>La semana</strong>: los próximos siete días con qué
+  licencias empiezan y terminan, qué suplencias vencen y cuántas horas quedan
+  sin docente cada día. Sirve para resolver el viernes lo que si no se
+  descubre el lunes a las 7:45.
+</p>
+
+<h2>Lo último que pasó</h2>
+<p>
+  Al pie del tablero, las últimas acciones de la escuela: licencias aprobadas,
+  suplentes designados, horarios publicados, meses cerrados. Es la bitácora
+  del sistema, legible, para saber qué se movió sin recorrer pantallas.
+</p>
+
+<h2>El día por correo, a las 7:00</h2>
+<p>
+  Si el servidor tiene el correo configurado, el sistema puede mandarle a
+  secretaría y dirección un resumen del día antes de empezar: quién está de
+  licencia y hasta cuándo, qué horas quedan sin docente, qué hay para aprobar.
+  Se programa una sola vez en el hosting (está explicado en la guía de
+  despliegue) y no hay que hacer nada más.
+</p>
+
 <h2>Buscar una persona</h2>
 <p>
-  Arriba a la derecha hay una caja de búsqueda. Se escribe un apellido —o un
-  nombre, o un CUIL— y sale la persona con sus cargos vigentes, si hoy está de
-  licencia, y los botones para abrir su legajo o certificar servicios. Es el
-  atajo para cuando la pregunta es «¿qué pasa con Fulano?» en vez de «dónde
-  está tal pantalla».
+  Arriba a la derecha hay una caja de búsqueda. Se escribe un apellido —sin
+  preocuparse por las tildes: «benitez» encuentra a Benítez— y sale la persona
+  con sus cargos vigentes, si hoy está de licencia, y el botón para abrir su
+  ficha. Es el atajo para cuando la pregunta es «¿qué pasa con Fulano?» en vez
+  de «dónde está tal pantalla».
 </p>
 
 <h2>Cómo funciona el sistema</h2>
@@ -579,6 +603,46 @@
     necesita ninguna marca especial: el sistema lo resuelve solo. Si esa
     persona toma una licencia, va a generar <strong>dos líneas</strong> en las
     novedades, una para cada planilla. Eso es correcto, no es un error.
+  </p>
+</div>
+
+<h2>La pantalla Personal, y la ficha de cada uno</h2>
+<p>
+  En la barra, <strong>Personal</strong>: la planta completa, con cuántos
+  cargos y horas tiene cada uno, si hoy está trabajando o de licencia, y qué
+  materias puede dar. Desde ahí se abre la <strong>ficha</strong> de cada
+  persona: sus datos, su antigüedad, sus cargos, su documentación y todo su
+  año —licencias, lo marcado en el parte, las suplencias que hizo— en una sola
+  pantalla de lectura. El formulario del panel queda para editar.
+</p>
+
+<h2>Qué materias puede dar</h2>
+<p>
+  En cada persona se tildan las materias que está <strong>en condiciones de
+  dar</strong>, aunque este año no tenga horas de esa materia. No es lo mismo
+  que sus cargos: alguien habilitado en Química sirve para cubrir Química
+  aunque hoy no la dicte. Es lo que el sistema mira cuando hay que reemplazar
+  a alguien, así que conviene completarlo: cuanto más cargado, mejores
+  candidatos encuentra.
+</p>
+
+<h2>El personal por planilla</h2>
+<p>
+  Para cargar o corregir mucha gente de una vez, en Personal está
+  <strong>Bajar Excel</strong>: descarga la lista completa, se corrige o se
+  agregan filas en Excel, y se vuelve a subir con <strong>Subir
+  planilla</strong>. La identidad es el CUIL: con el mismo CUIL se actualiza,
+  con uno nuevo se crea la persona.
+</p>
+<div class="ojo">
+  <span class="titulo">Lo que la planilla nunca hace</span>
+  <p>
+    No borra a nadie —una fila que falta no es una baja; las bajas se hacen en
+    el sistema, con su motivo— y no toca los cargos: materia, curso, fuente de
+    pago y situación de revista se cargan adentro, donde cada campo valida.
+    Lo dudoso (un CUIL inválido, una materia que no existe) se observa fila
+    por fila y no se toca: se corrige el Excel y se vuelve a subir, sin miedo,
+    porque subir dos veces no duplica.
   </p>
 </div>
 
@@ -767,6 +831,33 @@
   </p>
 </div>
 
+<h2>«Cubrir ahora»: a quién llamo</h2>
+<p>
+  En <strong>Cursos de hoy</strong>, cada hora en rojo trae el botón
+  <strong>Cubrir ahora</strong>. Abre la lista de posibles reemplazos con tres
+  filtros: <em>está en la escuela hoy</em>, <em>da la misma materia</em>,
+  <em>disponible para llamar</em>. El orden ya viene por conveniencia: primero
+  quien está en el edificio, da esa materia y tiene la hora libre.
+</p>
+<p>
+  Quien no puede sigue en la lista, atenuado y con el motivo —está de
+  licencia, tiene clase a esa hora, lo declaró en su DDJJ—: saberlo evita
+  volver a preguntárselo mañana. <strong>Designar</strong> crea la cobertura y
+  el cargo del suplente, del que sale su alta al compilar el mes. Si la hora
+  no tiene una licencia detrás, no deja designar: ofrece cargarla primero.
+</p>
+
+<h2>Avisarle al suplente</h2>
+<p>
+  Designar no es avisar. Después de designar, la pantalla de aviso arma el
+  mensaje una sola vez —quién cubre a quién, qué cargo, desde y hasta cuándo—
+  y da tres caminos: <strong>enviarlo por email</strong>,
+  <strong>abrir WhatsApp con el texto ya escrito</strong> (solo falta apretar
+  enviar), o <strong>«Ya le avisé»</strong> para el llamado por teléfono.
+  Queda registrado cuándo y por qué vía, así nadie llama dos veces… ni
+  ninguna.
+</p>
+
 <h2>Extender o cesar una suplencia</h2>
 <p>
   El tablero avisa cuáles están por vencer, y se resuelven ahí mismo:
@@ -883,11 +974,25 @@
   de color acá.
 </p>
 
+<div class="clave">
+  <span class="titulo">El aviso que nunca se convirtió en licencia</span>
+  <p>
+    Si alguien avisó por el portal, pasaron dos días y la licencia no se cargó,
+    el tablero lo marca como pendiente urgente: <em>«Avisos viejos sin licencia
+    cargada»</em>. Sin ese aviso, esa ausencia quedaría injustificada en el mes
+    sin que nadie la persiguiera. Es el único punto del circuito donde algo se
+    podía perder en silencio.
+  </p>
+</div>
+
 <h2>El resumen del mes</h2>
 <p>
   En <strong>Resumen del mes</strong> está el acumulado por persona:
   inasistencias justificadas e injustificadas, tardanzas, licencias. Es lo que
-  conviene mirar antes de compilar las novedades.
+  conviene mirar antes de compilar las novedades. Cada fila trae un
+  <em>«ver los días»</em> que despliega el detalle: qué día fue cada cosa, si
+  quedó justificada y por qué artículo — la respuesta a «¿3 inasistencias?
+  ¿qué días?» sin salir de la pantalla.
 </p>
 
 <h1><span class="numero">9</span>El cierre del mes</h1>
@@ -1084,6 +1189,22 @@
           tres es.</td>
     </tr>
     <tr>
+      <td>Quiero cargar 130 personas y no pienso tipearlas</td>
+      <td>Personal → <strong>Bajar Excel</strong>, completar la planilla, y
+          <strong>Subir planilla</strong>. El CUIL identifica a cada uno.</td>
+    </tr>
+    <tr>
+      <td>Designé un suplente pero nadie le avisó</td>
+      <td>En la pantalla de la cobertura está <em>«Avisarle»</em>: email,
+          WhatsApp con el mensaje escrito, o dejar anotado el llamado. Si no
+          dice «avisado el…», nadie le avisó.</td>
+    </tr>
+    <tr>
+      <td>Empieza el año y hay que recargar todo</td>
+      <td>No: <code>abrir_ciclo</code> copia cursos, períodos y plan de
+          estudios del año anterior, listos para retocar.</td>
+    </tr>
+    <tr>
       <td>El tablero no me muestra lo que espero</td>
       <td>Muestra lo del <strong>puesto</strong> de quien entró. Si falta algo,
           revisá el rol en <em>Administración → Membresías</em>.</td>
@@ -1139,6 +1260,12 @@
     <tr><td class="camino">Mixto</td>
         <td>Una persona con cargos de las dos fuentes. No es un campo: sale
             solo de sus cargos.</td></tr>
+    <tr><td class="camino">Ficha</td>
+        <td>La persona completa, para leer: datos, cargos, su año, su
+            antigüedad. El formulario del panel es para editar.</td></tr>
+    <tr><td class="camino">Materias que puede dar</td>
+        <td>Lo que alguien está habilitado a dictar, tenga o no horas de eso
+            este año. Alimenta la búsqueda de reemplazos.</td></tr>
     <tr><td class="camino">Cobertura</td>
         <td>Qué se hace con las horas de alguien de licencia: suplente
             designado, o sin cubrir.</td></tr>
