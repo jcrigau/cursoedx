@@ -3,6 +3,7 @@
 from datetime import date, timedelta
 
 from django.contrib import admin
+from django.templatetags.static import static
 from django.urls import reverse
 from django.utils.html import format_html
 
@@ -101,8 +102,9 @@ class LegajoAdmin(AdminInstitucional):
     search_fields = ("apellido", "nombre", "cuil", "dni", "numero")
     inlines = [CargoInline, DocumentoInline, TituloInline, ServicioAnteriorInline]
 
+    readonly_fields = ("foto_actual",)
     fieldsets = (
-        (None, {"fields": ("numero", "apellido", "nombre", "foto", "estado")}),
+        (None, {"fields": ("numero", "apellido", "nombre", "foto_actual", "foto", "estado")}),
         ("Identificación", {"fields": ("cuil", "dni", "fecha_nacimiento", "obra_social")}),
         ("Contacto", {"fields": ("email", "telefono", "domicilio", "localidad")}),
         ("En la institución", {"fields": ("plantel", "fecha_ingreso", "usuario", "observaciones")}),
@@ -119,6 +121,20 @@ class LegajoAdmin(AdminInstitucional):
         ),
     )
     filter_horizontal = ("materias_que_puede_dar",)
+
+    @admin.display(description="foto actual")
+    def foto_actual(self, obj):
+        """La cara que hay hoy, para ver a quién se le está cambiando qué."""
+        url = obj.foto.url if obj.foto else static("img/persona.svg")
+        return format_html(
+            '<img src="{}" alt="" style="width:110px;height:110px;object-fit:cover;'
+            'border-radius:10px;border:1px solid #dfe5e9">'
+            '<div style="color:#4a5c6b;font-size:0.8rem;margin-top:0.3rem">{}</div>',
+            url,
+            "Para cambiarla, elegí un archivo nuevo abajo."
+            if obj.foto
+            else "Sin foto: se muestra la silueta estándar.",
+        )
 
     @admin.display(description="cargos vigentes")
     def resumen_cargos(self, obj):

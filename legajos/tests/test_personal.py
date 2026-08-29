@@ -173,6 +173,19 @@ class TestLaFicha:
         assert "Ver archivo" in cuerpo
         assert "/media/documentos/" in cuerpo
 
+    def test_el_formulario_del_panel_muestra_la_foto_actual(self, client, con_personal, secretaria):
+        """Al editar el legajo se ve qué cara tiene hoy, antes de cambiarla."""
+        secretaria.is_superuser = True
+        secretaria.save()
+        client.force_login(secretaria)
+
+        cuerpo = client.get(
+            reverse("admin:legajos_legajo_change", args=[con_personal["persona"].pk])
+        ).content.decode()
+
+        assert "Foto actual" in cuerpo
+        assert "img/persona.svg" in cuerpo
+
     def test_sin_foto_va_la_silueta_estandar(self, client, con_personal, secretaria):
         """Nadie queda sin cara: sin foto cargada se muestra el perfil estándar."""
         client.force_login(secretaria)
