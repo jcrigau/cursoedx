@@ -12,6 +12,32 @@
     {% endif %}
   </p>
 
+  {% if pendientes %}
+    <section class="pendientes">
+      <h2>Lo que tenés para resolver</h2>
+      <div class="lista-pendientes">
+        {% for pendiente in pendientes %}
+          <a class="pendiente {% if pendiente.urgente %}urgente{% endif %}" href="{{ pendiente.url }}">
+            <span class="cuenta">{{ pendiente.cantidad }}</span>
+            <span class="cuerpo">
+              <span class="titulo">{{ pendiente.titulo }}</span>
+              <span class="detalle">{{ pendiente.detalle }}</span>
+            </span>
+            <span class="accion">{{ pendiente.accion }} →</span>
+          </a>
+        {% endfor %}
+      </div>
+    </section>
+  {% else %}
+    <div class="aviso">
+      Al día: no tenés nada pendiente en esta escuela.
+      {% if not ve_la_escuela %}
+        Cuando la secretaría cierre un mes, va a aparecer acá para descargarlo.
+      {% endif %}
+    </div>
+  {% endif %}
+
+  {% if ve_la_escuela %}
   <div class="grilla-indicadores">
     <div class="tarjeta indicador">
       <div class="numero">{{ cantidad_personal }}</div>
@@ -163,4 +189,5 @@
       poder armarse. Conviene corregirlo antes de generar los horarios.
     </p>
   {% endif %}
+  {% endif %}{# ve_la_escuela #}
 {% endblock %}

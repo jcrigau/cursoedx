@@ -26,6 +26,10 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
 - **Manual de la secretaría** en PDF, generado desde el propio sistema
   (`generar_manual`), y **control de versiones** visible al pie de cada
   pantalla y en `/sistema/`.
+- **El tablero cambia según el puesto**: cada uno entra y ve lo que tiene
+  para resolver, con el link al lugar exacto donde se resuelve. El directivo
+  sus licencias a aprobar, la secretaría el parte y el cierre del mes, el
+  liquidador lo que ya está cerrado. El docente va derecho al portal.
 - **`--reiniciar`**: vacía la escuela de ejemplo y la rearma de cero, sin
   tocar ninguna otra institución. Para bases que quedaron con datos de
   versiones anteriores.

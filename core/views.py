@@ -9,6 +9,8 @@ from django.urls import reverse
 from django.views.decorators.http import require_POST
 
 from .middleware import CLAVE_SESION
+from .models import Rol
+from .pendientes import pendientes_de
 from .version import informacion
 
 
@@ -23,6 +25,11 @@ def inicio(request):
     institucion = request.institucion
     if institucion is None:
         return render(request, "core/sin_institucion.html", status=403)
+
+    # El docente no trabaja sobre el tablero de la escuela: lo suyo está en el
+    # portal. Se lo lleva directo en lugar de mostrarle una pantalla vacía.
+    if _solo_es_docente(request.user, institucion):
+        return HttpResponseRedirect(reverse("portal_inicio"))
 
     # Import local: el tablero cruza módulos y va a sumar más apps por fase.
     from estructura.models import (
@@ -54,9 +61,33 @@ def inicio(request):
         ).exists(),
         "cursos": cursos.select_related("nivel", "turno", "esquema_horario")[:12],
     }
-    contexto.update(_resumen_de_personal(institucion))
-    contexto.update(_situacion_del_dia(institucion))
+    personal = _resumen_de_personal(institucion)
+    situacion = _situacion_del_dia(institucion)
+    contexto.update(personal)
+    contexto.update(situacion)
+    # El liquidador entra a descargar lo que ya se cerró: el estado de la
+    # escuela —personal, documentación, cursos— no es asunto suyo.
+    contexto["ve_la_escuela"] = _trabaja_en_la_escuela(request.user, institucion)
+    contexto["pendientes"] = pendientes_de(
+        institucion,
+        request.user,
+        situacion=situacion,
+        documentos_vencidos=personal["documentos_vencidos"],
+    )
     return render(request, "core/inicio.html", contexto)
+
+
+def _trabaja_en_la_escuela(usuario, institucion) -> bool:
+    """Quién ve el estado de la escuela y no solo lo suyo."""
+    if usuario.is_superuser:
+        return True
+    return bool(usuario.roles_en(institucion) & {Rol.SECRETARIA, Rol.DIRECTIVO})
+
+
+def _solo_es_docente(usuario, institucion) -> bool:
+    if usuario.is_superuser or usuario.is_staff:
+        return False
+    return usuario.roles_en(institucion) == {Rol.DOCENTE}
 
 
 def _situacion_del_dia(institucion) -> dict:

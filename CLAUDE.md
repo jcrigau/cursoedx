@@ -117,6 +117,10 @@ instituciones expone datos laborales de otra escuela.
   cruce que el parte diario: son los mismos datos ordenados al revés —por curso
   en vez de por persona— y por eso no pueden contradecirse. Si se toca uno, se
   toca el otro.
+- El **tablero de inicio muestra lo del puesto** (`core/pendientes.py`): cada
+  pendiente trae el link al lugar donde se resuelve, así nadie tiene que
+  aprender el mapa del panel para trabajar. Al sumar una pantalla nueva hay
+  que preguntarse a qué rol le corresponde y agregarla ahí.
 - El **color y el emblema son de la institución**, no del sistema: pintan las
   pantallas mientras esa escuela está activa, y sin institución activa no se
   aplica ninguno. Es lo que evita cargar datos reales en la escuela de prueba.

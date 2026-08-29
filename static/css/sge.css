@@ -501,3 +501,60 @@ tr.hora-con_novedad td:first-child { box-shadow: inset 3px 0 0 #b58020; }
   margin-right: 0.1rem;
   line-height: 1;
 }
+
+/* --- Lo que cada puesto tiene para resolver ------------------------------ */
+/* Va primero en el tablero y lleva al lugar exacto donde se resuelve: nadie
+   debería tener que aprender el mapa del sistema para hacer su trabajo. */
+
+.pendientes { margin-bottom: 2rem; }
+.pendientes h2 { margin-top: 0; }
+
+.lista-pendientes { display: grid; gap: 0.6rem; }
+
+.pendiente {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--acento);
+  border-radius: var(--radio);
+  text-decoration: none;
+  color: inherit;
+}
+
+.pendiente:hover { box-shadow: var(--sombra); border-color: var(--acento); }
+.pendiente.urgente { border-left-color: var(--alerta); }
+
+.pendiente .cuenta {
+  font-size: 1.6rem;
+  font-weight: 700;
+  min-width: 2.2rem;
+  text-align: center;
+  color: var(--acento);
+  font-variant-numeric: tabular-nums;
+}
+
+.pendiente.urgente .cuenta { color: var(--alerta); }
+
+.pendiente .cuerpo { flex: 1; }
+.pendiente .titulo { display: block; font-weight: 600; }
+.pendiente .detalle {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--tinta-suave);
+  margin-top: 0.1rem;
+}
+
+.pendiente .accion {
+  color: var(--acento);
+  font-weight: 600;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+@media (max-width: 40rem) {
+  .pendiente { flex-wrap: wrap; }
+  .pendiente .accion { width: 100%; text-align: right; }
+}
