@@ -35,7 +35,12 @@
       {% if institucion_actual.emblema %}{{ institucion_actual.emblema }} {% endif %}{{ site_header }}{% if institucion_actual %}<span class="escuela-actual">· {{ institucion_actual }}</span>{% endif %}
     </a>
   </div>
-  {% if user.is_anonymous %}{% include "admin/color_theme_toggle.html" %}{% endif %}
+  {% if not user.is_anonymous %}
+    {# En el admin, «Inicio» ya es la portada del panel: el tablero se nombra aparte. #}
+    <a class="volver-al-inicio" href="{% url 'inicio' %}">← Volver al tablero</a>
+  {% else %}
+    {% include "admin/color_theme_toggle.html" %}
+  {% endif %}
 {% endblock %}
 
 {% block nav-global %}{% endblock %}

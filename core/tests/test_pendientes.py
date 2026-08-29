@@ -95,3 +95,20 @@ class TestAislamiento:
         cuerpo = client.get(reverse("inicio")).content.decode()
 
         assert "Licencias esperando aprobación" not in cuerpo
+
+
+class TestVolverAlTablero:
+    """Desde cualquier pantalla se tiene que poder volver, sin buscar."""
+
+    def test_la_barra_tiene_el_inicio(self, client, escuela_cargada):
+        client.force_login(crear(escuela_cargada, Rol.SECRETARIA, "vuelta@uno.edu.ar"))
+        cuerpo = client.get(reverse("parte_diario")).content.decode()
+        assert "volver-al-inicio" in cuerpo
+
+    def test_el_admin_tiene_el_camino_de_vuelta(self, client, escuela_cargada):
+        """Django solo ofrece «Ver sitio», que ni se ve ni dice a dónde lleva."""
+        usuario = crear(escuela_cargada, Rol.SECRETARIA, "vuelta2@uno.edu.ar")
+        client.force_login(usuario)
+        cuerpo = client.get(reverse("admin:index")).content.decode()
+        assert "Volver al tablero" in cuerpo
+        assert f'href="{reverse("inicio")}"' in cuerpo

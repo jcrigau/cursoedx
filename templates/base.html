@@ -55,6 +55,7 @@
       «no tenés permiso» es peor que no mostrarlo.
     {% endcomment %}
     <nav class="menu">
+      <a href="{% url 'inicio' %}" class="volver-al-inicio">Inicio</a>
       {% if perms.asistencia.view_registroasistencia %}
         <a href="{% url 'parte_diario' %}">Parte diario</a>
         <a href="{% url 'cursos_del_dia' %}">Cursos de hoy</a>

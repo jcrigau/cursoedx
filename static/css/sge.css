@@ -558,3 +558,16 @@ tr.hora-con_novedad td:first-child { box-shadow: inset 3px 0 0 #b58020; }
   .pendiente { flex-wrap: wrap; }
   .pendiente .accion { width: 100%; text-align: right; }
 }
+
+/* Volver al tablero, siempre visible y sin ambigüedad. Es la salida del
+   laberinto: desde cualquier pantalla, un clic y estás en lo que tenés que
+   hacer. */
+.menu .volver-al-inicio {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  padding: 0.25rem 0.85rem;
+  font-weight: 600;
+}
+
+.menu .volver-al-inicio:hover { background: rgba(255, 255, 255, 0.26); }
