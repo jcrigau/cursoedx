@@ -15,7 +15,7 @@ from core.management.commands.cargar_piloto import (
     NOMBRE_ESCUELA_DE_PRUEBA,
     NOMBRES_ANTERIORES,
 )
-from core.models import Institucion
+from core.models import Institucion, Membresia, Rol, Usuario
 from legajos.models import Cargo, Legajo
 
 
@@ -58,3 +58,31 @@ def test_una_instalacion_vieja_se_renombra_en_lugar_de_duplicarse():
     escuela = Institucion.objects.get()  # una sola, no dos
     assert escuela.nombre == NOMBRE_ESCUELA_DE_PRUEBA
     assert escuela.emblema == EMBLEMA_ESCUELA_DE_PRUEBA
+
+
+@pytest.mark.django_db
+def test_el_escenario_se_puede_recargar():
+    """Volver a armarlo tiene que replantar lo mismo, no acumular situaciones.
+
+    Se corre sin el generador de horarios: acá lo que se prueba es que los
+    usuarios y las situaciones no se dupliquen, no el horario.
+    """
+    call_command("cargar_piloto", verbosity=0)
+    call_command("cargar_escenario", "--sin-demo", verbosity=0)
+    primera = contar()
+    usuarios = Usuario.objects.count()
+
+    call_command("cargar_escenario", "--sin-demo", verbosity=0)
+
+    assert contar() == primera
+    assert Usuario.objects.count() == usuarios
+
+
+@pytest.mark.django_db
+def test_el_escenario_crea_un_usuario_por_puesto():
+    call_command("cargar_piloto", verbosity=0)
+    call_command("cargar_escenario", "--sin-demo", verbosity=0)
+
+    institucion = Institucion.objects.get()
+    roles = set(Membresia.objects.filter(institucion=institucion).values_list("rol", flat=True))
+    assert roles == {Rol.SECRETARIA, Rol.DIRECTIVO, Rol.DOCENTE, Rol.LIQUIDADOR}

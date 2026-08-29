@@ -64,6 +64,13 @@ Entrar a http://127.0.0.1:8000/ con `secretaria@ejemplo.edu.ar`, y al portal
 docente en /portal/ con `docente@ejemplo.edu.ar`.
 Para un usuario propio: `python manage.py createsuperuser`.
 
+Para recorrer el sistema como se usa —y para mostrárselo a una escuela—,
+`cargar_escenario` va un paso más allá: crea **un usuario por cada puesto**
+(secretaría, dirección, docente, liquidación) y deja un día de trabajo con
+cosas por resolver: una licencia esperando aprobación, otra aprobada sin
+decidir la cobertura, un docente que avisó que no viene, una baja del mes y el
+cierre sin hacer. Al terminar imprime el recorrido, puesto por puesto.
+
 `cargar_demo` deja la escuela **funcionando**: arma la estructura, genera y
 publica el horario, carga licencias con y sin suplente sobre docentes que hoy
 tienen clase, registra la asistencia de los últimos días y compila el mes de

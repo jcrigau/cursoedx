@@ -58,3 +58,33 @@
   opacity: 0.85;
   margin-left: 0.4em;
 }
+
+/* --- El menú lateral, siempre a la vista -------------------------------- */
+/* Django lo deja scrollear junto con el contenido, así que en un listado
+   largo el menú se pierde arriba y hay que volver al principio para cambiar
+   de pantalla. Pegado al borde y con su propio scroll, queda siempre a mano. */
+
+#nav-sidebar {
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  max-height: 100vh;
+  overflow-y: auto;
+  /* Que el scroll del menú no arrastre al de la página al llegar al final. */
+  overscroll-behavior: contain;
+}
+
+/* El buscador del menú queda fijo arriba: filtrar es lo primero que se hace. */
+#nav-sidebar #nav-filter {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+
+/* El botón que lo pliega acompaña al menú en vez de quedarse atrás. */
+#toggle-nav-sidebar {
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100vh;
+}

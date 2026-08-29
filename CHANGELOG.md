@@ -26,6 +26,10 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
 - **Manual de la secretaría** en PDF, generado desde el propio sistema
   (`generar_manual`), y **control de versiones** visible al pie de cada
   pantalla y en `/sistema/`.
+- **cargar_escenario**: un día de trabajo por resolver, con un usuario por
+  puesto y el recorrido impreso al terminar.
+- El **menú lateral del admin** queda fijo mientras se recorre un listado
+  largo, en vez de perderse arriba.
 - **cargar_demo**: deja la escuela de ejemplo en marcha, con horario publicado,
   parte del día y mes de novedades compilado.
 
