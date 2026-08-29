@@ -26,6 +26,16 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
 - **Manual de la secretaría** en PDF, generado desde el propio sistema
   (`generar_manual`), y **control de versiones** visible al pie de cada
   pantalla y en `/sistema/`.
+- **Las decisiones se toman donde aparece el problema**: designar suplente o
+  dejar sin cubrir desde el propio parte, cargar la licencia desde el aviso del
+  docente, y extender o cesar suplencias desde el tablero.
+- **Buscar una persona** por apellido, nombre o CUIL desde la barra.
+- **Cada novedad dice de dónde salió**, con link al hecho que la generó.
+- **Cómo funciona el sistema** (`/circuito/`): el camino completo dibujado, de
+  el aviso del docente hasta la descarga del liquidador, con link a cada paso.
+- **Ayuda plegable** en el parte, los cursos y el mes, y una **bienvenida por
+  puesto** la primera vez que alguien entra.
+- **El checklist de puesta en marcha** lleva a cada formulario de alta.
 - **El tablero cambia según el puesto**: cada uno entra y ve lo que tiene
   para resolver, con el link al lugar exacto donde se resuelve. El directivo
   sus licencias a aprobar, la secretaría el parte y el cierre del mes, el

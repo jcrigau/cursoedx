@@ -18,6 +18,17 @@ from .compilador import coberturas_del_mes, compilar
 from .exportar import a_csv, a_xlsx, resumen_por_persona
 from .models import MESES, EstadoPeriodo, Novedad, PeriodoNovedades, periodo_de
 
+AYUDA_MES = [
+    "<strong>Compilar se puede repetir.</strong> Cada novedad recuerda de qué "
+    "hecho salió, así que actualiza en vez de duplicar, y no toca lo cargado a "
+    "mano ni lo congelado por un cierre.",
+    "Cada línea va a la planilla del <strong>cargo</strong> que la originó, no de "
+    "la persona: quien tiene cargos de las dos fuentes genera dos líneas.",
+    "Marcar «informadas» es una lista de control mientras se cargan en la planilla "
+    "del liquidador; no cambia nada del cálculo.",
+    "Hasta que el mes no se cierre, el liquidador no ve nada: un borrador todavía puede cambiar.",
+]
+
 PERMISO_VER = "novedades.view_novedad"
 PERMISO_EDITAR = "novedades.change_novedad"
 
@@ -64,6 +75,7 @@ def detalle(request, anio: int, mes: int):
         "novedades/detalle.html",
         {
             "periodo": periodo,
+            "ayuda": AYUDA_MES,
             "resumen": periodo.resumen(),
             "personas": resumen_por_persona(periodo),
             "sin_impacto": periodo.novedades.filter(impacta_haberes=False).count(),

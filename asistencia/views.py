@@ -12,6 +12,23 @@ from .models import EstadoAsistencia, RegistroAsistencia, buscar_licencia_que_ju
 from .parte import coberturas_pendientes, cuadro_del_dia, parte_diario
 from .reportes import resumen_mensual
 
+AYUDA_PARTE = [
+    "<strong>Lo que quede sin marcar se toma como presente.</strong> No hace "
+    "falta confirmar uno por uno a los que vinieron.",
+    "Quien tiene licencia aprobada no aparece en la lista: ya se sabe que no "
+    "viene y por qué. Sí aparece el suplente que lo cubre.",
+    "El parte no se guarda: se calcula cada vez. Por eso una licencia cargada "
+    "tarde corrige sola los días anteriores.",
+]
+
+AYUDA_CURSOS = [
+    "En <strong>rojo</strong>, las horas que quedan sin docente: esos cursos no tienen clase.",
+    "En el color de la escuela, las que cubre un suplente, con el titular al que reemplaza.",
+    "En ámbar, algo para mirar pero con clase: una tardanza, un retiro o un aviso sin resolver.",
+    "Sale del mismo cruce que el parte diario, así que las dos pantallas no "
+    "pueden decir cosas distintas.",
+]
+
 PERMISO_VER = "asistencia.view_registroasistencia"
 PERMISO_CARGAR = "asistencia.add_registroasistencia"
 
@@ -41,6 +58,7 @@ def parte_del_dia(request):
         # Decidir coberturas y cargar licencias es del directivo y de
         # secretaría; el resto ve el parte pero no lo resuelve desde acá.
         "puede_cubrir": request.user.has_perm("licencias.add_cobertura"),
+        "ayuda": AYUDA_PARTE,
         "fecha": fecha,
         "dia_anterior": fecha - timedelta(days=1),
         "dia_siguiente": fecha + timedelta(days=1),
@@ -140,6 +158,7 @@ def cursos_del_dia(request):
         "dia_anterior": fecha - timedelta(days=1),
         "dia_siguiente": fecha + timedelta(days=1),
         "cuadros": cuadros,
+        "ayuda": AYUDA_CURSOS,
         "horas_sin_clase": sum(cuadro.sin_clase for cuadro in cuadros),
         "cursos_afectados": sum(1 for cuadro in cuadros if cuadro.tiene_problemas),
         "parte": parte_diario(request.institucion, fecha) if not cuadros else None,

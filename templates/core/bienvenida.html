@@ -1,0 +1,14 @@
+{% if bienvenida %}
+  <section class="bienvenida no-imprimir">
+    <h2>{{ bienvenida.titulo }}</h2>
+    <ul>
+      {% for punto in bienvenida.puntos %}<li>{{ punto|safe }}</li>{% endfor %}
+    </ul>
+    <form method="post" action="{% url 'ocultar_bienvenida' %}">
+      {% csrf_token %}
+      <input type="hidden" name="siguiente" value="{{ request.get_full_path }}">
+      <button type="submit" class="boton">Entendido, no mostrar más</button>
+      <span class="pie">Después lo tenés en <a href="{% url 'circuito' %}">Cómo funciona el sistema</a>.</span>
+    </form>
+  </section>
+{% endif %}

@@ -14,6 +14,12 @@ from portal import views as portal_views
 urlpatterns = [
     path("", core_views.inicio, name="inicio"),
     path("institucion/cambiar/", core_views.cambiar_institucion, name="cambiar_institucion"),
+    path("circuito/", core_views.circuito, name="circuito"),
+    path(
+        "bienvenida/ocultar/",
+        core_views.ocultar_bienvenida,
+        name="ocultar_bienvenida",
+    ),
     path("sistema/", core_views.estado_del_sistema, name="estado_del_sistema"),
     path("legajos/buscar/", legajos_views.buscar, name="buscar_personas"),
     path(

@@ -18,6 +18,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 
 from asistencia.parte import version_vigente
+from core.bienvenida import para as bienvenida_para
 from horarios.models import AsignacionHoraria
 from horarios.vistas_grilla import grilla_de_docente
 from legajos.antiguedad import calcular_antiguedad
@@ -96,6 +97,7 @@ def inicio(request, legajo):
         ],
     }
     contexto["seccion"] = "inicio"
+    contexto["bienvenida"] = bienvenida_para(request.user, legajo.institucion)
     return render(request, "portal/inicio.html", contexto)
 
 

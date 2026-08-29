@@ -592,7 +592,12 @@ table.datos.compacta td { border-color: rgba(0, 0, 0, 0.06); }
 
 /* El buscador de personas, en la barra. La secretaría piensa en gente
    —«¿qué pasa con Herrera?»— y no en qué pantalla vive cada dato. */
-.barra .buscador { margin-left: auto; }
+.barra .buscador {
+  margin-left: auto;
+  /* Cede espacio antes que empujar el menú a una segunda línea. */
+  flex: 0 1 14rem;
+  min-width: 8rem;
+}
 
 .barra .buscador input {
   background: rgba(255, 255, 255, 0.14);
@@ -602,7 +607,7 @@ table.datos.compacta td { border-color: rgba(0, 0, 0, 0.06); }
   color: #fff;
   font: inherit;
   font-size: 0.85rem;
-  min-width: 13rem;
+  width: 100%;
 }
 
 .barra .buscador input::placeholder { color: rgba(255, 255, 255, 0.65); }
@@ -623,3 +628,91 @@ table.datos.compacta td { border-color: rgba(0, 0, 0, 0.06); }
   margin-top: 0.15rem;
   font-style: italic;
 }
+
+/* --- El circuito: el dibujo de cómo se apoya cada paso en el anterior ---- */
+
+.circuito { max-width: 42rem; margin: 1.5rem 0; }
+
+.paso-circuito {
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--acento);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  padding: 0.9rem 1.1rem;
+}
+
+.paso-circuito.automatico {
+  border-left-style: dashed;
+  background: var(--acento-claro);
+}
+
+.paso-circuito .quien {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--tinta-suave);
+  font-weight: 700;
+}
+
+.paso-circuito .que {
+  display: inline-block;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0.1rem 0 0.25rem;
+}
+
+.paso-circuito .que.sin-link { color: var(--tinta); }
+.paso-circuito .porque { margin: 0; font-size: 0.88rem; color: var(--tinta-suave); }
+.paso-circuito .etiqueta { margin-top: 0.45rem; display: inline-block; }
+
+.circuito .flecha {
+  text-align: center;
+  color: var(--borde);
+  font-size: 1.3rem;
+  line-height: 1;
+  margin: 0.35rem 0;
+}
+
+/* El paso pendiente lleva a su formulario: seguir la lista alcanza para
+   dejar una escuela nueva lista. */
+.pasos li { display: flex; align-items: center; gap: 0.5rem; }
+.pasos li .texto { flex: 1; }
+.pasos li .ficha { font-size: 0.78rem; padding: 0.15rem 0.6rem; }
+
+/* Ayuda de la pantalla: plegada, para no estorbar a quien ya sabe. */
+.ayuda {
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  background: var(--superficie);
+  margin: 0 0 1.25rem;
+  font-size: 0.88rem;
+}
+
+.ayuda summary {
+  cursor: pointer;
+  padding: 0.55rem 0.9rem;
+  font-weight: 600;
+  color: var(--acento);
+  list-style-position: inside;
+}
+
+.ayuda[open] summary { border-bottom: 1px solid var(--borde); }
+.ayuda ul { margin: 0.65rem 0; padding: 0 1.6rem; color: var(--tinta-suave); }
+.ayuda li { margin-bottom: 0.35rem; }
+
+/* --- La bienvenida del primer ingreso ----------------------------------- */
+/* Tres renglones para orientar a quien entra por primera vez. Se cierra y no
+   vuelve: si apareciera siempre, sería un cartel más que se aprende a saltear. */
+
+.bienvenida {
+  background: var(--acento-claro);
+  border: 1px solid var(--acento);
+  border-radius: var(--radio);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.75rem;
+}
+
+.bienvenida h2 { margin: 0 0 0.5rem; font-size: 1.05rem; color: var(--acento); }
+.bienvenida ul { margin: 0 0 0.9rem; padding-left: 1.1rem; }
+.bienvenida li { margin-bottom: 0.35rem; font-size: 0.92rem; }
+.bienvenida .pie { margin-left: 0.75rem; }

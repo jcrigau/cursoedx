@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block titulo %}El circuito · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Cómo funciona el sistema</h1>
+  <p class="subtitulo">
+    Cada paso se apoya en el anterior. Por eso nada se carga dos veces, y por
+    eso nada puede quedar diciendo dos cosas distintas.
+  </p>
+
+  <div class="circuito">
+    {% for paso in pasos %}
+      <div class="paso-circuito {% if paso.automatico %}automatico{% endif %}">
+        <div class="quien">{{ paso.quien }}</div>
+        {% if paso.url %}
+          <a class="que" href="{{ paso.url }}">{{ paso.que }}</a>
+        {% else %}
+          <span class="que sin-link">{{ paso.que }}</span>
+        {% endif %}
+        <p class="porque">{{ paso.porque }}</p>
+        {% if paso.automatico %}
+          <span class="etiqueta">lo hace solo el sistema</span>
+        {% endif %}
+      </div>
+      {% if not forloop.last %}<div class="flecha" aria-hidden="true">↓</div>{% endif %}
+    {% endfor %}
+  </div>
+
+  <h2>Lo que conviene tener claro</h2>
+
+  <div class="tarjeta">
+    <p>
+      <strong>El parte no se guarda: se calcula.</strong> Cada vez que se abre,
+      se arma cruzando el horario vigente con las licencias y coberturas del
+      momento. Por eso una licencia cargada tarde corrige sola los días
+      anteriores.
+    </p>
+    <p>
+      <strong>Cada novedad va a la planilla del cargo, no de la persona.</strong>
+      Quien tiene cargos de las dos fuentes de pago genera dos líneas, una a
+      cada planilla. Es correcto: es el caso donde se cometían los errores.
+    </p>
+    <p style="margin-bottom:0">
+      <strong>Compilar se puede repetir.</strong> Cada novedad automática
+      recuerda de qué hecho salió, así que volver a compilar actualiza en vez
+      de duplicar, y nunca toca lo cargado a mano ni lo congelado por un cierre.
+    </p>
+  </div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% comment %}
+  Ayuda de la pantalla, plegada por defecto.
+
+  El manual ya explica todo, pero está en otro lado: la duda aparece acá, con
+  la pantalla delante. Se usa así:
+
+    {% include "core/ayuda.html" with puntos=lista_de_textos %}
+
+  Va plegada para no estorbar a quien ya sabe, y el navegador recuerda si se
+  dejó abierta.
+{% endcomment %}
+<details class="ayuda no-imprimir">
+  <summary>¿Cómo se usa esta pantalla?</summary>
+  <ul>
+    {% for punto in puntos %}<li>{{ punto|safe }}</li>{% endfor %}
+  </ul>
+</details>

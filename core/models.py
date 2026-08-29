@@ -169,6 +169,11 @@ class Usuario(AbstractBaseUser, PermissionsMixin):
 
     objects = UsuarioManager()
 
+    # La bienvenida del primer ingreso se muestra una sola vez. Va en el
+    # usuario y no en la sesión: si volviera en cada login sería un cartel más
+    # que se aprende a ignorar.
+    vio_la_bienvenida = models.BooleanField("vio la bienvenida", default=False)
+
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["nombre", "apellido"]
 

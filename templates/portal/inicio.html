@@ -2,6 +2,8 @@
 {% block titulo %}Hoy · Mi portal{% endblock %}
 
 {% block contenido %}
+  {% include "core/bienvenida.html" %}
+
   <h1>Hoy</h1>
   <p class="subtitulo">{{ hoy|date:"l j \d\e F"|capfirst }}</p>
 

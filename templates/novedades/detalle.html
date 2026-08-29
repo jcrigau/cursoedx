@@ -35,6 +35,8 @@
     </div>
   </div>
 
+  {% include "core/ayuda.html" with puntos=ayuda %}
+
   <div class="acciones no-imprimir">
     {% if puede_editar and periodo.editable %}
       <form method="post" style="display:inline">

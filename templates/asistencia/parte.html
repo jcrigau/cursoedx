@@ -13,6 +13,8 @@
     {% if fecha != hoy %}<a class="ficha" href="?fecha={{ hoy|date:'Y-m-d' }}">Hoy</a>{% endif %}
   </form>
 
+  {% include "core/ayuda.html" with puntos=ayuda %}
+
   {% if parte.aviso %}
     <div class="aviso warning">{{ parte.aviso }}</div>
   {% endif %}

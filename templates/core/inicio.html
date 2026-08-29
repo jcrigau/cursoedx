@@ -12,6 +12,8 @@
     {% endif %}
   </p>
 
+  {% include "core/bienvenida.html" %}
+
   {% if pendientes %}
     <section class="pendientes">
       <h2>Lo que tenés para resolver</h2>
@@ -161,30 +163,22 @@
   <h2>Puesta en marcha</h2>
   <div class="tarjeta">
     <ul class="pasos">
-      <li class="{% if cantidad_niveles %}hecho{% else %}falta{% endif %}">
-        <span class="marca-paso">{% if cantidad_niveles %}✓{% else %}○{% endif %}</span>
-        <span class="texto">Cargar los niveles que tiene la escuela</span>
-      </li>
-      <li class="{% if ciclo %}hecho{% else %}falta{% endif %}">
-        <span class="marca-paso">{% if ciclo %}✓{% else %}○{% endif %}</span>
-        <span class="texto">Abrir el ciclo lectivo y sus períodos (cuatrimestres)</span>
-      </li>
-      <li class="{% if tiene_grilla %}hecho{% else %}falta{% endif %}">
-        <span class="marca-paso">{% if tiene_grilla %}✓{% else %}○{% endif %}</span>
-        <span class="texto">Definir turnos y la grilla de bloques horarios</span>
-      </li>
-      <li class="{% if cantidad_cursos %}hecho{% else %}falta{% endif %}">
-        <span class="marca-paso">{% if cantidad_cursos %}✓{% else %}○{% endif %}</span>
-        <span class="texto">Crear los cursos y divisiones del ciclo</span>
-      </li>
-      <li class="{% if cantidad_materias %}hecho{% else %}falta{% endif %}">
-        <span class="marca-paso">{% if cantidad_materias %}✓{% else %}○{% endif %}</span>
-        <span class="texto">Cargar las materias y el plan de estudios de cada curso</span>
-      </li>
+      {% for paso in puesta_en_marcha %}
+        <li class="{% if paso.hecho %}hecho{% else %}falta{% endif %}">
+          <span class="marca-paso">{% if paso.hecho %}✓{% else %}○{% endif %}</span>
+          <span class="texto">{{ paso.texto }}</span>
+          {% if not paso.hecho and user.is_staff %}
+            <a class="ficha no-imprimir" href="{{ paso.url }}">Cargar →</a>
+          {% endif %}
+        </li>
+      {% endfor %}
     </ul>
-    {% if user.is_staff %}
-      <p style="margin-bottom:0"><a href="{% url 'admin:index' %}">Ir a la administración para cargar datos →</a></p>
-    {% endif %}
+    <p class="pie" style="margin-bottom:0">
+      Cada paso se apoya en el anterior, así que conviene seguir el orden.
+      {% if user.is_staff %}
+        <a href="{% url 'circuito' %}">Ver cómo encaja todo →</a>
+      {% endif %}
+    </p>
   </div>
 
   {% if cursos %}
