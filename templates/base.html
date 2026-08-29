@@ -59,6 +59,7 @@
       {% if perms.asistencia.view_registroasistencia %}
         <a href="{% url 'parte_diario' %}">Parte diario</a>
         <a href="{% url 'cursos_del_dia' %}">Cursos de hoy</a>
+        <a href="{% url 'semana' %}">La semana</a>
         <a href="{% url 'resumen_asistencia' %}">Resumen del mes</a>
       {% endif %}
       {% if perms.legajos.view_legajo %}

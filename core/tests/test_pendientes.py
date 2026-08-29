@@ -112,3 +112,92 @@ class TestVolverAlTablero:
         cuerpo = client.get(reverse("admin:index")).content.decode()
         assert "Volver al tablero" in cuerpo
         assert f'href="{reverse("inicio")}"' in cuerpo
+
+
+class TestCabosSueltos:
+    """El aviso viejo sin licencia es el único punto donde algo se pierde solo."""
+
+    def test_un_aviso_viejo_sin_licencia_aparece(self, client, escuela_cargada):
+        from datetime import date, timedelta
+
+        from legajos.models import Legajo
+        from portal.models import AvisoInasistencia, MotivoAviso
+
+        sin_licencias = (
+            Legajo.objects.filter(institucion=escuela_cargada, licencias__isnull=True)
+            .order_by("apellido")
+            .first()
+        )
+        AvisoInasistencia.objects.create(
+            institucion=escuela_cargada,
+            legajo=sin_licencias,
+            fecha=date.today() - timedelta(days=3),
+            motivo=MotivoAviso.ENFERMEDAD,
+        )
+
+        client.force_login(crear(escuela_cargada, Rol.SECRETARIA, "cabo@uno.edu.ar"))
+        cuerpo = client.get(reverse("inicio")).content.decode()
+
+        assert "Avisos viejos sin licencia cargada" in cuerpo
+
+    def test_con_la_licencia_cargada_deja_de_ser_un_cabo(self, client, escuela_cargada):
+        from datetime import date, timedelta
+
+        from legajos.models import Legajo
+        from licencias.models import EstadoLicencia, Licencia, TipoLicencia
+        from portal.models import AvisoInasistencia, MotivoAviso
+
+        legajo = (
+            Legajo.objects.filter(institucion=escuela_cargada, licencias__isnull=True)
+            .order_by("apellido")
+            .first()
+        )
+        fecha = date.today() - timedelta(days=3)
+        AvisoInasistencia.objects.create(
+            institucion=escuela_cargada,
+            legajo=legajo,
+            fecha=fecha,
+            motivo=MotivoAviso.ENFERMEDAD,
+        )
+        # La licencia existe aunque todavía no esté aprobada: ya la está
+        # persiguiendo el directivo, no es un cabo suelto.
+        Licencia.objects.create(
+            institucion=escuela_cargada,
+            legajo=legajo,
+            tipo=TipoLicencia.objects.filter(institucion=escuela_cargada).first(),
+            fecha_inicio=fecha,
+            fecha_fin=fecha,
+            estado=EstadoLicencia.SOLICITADA,
+        )
+
+        client.force_login(crear(escuela_cargada, Rol.SECRETARIA, "cabo2@uno.edu.ar"))
+        cuerpo = client.get(reverse("inicio")).content.decode()
+
+        assert "Avisos viejos sin licencia cargada" not in cuerpo
+
+
+class TestLaSemana:
+    def test_muestra_los_siete_dias(self, client, escuela_cargada):
+        client.force_login(crear(escuela_cargada, Rol.SECRETARIA, "sem@uno.edu.ar"))
+        respuesta = client.get(reverse("semana"))
+        assert respuesta.status_code == 200
+
+    def test_una_licencia_que_empieza_aparece_en_su_dia(self, client, escuela_cargada):
+        from datetime import date, timedelta
+
+        from legajos.models import Legajo
+        from licencias.models import EstadoLicencia, Licencia, TipoLicencia
+
+        Licencia.objects.create(
+            institucion=escuela_cargada,
+            legajo=Legajo.objects.filter(institucion=escuela_cargada).first(),
+            tipo=TipoLicencia.objects.filter(institucion=escuela_cargada).first(),
+            fecha_inicio=date.today() + timedelta(days=2),
+            fecha_fin=date.today() + timedelta(days=9),
+            estado=EstadoLicencia.APROBADA,
+        )
+
+        client.force_login(crear(escuela_cargada, Rol.SECRETARIA, "sem2@uno.edu.ar"))
+        cuerpo = client.get(reverse("semana")).content.decode()
+
+        assert "empieza" in cuerpo

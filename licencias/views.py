@@ -15,6 +15,7 @@ from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
+from core.models import AccionAuditada, registrar_auditoria
 from horarios.models import AsignacionHoraria
 from legajos.models import Legajo, MotivoBaja
 
@@ -225,6 +226,15 @@ def designar_suplente(request, pk: int):
         cobertura.suplente = suplente
         cobertura.save(update_fields=["tipo", "suplente", "actualizado_en"])
     cobertura.designar_cargo_del_suplente()
+    registrar_auditoria(
+        AccionAuditada.CREACION,
+        cobertura,
+        usuario=request.user,
+        descripcion=(
+            f"Designó a {suplente.nombre_completo} como suplente de "
+            f"{asignacion.cargo.legajo.nombre_completo} ({asignacion.cargo.descripcion})"
+        ),
+    )
 
     messages.success(
         request,

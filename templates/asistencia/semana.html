@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block titulo %}La semana · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>La semana que viene</h1>
+  <p class="subtitulo">
+    Lo que se puede resolver hoy en vez de descubrirlo esa mañana.
+  </p>
+
+  <div class="semana">
+    {% for dia in dias %}
+      <section class="dia-semana {% if dia.es_hoy %}es-hoy{% endif %} {% if dia.sin_cobertura %}con-problemas{% endif %}">
+        <h2>
+          {{ dia.fecha|date:"l j"|capfirst }}
+          {% if dia.es_hoy %}<span class="etiqueta">hoy</span>{% endif %}
+        </h2>
+
+        {% if not dia.hay_clases %}
+          <p class="secundario">Sin clases.</p>
+        {% else %}
+          <p class="secundario">{{ dia.personas }} persona{{ dia.personas|pluralize }} en el parte.</p>
+
+          {% if dia.sin_cobertura %}
+            <a class="renglon alerta-renglon"
+               href="{% url 'cursos_del_dia' %}?fecha={{ dia.fecha|date:'Y-m-d' }}">
+              {{ dia.sin_cobertura }} hora{{ dia.sin_cobertura|pluralize }} sin docente →
+            </a>
+          {% endif %}
+        {% endif %}
+
+        {% for licencia in dia.empiezan %}
+          <div class="renglon">
+            <span class="etiqueta alerta">empieza</span>
+            {{ licencia.legajo.nombre_completo }}
+            <span class="secundario">{{ licencia.tipo.codigo }} · hasta el {{ licencia.fecha_fin|date:"d/m" }}</span>
+          </div>
+        {% endfor %}
+
+        {% for licencia in dia.terminan %}
+          <div class="renglon">
+            <span class="etiqueta">vuelve</span>
+            {{ licencia.legajo.nombre_completo }}
+            <span class="secundario">termina su {{ licencia.tipo.codigo }}</span>
+          </div>
+        {% endfor %}
+      </section>
+    {% endfor %}
+  </div>
+
+  {% if suplencias %}
+    <h2>Suplencias que vencen esta semana</h2>
+    <table class="datos">
+      <thead><tr><th>Suplente</th><th>Cargo</th><th>Termina</th><th>Titular</th></tr></thead>
+      <tbody>
+        {% for cobertura in suplencias %}
+          <tr>
+            <td>{{ cobertura.suplente.nombre_completo }}</td>
+            <td>{{ cobertura.cargo.descripcion }}</td>
+            <td>{{ cobertura.fecha_fin|date:"d/m/Y" }}</td>
+            <td class="secundario">{{ cobertura.cargo.legajo.nombre_completo }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    <p class="pie">Se extienden o se cesan desde el <a href="{% url 'inicio' %}">tablero</a>.</p>
+  {% endif %}
+{% endblock %}

@@ -90,10 +90,55 @@ def _del_directivo(institucion, situacion) -> list[Pendiente]:
     ]
 
 
+def _avisos_sin_licencia(institucion, hoy) -> int:
+    """Avisos de hace dos días o más cuyo certificado nunca llegó.
+
+    Es el único punto del circuito donde algo se pierde en silencio: el
+    docente avisó, se lo marcó ausente, y la licencia no se cargó nunca. Sin
+    licencia, esa ausencia queda injustificada en el mes y nadie la persigue.
+    Un aviso con licencia cargada —aunque esté sin aprobar— ya no es un cabo
+    suelto: lo está persiguiendo el directivo.
+    """
+    from datetime import timedelta
+
+    from licencias.models import EstadoLicencia, Licencia
+    from portal.models import AvisoInasistencia, EstadoAviso
+
+    viejos = AvisoInasistencia.objects.filter(
+        institucion=institucion, fecha__lte=hoy - timedelta(days=2)
+    ).exclude(estado=EstadoAviso.ANULADO)
+
+    sueltos = 0
+    for aviso in viejos.select_related("legajo"):
+        cubierto = (
+            Licencia.objects.filter(
+                legajo=aviso.legajo,
+                fecha_inicio__lte=aviso.fecha,
+                fecha_fin__gte=aviso.fecha,
+            )
+            .exclude(estado__in=[EstadoLicencia.RECHAZADA, EstadoLicencia.CANCELADA])
+            .exists()
+        )
+        if not cubierto:
+            sueltos += 1
+    return sueltos
+
+
 def _de_secretaria(institucion, situacion, documentos_vencidos) -> list[Pendiente]:
     """El trabajo del día y el cierre del mes."""
     hoy = date.today()
     return [
+        Pendiente(
+            titulo="Avisos viejos sin licencia cargada",
+            cantidad=_avisos_sin_licencia(institucion, hoy),
+            detalle=(
+                "Avisaron hace más de dos días y el certificado nunca se cargó: esas "
+                "ausencias van a quedar injustificadas en el mes."
+            ),
+            url=reverse("admin:portal_avisoinasistencia_changelist"),
+            accion="Revisar y cargar",
+            urgente=True,
+        ),
         Pendiente(
             titulo="Horas sin docente hoy",
             cantidad=situacion["horas_sin_cobertura"],

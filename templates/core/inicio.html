@@ -215,5 +215,25 @@
       poder armarse. Conviene corregirlo antes de generar los horarios.
     </p>
   {% endif %}
+  {% if actividad %}
+    <h2>Lo último que pasó</h2>
+    <div class="tarjeta actividad">
+      <ul>
+        {% for registro in actividad %}
+          <li>
+            <span class="cuando">{{ registro.creado_en|date:"d/m H:i" }}</span>
+            <span class="que">{{ registro.descripcion }}</span>
+            {% if registro.usuario %}
+              <span class="quien">{{ registro.usuario.nombre_completo }}</span>
+            {% endif %}
+          </li>
+        {% endfor %}
+      </ul>
+      <p class="pie" style="margin:0.5rem 0 0">
+        El registro completo, con quién hizo cada cosa, está en
+        <a href="{% url 'admin:core_registroauditoria_changelist' %}">Registros de auditoría</a>.
+      </p>
+    </div>
+  {% endif %}
   {% endif %}{# ve_la_escuela #}
 {% endblock %}

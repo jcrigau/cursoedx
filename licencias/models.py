@@ -175,10 +175,18 @@ class Licencia(ModeloInstitucional):
     # -- flujo ---------------------------------------------------------------
 
     def aprobar(self, usuario=None):
+        from core.models import AccionAuditada, registrar_auditoria
+
         self.estado = EstadoLicencia.APROBADA
         self.resuelta_en = date.today()
         self.resuelta_por = usuario
         self.save(update_fields=["estado", "resuelta_en", "resuelta_por", "actualizado_en"])
+        registrar_auditoria(
+            AccionAuditada.APROBACION,
+            self,
+            usuario=usuario,
+            descripcion=f"Aprobó la licencia de {self.legajo.nombre_completo} ({self.tipo})",
+        )
 
     def rechazar(self, motivo: str = "", usuario=None):
         self.estado = EstadoLicencia.RECHAZADA
@@ -193,6 +201,14 @@ class Licencia(ModeloInstitucional):
                 "resuelta_por",
                 "actualizado_en",
             ]
+        )
+        from core.models import AccionAuditada, registrar_auditoria
+
+        registrar_auditoria(
+            AccionAuditada.MODIFICACION,
+            self,
+            usuario=usuario,
+            descripcion=f"Rechazó la licencia de {self.legajo.nombre_completo} ({self.tipo})",
         )
 
     # -- topes ---------------------------------------------------------------

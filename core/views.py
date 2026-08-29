@@ -10,7 +10,7 @@ from django.views.decorators.http import require_POST
 
 from .bienvenida import para as bienvenida_para
 from .middleware import CLAVE_SESION
-from .models import Rol
+from .models import RegistroAuditoria, Rol
 from .pendientes import pendientes_de
 from .version import informacion
 
@@ -72,6 +72,15 @@ def inicio(request):
     contexto["puede_cubrir"] = request.user.has_perm("licencias.change_cobertura")
     contexto["puesta_en_marcha"] = _puesta_en_marcha(contexto)
     contexto["bienvenida"] = bienvenida_para(request.user, institucion)
+    if contexto["ve_la_escuela"]:
+        # Qué se movió, sin recorrer pantallas. Sale de la bitácora que ya se
+        # registra; acá solo se muestra lo último.
+        contexto["actividad"] = (
+            RegistroAuditoria.objects.filter(institucion=institucion)
+            .exclude(descripcion="")
+            .select_related("usuario")
+            .order_by("-creado_en")[:8]
+        )
     contexto["pendientes"] = pendientes_de(
         institucion,
         request.user,

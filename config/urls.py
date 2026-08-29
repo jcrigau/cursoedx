@@ -75,6 +75,7 @@ urlpatterns = [
         licencias_views.cesar_suplencia,
         name="cesar_suplencia",
     ),
+    path("asistencia/semana/", asistencia_views.semana, name="semana"),
     path("asistencia/resumen/", asistencia_views.resumen_del_mes, name="resumen_asistencia"),
     path("novedades/", novedades_views.periodos, name="novedades_periodos"),
     path("novedades/<int:anio>/<int:mes>/", novedades_views.detalle, name="novedades_detalle"),

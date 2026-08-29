@@ -165,3 +165,56 @@ def cursos_del_dia(request):
         "parte": parte_diario(request.institucion, fecha) if not cuadros else None,
     }
     return render(request, "asistencia/cursos.html", contexto)
+
+
+@login_required
+@permission_required(PERMISO_VER, raise_exception=True)
+def semana(request):
+    """Los próximos siete días, antes de que lleguen.
+
+    El parte mira un día; esta pantalla mira lo que se viene: qué licencias
+    empiezan y terminan, qué suplencias vencen, y cuántas horas quedan sin
+    docente cada día. Es la diferencia entre enterarse el lunes a las 7:45 y
+    resolverlo el viernes.
+    """
+    from licencias.models import EstadoLicencia, Licencia, suplencias_por_vencer
+
+    institucion = request.institucion
+    hoy = date.today()
+    dias = []
+    for corrimiento in range(7):
+        fecha = hoy + timedelta(days=corrimiento)
+        parte = parte_diario(institucion, fecha)
+        dias.append(
+            {
+                "fecha": fecha,
+                "es_hoy": corrimiento == 0,
+                "hay_clases": parte.hay_clases,
+                "personas": len(parte.lineas),
+                "sin_cobertura": len(parte.sin_cobertura),
+                "empiezan": list(
+                    Licencia.objects.filter(
+                        institucion=institucion,
+                        estado=EstadoLicencia.APROBADA,
+                        fecha_inicio=fecha,
+                    ).select_related("legajo", "tipo")
+                ),
+                "terminan": list(
+                    Licencia.objects.filter(
+                        institucion=institucion,
+                        estado=EstadoLicencia.APROBADA,
+                        fecha_fin=fecha,
+                    ).select_related("legajo", "tipo")
+                ),
+            }
+        )
+
+    return render(
+        request,
+        "asistencia/semana.html",
+        {
+            "dias": dias,
+            "suplencias": list(suplencias_por_vencer(institucion)),
+            "hoy": hoy,
+        },
+    )

@@ -162,8 +162,10 @@ class VersionHorario(ModeloInstitucional):
     def __str__(self) -> str:
         return f"{self.nombre} · {self.periodo}"
 
-    def publicar(self):
+    def publicar(self, usuario=None):
         """Deja esta versión como vigente y archiva la anterior del período."""
+        from core.models import AccionAuditada, registrar_auditoria
+
         (
             VersionHorario.objects.filter(periodo=self.periodo, estado=EstadoVersion.VIGENTE)
             .exclude(pk=self.pk)
@@ -171,6 +173,12 @@ class VersionHorario(ModeloInstitucional):
         )
         self.estado = EstadoVersion.VIGENTE
         self.save(update_fields=["estado", "actualizado_en"])
+        registrar_auditoria(
+            AccionAuditada.APROBACION,
+            self,
+            usuario=usuario,
+            descripcion=f"Publicó el horario «{self.nombre}» ({self.periodo})",
+        )
 
     def horas_por_curso(self) -> dict:
         conteo = {}
