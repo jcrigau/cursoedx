@@ -129,6 +129,35 @@ class TestAQuienLlamo:
             c.legajo == ocupada and not c.disponible for c in candidatos
         )
 
+    def test_el_personal_que_no_da_clases_no_aparece(self, hora_sin_docente):
+        """Un ordenanza o una administrativa no son reemplazo para un curso."""
+        from legajos.models import Plantel
+
+        otra_persona(
+            hora_sin_docente["escuela"], "Ordenanza", "20-30000782-1", plantel=Plantel.MAESTRANZA
+        )
+        otra_persona(
+            hora_sin_docente["escuela"],
+            "Administrativa",
+            "27-30000783-1",
+            plantel=Plantel.ADMINISTRATIVO,
+        )
+        preceptor = otra_persona(
+            hora_sin_docente["escuela"], "Preceptor", "20-30000784-1", plantel=Plantel.PRECEPTOR
+        )
+
+        candidatos = buscar(
+            hora_sin_docente["escuela"]["institucion"],
+            hora_sin_docente["asignacion"],
+            hora_sin_docente["fecha"],
+        )
+        apellidos = [c.legajo.apellido for c in candidatos]
+
+        assert "Ordenanza" not in apellidos
+        assert "Administrativa" not in apellidos
+        # El preceptor sí: puede estar habilitado para dar la materia.
+        assert preceptor in [c.legajo for c in candidatos]
+
     def test_la_pantalla_lista_a_los_candidatos(self, client, hora_sin_docente, secretaria):
         otra_persona(hora_sin_docente["escuela"], "Candidata", "27-30000780-1")
         client.force_login(secretaria)

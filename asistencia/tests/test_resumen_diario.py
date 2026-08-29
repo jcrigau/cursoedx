@@ -46,12 +46,11 @@ class TestResumenDiario:
             assert Command()._resumen(institucion, datos["fecha_libre"]) is None
 
     def test_llega_a_secretaria_y_direccion(self, con_secretaria_con_email):
-        from asistencia.management.commands.enviar_resumen_diario import Command
+        from core.correo import emails_de_gestion
 
         institucion = con_secretaria_con_email["escuela"]["institucion"]
-        destinos = Command()._destinatarios(institucion)
 
-        assert "sec@escuela.edu.ar" in destinos
+        assert "sec@escuela.edu.ar" in emails_de_gestion(institucion)
 
     def test_probar_no_envia(self, con_secretaria_con_email, monkeypatch):
         from datetime import date as fecha_real

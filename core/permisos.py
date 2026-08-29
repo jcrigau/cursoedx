@@ -74,7 +74,9 @@ PERMISOS_POR_ROL: dict[str, dict[str, dict[str, tuple[str, ...]]]] = {
         "licencias": {"tipolicencia": SOLO_VER, "licencia": TODAS, "cobertura": TODAS},
         "asistencia": {modelo: SOLO_VER for modelo in ASISTENCIA},
         "novedades": {modelo: SOLO_VER for modelo in NOVEDADES},
-        "portal": {modelo: SOLO_VER for modelo in PORTAL},
+        # Los avisos también los responde: marcarlos vistos es contestarle
+        # al docente en su portal.
+        "portal": {"avisoinasistencia": ("view", "change"), "fichada": SOLO_VER},
         "core": {"membresia": SOLO_VER, "registroauditoria": SOLO_VER},
     },
     # El docente usa el portal (F5), no el panel de administración. Podrá ver

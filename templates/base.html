@@ -62,6 +62,9 @@
         <a href="{% url 'semana' %}">La semana</a>
         <a href="{% url 'resumen_asistencia' %}">Resumen del mes</a>
       {% endif %}
+      {% if perms.portal.view_avisoinasistencia %}
+        <a href="{% url 'avisos_recibidos' %}">Avisos</a>
+      {% endif %}
       {% if perms.legajos.view_legajo %}
         <a href="{% url 'personal' %}">Personal</a>
       {% endif %}

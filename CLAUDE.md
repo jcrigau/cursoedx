@@ -126,6 +126,14 @@ instituciones expone datos laborales de otra escuela.
   que lo que da hoy (los cargos): alguien habilitado en Química sirve para
   cubrir Química aunque este año no tenga horas. La búsqueda de reemplazos usa
   la unión de las dos cosas.
+- El **plantel es del legajo** (`Legajo.plantel`: docente, preceptor,
+  directivo, administrativo, maestranza) y cubre a todo el personal, no solo
+  docentes. `PLANTELES_SIN_CLASES` (administrativo y maestranza) quedan fuera
+  de la búsqueda de reemplazos y no se les piden materias.
+- Un **aviso de inasistencia se responde**, no solo se mira: al llegar manda
+  correo a secretaría y dirección (`portal/avisos.py`) y queda como
+  «comunicación sin responder» en el tablero hasta que alguien lo marque
+  visto (lo que el docente ve en su portal) o le conteste por WhatsApp/email.
 - Las búsquedas de personas comparan **sin tildes** (`core.texto`), en Python:
   nadie escribe «Benítez» con tilde, y el sistema tiene que andar igual sobre
   SQLite.

@@ -18,6 +18,14 @@
       <input type="radio" name="solo" value="todos" {% if solo != "activos" %}checked{% endif %}>
       Todos
     </label>
+    <select name="plantel" aria-label="Filtrar por plantel" onchange="this.form.submit()">
+      <option value="">Todo el plantel</option>
+      {% for valor, nombre in planteles %}
+        <option value="{{ valor }}" {% if valor == plantel_elegido %}selected{% endif %}>
+          {{ nombre }}
+        </option>
+      {% endfor %}
+    </select>
     <select name="materia" aria-label="Filtrar por materia" onchange="this.form.submit()">
       <option value="">Todas las materias</option>
       {% for materia in materias %}
@@ -52,6 +60,7 @@
               <strong>{{ legajo.nombre_completo }}</strong>
               <div class="secundario">
                 {{ legajo.cuil }}
+                {% if legajo.plantel != "DOCENTE" %} · {{ legajo.get_plantel_display|lower }}{% endif %}
                 {% if legajo.estado != "ACTIVO" %} · {{ legajo.get_estado_display|lower }}{% endif %}
               </div>
             </td>
@@ -60,13 +69,17 @@
               {% if legajo.horas %} · {{ legajo.horas }} hs{% endif %}
             </td>
             <td>
-              {% for materia in legajo.materias_que_puede_dar.all %}
-                <a class="etiqueta materia {{ materia|color_materia }}"
-                   href="?materia={{ materia.pk }}&solo={{ solo }}"
-                   title="Ver a todos los que pueden dar {{ materia.nombre }}">{{ materia.nombre }}</a>
-              {% empty %}
-                <span class="secundario">sin declarar</span>
-              {% endfor %}
+              {% if legajo.da_clases %}
+                {% for materia in legajo.materias_que_puede_dar.all %}
+                  <a class="etiqueta materia {{ materia|color_materia }}"
+                     href="?materia={{ materia.pk }}&solo={{ solo }}"
+                     title="Ver a todos los que pueden dar {{ materia.nombre }}">{{ materia.nombre }}</a>
+                {% empty %}
+                  <span class="secundario">sin declarar</span>
+                {% endfor %}
+              {% else %}
+                <span class="secundario">no da clases</span>
+              {% endif %}
             </td>
             <td>
               {% if legajo.esta_de_licencia %}
@@ -77,7 +90,7 @@
             </td>
             <td class="acciones-fila no-imprimir">
               <a class="ficha" href="{% url 'ficha_persona' legajo.pk %}">Ficha</a>
-              {% if puede_editar %}
+              {% if puede_editar and legajo.da_clases %}
                 <a class="ficha" href="{% url 'materias_de' legajo.pk %}">Materias</a>
               {% endif %}
             </td>

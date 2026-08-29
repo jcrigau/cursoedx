@@ -15,7 +15,7 @@ from datetime import date
 
 from estructura.models import PeriodoAcademico
 from horarios.models import AsignacionHoraria, FranjaNoDisponible, se_superponen
-from legajos.models import EstadoLegajo, Legajo
+from legajos.models import PLANTELES_SIN_CLASES, EstadoLegajo, Legajo
 from licencias.models import licencias_vigentes
 
 
@@ -97,9 +97,12 @@ def buscar(institucion, asignacion: AsignacionHoraria, fecha: date) -> list[Cand
     de_licencia = {licencia.legajo_id for licencia in licencias_vigentes(institucion, fecha)}
     bloqueados = _bloqueados_por_ddjj(institucion, asignacion, fecha)
 
+    # Administrativos y maestranza no se paran frente a un curso; preceptores
+    # y directivos sí pueden, si tienen la materia habilitada.
     personas = (
         Legajo.objects.filter(institucion=institucion, estado=EstadoLegajo.ACTIVO)
         .exclude(pk=asignacion.legajo_id)
+        .exclude(plantel__in=PLANTELES_SIN_CLASES)
         .prefetch_related("cargos__materia", "materias_que_puede_dar")
     )
 

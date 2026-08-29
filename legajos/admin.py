@@ -90,13 +90,14 @@ class LegajoAdmin(AdminInstitucional):
     list_display = (
         "nombre_completo",
         "cuil",
+        "plantel",
         "estado",
         "resumen_cargos",
         "antiguedad_total",
         "alerta_documentacion",
         "certificacion",
     )
-    list_filter = ("estado", "cargos__fuente_pago", "cargos__situacion_revista")
+    list_filter = ("plantel", "estado", "cargos__fuente_pago", "cargos__situacion_revista")
     search_fields = ("apellido", "nombre", "cuil", "dni", "numero")
     inlines = [CargoInline, DocumentoInline, TituloInline, ServicioAnteriorInline]
 
@@ -104,7 +105,7 @@ class LegajoAdmin(AdminInstitucional):
         (None, {"fields": ("numero", "apellido", "nombre", "estado")}),
         ("Identificación", {"fields": ("cuil", "dni", "fecha_nacimiento", "obra_social")}),
         ("Contacto", {"fields": ("email", "telefono", "domicilio", "localidad")}),
-        ("En la institución", {"fields": ("fecha_ingreso", "usuario", "observaciones")}),
+        ("En la institución", {"fields": ("plantel", "fecha_ingreso", "usuario", "observaciones")}),
         (
             "Materias que puede dar",
             {

@@ -39,6 +39,27 @@ def test_cargar_el_piloto_dos_veces_no_duplica_nada():
 
 
 @pytest.mark.django_db
+def test_el_piloto_trae_personal_de_todos_los_planteles():
+    """Preceptor, administrativa y ordenanza vienen con su plantel puesto.
+
+    Y una base cargada antes de que existiera el plantel se corrige al
+    recargar: es lo que va a pasar en el servidor.
+    """
+    from legajos.models import Plantel
+
+    call_command("cargar_piloto", verbosity=0)
+    Legajo.objects.filter(apellido="Quiroga").update(plantel=Plantel.DOCENTE)  # base vieja
+
+    call_command("cargar_piloto", verbosity=0)
+
+    por_apellido = {legajo.apellido: legajo.plantel for legajo in Legajo.objects.all()}
+    assert por_apellido["Quiroga"] == Plantel.PRECEPTOR
+    assert por_apellido["Bustos"] == Plantel.ADMINISTRATIVO
+    assert por_apellido["Barroso"] == Plantel.MAESTRANZA
+    assert por_apellido["Ferreyra"] == Plantel.DOCENTE
+
+
+@pytest.mark.django_db
 def test_la_escuela_de_ejemplo_se_distingue_a_la_vista():
     call_command("cargar_piloto", verbosity=0)
 

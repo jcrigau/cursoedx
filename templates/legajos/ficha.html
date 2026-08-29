@@ -6,7 +6,7 @@
 {% block contenido %}
   <h1>{{ legajo.nombre_completo }}</h1>
   <p class="subtitulo">
-    {{ legajo.cuil }} · {{ legajo.get_estado_display|lower }}
+    {{ legajo.cuil }} · {{ legajo.get_plantel_display|lower }} · {{ legajo.get_estado_display|lower }}
     {% if licencia_de_hoy %}
       · <span class="etiqueta alerta">hoy de licencia</span>
       {{ licencia_de_hoy.tipo }} hasta el {{ licencia_de_hoy.fecha_fin|date:"d/m/Y" }}
@@ -16,7 +16,9 @@
   <p class="acciones no-imprimir">
     <a class="ficha" href="{% url 'certificacion_servicios' legajo.pk %}">Certificación de servicios</a>
     {% if puede_editar %}
-      <a class="ficha" href="{% url 'materias_de' legajo.pk %}">Materias que puede dar</a>
+      {% if legajo.da_clases %}
+        <a class="ficha" href="{% url 'materias_de' legajo.pk %}">Materias que puede dar</a>
+      {% endif %}
       <a class="ficha" href="{% url 'admin:legajos_legajo_change' legajo.pk %}">Editar el legajo</a>
     {% endif %}
   </p>
@@ -31,14 +33,16 @@
           <tr><th>Ingreso</th><td>{{ legajo.fecha_ingreso|date:"d/m/Y" }}</td></tr>
           <tr><th>Antigüedad total</th><td>{{ antiguedad_total }}</td></tr>
           <tr><th>En esta escuela</th><td>{{ antiguedad_aca }}</td></tr>
-          <tr>
-            <th>Puede dar</th>
-            <td>
-              {% for materia in legajo.materias_que_puede_dar.all %}
-                <span class="etiqueta materia {{ materia|color_materia }}">{{ materia.nombre }}</span>
-              {% empty %}<span class="secundario">sin declarar</span>{% endfor %}
-            </td>
-          </tr>
+          {% if legajo.da_clases %}
+            <tr>
+              <th>Puede dar</th>
+              <td>
+                {% for materia in legajo.materias_que_puede_dar.all %}
+                  <span class="etiqueta materia {{ materia|color_materia }}">{{ materia.nombre }}</span>
+                {% empty %}<span class="secundario">sin declarar</span>{% endfor %}
+              </td>
+            </tr>
+          {% endif %}
         </tbody>
       </table>
 
@@ -71,6 +75,40 @@
                   {% if documento.esta_vencido %}<span class="etiqueta alerta">vencido</span>
                   {% elif documento.por_vencer %}<span class="etiqueta alerta">por vencer</span>
                   {% else %}<span class="etiqueta">al día</span>{% endif %}
+                </td>
+                <td class="no-imprimir">
+                  {% if documento.archivo %}
+                    <a class="ficha" href="{{ documento.archivo.url }}" target="_blank">Ver archivo</a>
+                  {% else %}
+                    <span class="secundario">sin archivo</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endif %}
+
+      {% if titulos %}
+        <h2>Títulos y formación</h2>
+        <table class="datos">
+          <tbody>
+            {% for titulo in titulos %}
+              <tr>
+                <td>
+                  {{ titulo.nombre }}
+                  {% if titulo.institucion_otorgante %}
+                    <div class="secundario">{{ titulo.institucion_otorgante }}</div>
+                  {% endif %}
+                </td>
+                <td class="secundario">
+                  {{ titulo.get_tipo_display }}
+                  {% if titulo.registrado %} · registrado{% endif %}
+                </td>
+                <td class="no-imprimir">
+                  {% if titulo.archivo %}
+                    <a class="ficha" href="{{ titulo.archivo.url }}" target="_blank">Ver archivo</a>
+                  {% endif %}
                 </td>
               </tr>
             {% endfor %}

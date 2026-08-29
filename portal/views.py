@@ -9,7 +9,7 @@ from datetime import date, datetime, timedelta
 from functools import wraps
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.core.exceptions import PermissionDenied
 from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
@@ -233,6 +233,10 @@ def _guardar_aviso(request, legajo):
             "estado": EstadoAviso.ENVIADO,
         },
     )
+    # Además del tablero, el aviso les llega por correo en el momento.
+    from . import avisos
+
+    avisos.avisar_a_gestion(aviso, actualizado=not creado)
     messages.success(
         request,
         "Aviso enviado a secretaría." if creado else "Se actualizó el aviso de ese día.",
@@ -306,3 +310,62 @@ def fichar(request, legajo):
             "en_la_escuela": fichada.en_la_escuela,
         }
     )
+
+
+# --- Del otro lado del mostrador: los avisos que recibe la escuela ---
+
+
+@login_required
+@permission_required("portal.view_avisoinasistencia", raise_exception=True)
+def avisos_recibidos(request):
+    """Los avisos de los docentes, para responderlos en el momento.
+
+    Un aviso sin responder queda al frente hasta que alguien lo marque visto
+    —que es lo que el docente ve en su portal como «visto por secretaría»— o
+    le conteste por WhatsApp o correo, con el mensaje ya escrito.
+    """
+    from . import avisos as respuestas
+
+    hoy = date.today()
+    todos = list(
+        AvisoInasistencia.objects.del_contexto()
+        .exclude(estado=EstadoAviso.ANULADO)
+        .filter(fecha__gte=hoy - timedelta(days=30))
+        .select_related("legajo")
+        .order_by("-fecha", "-creado_en")
+    )
+    for aviso in todos:
+        aviso.whatsapp = respuestas.link_whatsapp_respuesta(aviso)
+        aviso.correo = respuestas.link_email_respuesta(aviso)
+
+    sin_responder = [aviso for aviso in todos if aviso.estado == EstadoAviso.ENVIADO]
+    respondidos = [aviso for aviso in todos if aviso.estado == EstadoAviso.VISTO][:15]
+
+    return render(
+        request,
+        "portal/recibidos.html",
+        {
+            "sin_responder": sin_responder,
+            "respondidos": respondidos,
+            "hoy": hoy,
+            "puede_responder": request.user.has_perm("portal.change_avisoinasistencia"),
+        },
+    )
+
+
+@require_POST
+@login_required
+@permission_required("portal.change_avisoinasistencia", raise_exception=True)
+def responder_aviso(request, pk: int):
+    """Marca el aviso como visto: el docente lo ve en su portal."""
+    aviso = get_object_or_404(
+        AvisoInasistencia.objects.del_contexto().select_related("legajo"), pk=pk
+    )
+    if aviso.estado == EstadoAviso.ENVIADO:
+        aviso.marcar_visto()
+        messages.success(
+            request,
+            f"Listo: {aviso.legajo.nombre_completo} va a ver el aviso como "
+            "«visto por secretaría» en su portal.",
+        )
+    return HttpResponseRedirect(reverse("avisos_recibidos"))

@@ -19,7 +19,7 @@ from datetime import date, datetime
 
 from estructura.models import Materia
 
-from .models import EstadoLegajo, Legajo
+from .models import EstadoLegajo, Legajo, Plantel
 
 ENCABEZADOS = [
     "CUIL",
@@ -34,6 +34,7 @@ ENCABEZADOS = [
     "Domicilio",
     "Localidad",
     "Estado",
+    "Plantel",
     "Materias que puede dar",
 ]
 
@@ -75,13 +76,14 @@ def exportar(institucion):
                 legajo.domicilio,
                 legajo.localidad,
                 legajo.get_estado_display(),
+                legajo.get_plantel_display(),
                 SEPARADOR_MATERIAS.join(
                     materia.nombre for materia in legajo.materias_que_puede_dar.all()
                 ),
             ]
         )
 
-    anchos = [15, 22, 22, 12, 32, 16, 14, 14, 18, 26, 16, 10, 40]
+    anchos = [15, 22, 22, 12, 32, 16, 14, 14, 18, 26, 16, 10, 16, 40]
     for indice, ancho in enumerate(anchos, start=1):
         hoja.column_dimensions[get_column_letter(indice)].width = ancho
     hoja.freeze_panes = "A2"
@@ -173,9 +175,19 @@ def importar(institucion, archivo) -> ResultadoImportacion:
         elif estado:
             legajo.estado = EstadoLegajo.ACTIVO
 
+        plantel = _plantel_de(fila[12])
+        if plantel is not None:
+            legajo.plantel = plantel
+        elif fila[12] not in (None, ""):
+            resultado.observaciones.append(
+                f"Fila {numero} ({apellido}): plantel «{fila[12]}» no reconocido; quedó "
+                f"«{legajo.get_plantel_display()}». Vale: docente, preceptor, directivo, "
+                "administrativo o maestranza."
+            )
+
         legajo.save()
 
-        elegidas, desconocidas = _materias_de(fila[12], materias)
+        elegidas, desconocidas = _materias_de(fila[13], materias)
         legajo.materias_que_puede_dar.set(elegidas)
         for nombre_materia in desconocidas:
             resultado.observaciones.append(
@@ -205,6 +217,27 @@ def _normalizar_cuil(crudo) -> str | None:
     if len(digitos) != 11:
         return None
     return f"{digitos[:2]}-{digitos[2:10]}-{digitos[10]}"
+
+
+def _plantel_de(crudo) -> str | None:
+    """El plantel de la celda, escrito como sea: «Preceptora», «ordenanza»…"""
+    clave = _clave(str(crudo or ""))
+    if not clave:
+        return None
+    equivalencias = {
+        "docente": Plantel.DOCENTE,
+        "profesor": Plantel.DOCENTE,
+        "precept": Plantel.PRECEPTOR,
+        "directiv": Plantel.DIRECTIVO,
+        "administrat": Plantel.ADMINISTRATIVO,
+        "secretari": Plantel.ADMINISTRATIVO,
+        "maestranza": Plantel.MAESTRANZA,
+        "ordenanza": Plantel.MAESTRANZA,
+    }
+    for prefijo, valor in equivalencias.items():
+        if clave.startswith(prefijo):
+            return valor
+    return None
 
 
 def _como_fecha(crudo):

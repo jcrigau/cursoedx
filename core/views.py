@@ -144,6 +144,7 @@ def _situacion_del_dia(institucion) -> dict:
 
     from asistencia.parte import coberturas_pendientes, parte_diario
     from licencias.models import licencias_vigentes, suplencias_por_vencer
+    from portal.models import AvisoInasistencia, EstadoAviso
 
     hoy = date.today()
     parte = parte_diario(institucion, hoy)
@@ -154,6 +155,10 @@ def _situacion_del_dia(institucion) -> dict:
         "suplencias_por_vencer": list(suplencias_por_vencer(institucion)),
         "parte_sin_registrar": parte.sin_registrar if parte.hay_clases else 0,
         "hay_clases_hoy": parte.hay_clases,
+        # Comunicaciones de los docentes que nadie contestó todavía.
+        "avisos_sin_responder": AvisoInasistencia.objects.filter(
+            institucion=institucion, estado=EstadoAviso.ENVIADO
+        ).count(),
     }
 
 

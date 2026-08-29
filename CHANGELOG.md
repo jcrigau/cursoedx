@@ -12,6 +12,23 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
 
 ## Sin publicar
 
+- **Personal no docente**: cada legajo dice su **plantel** —docente,
+  preceptor/a, directivo, administrativo o maestranza/ordenanza—. Personal se
+  filtra por plantel, a quien no da clases no se le piden materias, y
+  administrativos y maestranza no aparecen al buscar reemplazos para un curso.
+  La planilla Excel lleva y trae la columna «Plantel» escrita como sea
+  («Ordenanza» también vale).
+- **Los archivos del legajo se abren desde la ficha**: lo que se subió en
+  Documentación y en Títulos (certificados, aptos, títulos escaneados) tiene su
+  «Ver archivo», sin pasar por el panel.
+- **El aviso del docente llega con ruido**: al enviarlo desde el portal sale
+  un **correo a secretaría y dirección** en el momento, y queda al frente del
+  tablero como **«Comunicaciones sin responder»** (tarjeta y pendiente urgente
+  para los dos puestos). La pantalla nueva **Avisos** lo responde con un
+  toque: **Visto ✓** (el docente lo ve como «visto por secretaría» en su
+  portal), **WhatsApp** o **correo** con el mensaje ya escrito —incluido el
+  recordatorio del certificado cuando es enfermedad— y «Cargar la licencia»
+  con la persona y la fecha puestas. El directivo también puede responder.
 - **Los cursos hoy**: el día visto por curso, hora por hora, con la materia y
   el docente que la da. Las horas que quedan sin clase salen marcadas en rojo,
   las cubiertas por un suplente en el color de la escuela. Sale del mismo cruce

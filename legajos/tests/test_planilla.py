@@ -94,7 +94,7 @@ class TestLoQueSeObserva:
     def test_materia_desconocida_se_ignora_y_se_avisa(self, escuela_con_gente):
         libro = planilla.exportar(escuela_con_gente["institucion"])
         hoja = libro.active
-        hoja.cell(row=2, column=13, value="Química | Alquimia")
+        hoja.cell(row=2, column=14, value="Química | Alquimia")
 
         resultado = planilla.importar(escuela_con_gente["institucion"], como_archivo(libro))
 
@@ -120,6 +120,44 @@ class TestLoQueSeObserva:
 
         persona = Legajo.objects.get(pk=escuela_con_gente["persona"].pk)
         assert persona.estado == EstadoLegajo.BAJA
+
+
+class TestElPlantelEnLaPlanilla:
+    def test_va_y_vuelve_sin_cambios(self, escuela_con_gente):
+        from legajos.models import Plantel
+
+        persona = escuela_con_gente["persona"]
+        persona.plantel = Plantel.PRECEPTOR
+        persona.save()
+
+        archivo = como_archivo(planilla.exportar(escuela_con_gente["institucion"]))
+        resultado = planilla.importar(escuela_con_gente["institucion"], archivo)
+
+        assert not resultado.observaciones
+        assert Legajo.objects.get(pk=persona.pk).plantel == Plantel.PRECEPTOR
+
+    def test_se_entiende_escrito_como_sea(self, escuela_con_gente):
+        """«Ordenanza» a secas también vale: es como lo dice la escuela."""
+        from legajos.models import Plantel
+
+        libro = planilla.exportar(escuela_con_gente["institucion"])
+        libro.active.cell(row=2, column=13, value="Ordenanza")
+
+        planilla.importar(escuela_con_gente["institucion"], como_archivo(libro))
+
+        persona = Legajo.objects.get(pk=escuela_con_gente["persona"].pk)
+        assert persona.plantel == Plantel.MAESTRANZA
+
+    def test_un_plantel_desconocido_se_observa_y_no_toca(self, escuela_con_gente):
+        from legajos.models import Plantel
+
+        libro = planilla.exportar(escuela_con_gente["institucion"])
+        libro.active.cell(row=2, column=13, value="Astronauta")
+
+        resultado = planilla.importar(escuela_con_gente["institucion"], como_archivo(libro))
+
+        assert any("Astronauta" in observacion for observacion in resultado.observaciones)
+        assert Legajo.objects.get(pk=escuela_con_gente["persona"].pk).plantel == Plantel.DOCENTE
 
 
 class TestLasPantallas:

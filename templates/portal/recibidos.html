@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block titulo %}Avisos recibidos · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Avisos de inasistencia</h1>
+  <p class="subtitulo">
+    Lo que los docentes mandaron desde su portal. Responder acá les confirma
+    que la escuela ya lo sabe.
+  </p>
+
+  {% if not sin_responder %}
+    <div class="aviso">No hay avisos sin responder. Todo contestado.</div>
+  {% else %}
+    <h2>Sin responder ({{ sin_responder|length }})</h2>
+    <table class="datos">
+      <thead>
+        <tr>
+          <th>Falta el</th><th>Persona</th><th>Motivo</th><th>Llegó</th>
+          <th class="no-imprimir">Responder</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for aviso in sin_responder %}
+          <tr>
+            <td>
+              {{ aviso.fecha|date:"D d/m" }}
+              {% if aviso.fecha == hoy %}<span class="etiqueta alerta">hoy</span>{% endif %}
+            </td>
+            <td>
+              <a href="{% url 'ficha_persona' aviso.legajo.pk %}">{{ aviso.legajo.nombre_completo }}</a>
+            </td>
+            <td>
+              {{ aviso.get_motivo_display }}
+              {% if aviso.detalle %}<div class="secundario">{{ aviso.detalle }}</div>{% endif %}
+            </td>
+            <td class="secundario">{{ aviso.creado_en|date:"d/m H:i" }}</td>
+            <td class="acciones-fila no-imprimir">
+              {% if puede_responder %}
+                <form method="post" action="{% url 'responder_aviso' aviso.pk %}" style="display:inline">
+                  {% csrf_token %}
+                  <button type="submit" class="ficha como-boton"
+                          title="El docente lo ve como «visto por secretaría» en su portal">Visto ✓</button>
+                </form>
+              {% endif %}
+              {% if aviso.whatsapp %}
+                <a class="ficha" href="{{ aviso.whatsapp }}" target="_blank" rel="noopener">WhatsApp</a>
+              {% endif %}
+              {% if aviso.correo %}
+                <a class="ficha" href="{{ aviso.correo }}">Email</a>
+              {% endif %}
+              <a class="ficha"
+                 href="{% url 'admin:licencias_licencia_add' %}?legajo={{ aviso.legajo.pk }}&fecha_inicio={{ aviso.fecha|date:'Y-m-d' }}&fecha_fin={{ aviso.fecha|date:'Y-m-d' }}">
+                Cargar la licencia →
+              </a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  {% if respondidos %}
+    <h2>Ya respondidos</h2>
+    <table class="datos">
+      <tbody>
+        {% for aviso in respondidos %}
+          <tr>
+            <td>{{ aviso.fecha|date:"D d/m" }}</td>
+            <td>{{ aviso.legajo.nombre_completo }}</td>
+            <td class="secundario">{{ aviso.get_motivo_display }}</td>
+            <td class="secundario">visto el {{ aviso.visto_en|date:"d/m H:i" }}</td>
+            <td class="acciones-fila no-imprimir">
+              {% if aviso.whatsapp %}
+                <a class="ficha" href="{{ aviso.whatsapp }}" target="_blank" rel="noopener">WhatsApp</a>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <p class="pie">
+    «Visto ✓» le aparece al docente en su portal como <em>visto por
+    secretaría</em>. Los botones de WhatsApp y Email abren el mensaje ya
+    escrito —incluido el recordatorio del certificado cuando el motivo es
+    enfermedad—; el aviso solo no justifica la falta: si corresponde, hay que
+    cargar la licencia con su certificado.
+  </p>
+{% endblock %}

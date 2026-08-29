@@ -386,14 +386,15 @@
   <tbody>
     <tr>
       <td class="camino">Dirección</td>
-      <td>Las licencias esperando aprobación —con el botón que las abre ya
-          filtradas— y las que están aprobadas pero sin decidir la cobertura.</td>
+      <td>Los avisos de docentes sin responder, las licencias esperando
+          aprobación —con el botón que las abre ya filtradas— y las que están
+          aprobadas pero sin decidir la cobertura.</td>
     </tr>
     <tr>
       <td class="camino">Secretaría</td>
-      <td>Las horas que hoy quedan sin docente, las coberturas sin decidir,
-          quién falta marcar en el parte, la documentación vencida, y en qué
-          punto está el cierre del mes.</td>
+      <td>Los avisos de docentes sin responder, las horas que hoy quedan sin
+          docente, las coberturas sin decidir, quién falta marcar en el parte,
+          la documentación vencida, y en qué punto está el cierre del mes.</td>
     </tr>
     <tr>
       <td class="camino">Liquidación</td>
@@ -420,6 +421,46 @@
 <p>
   Si no hay nada, dice <em>«Al día»</em>. El borde rojo marca lo que deja a un
   curso sin clase o frena la liquidación; el otro color es trabajo normal.
+</p>
+
+<h2>Cuando un docente avisa que falta</h2>
+<p>
+  El aviso que un docente manda desde su portal no espera a que alguien entre
+  a mirar: en el momento sale un <strong>correo a secretaría y dirección</strong>
+  (si el servidor tiene el correo configurado), y en el tablero se enciende la
+  tarjeta <strong>«Comunicaciones sin responder»</strong>, que queda en rojo
+  hasta que alguien conteste.
+</p>
+<p>
+  La tarjeta —o <strong>Avisos</strong> en la barra— abre la lista de lo que
+  llegó, con tres maneras de responder, todas de un toque:
+</p>
+<table>
+  <thead><tr><th>Botón</th><th>Qué hace</th></tr></thead>
+  <tbody>
+    <tr>
+      <td class="camino">Visto ✓</td>
+      <td>Le confirma por la app: en su portal el aviso pasa a
+          <em>«visto por secretaría»</em>. Es la respuesta mínima —«ya lo
+          sabemos»— y saca el aviso de los pendientes.</td>
+    </tr>
+    <tr>
+      <td class="camino">WhatsApp / Email</td>
+      <td>Abren el mensaje ya escrito —«recibimos tu aviso…»— con el
+          recordatorio del certificado cuando el motivo es enfermedad. Solo
+          hay que apretar enviar.</td>
+    </tr>
+    <tr>
+      <td class="camino">Cargar la licencia →</td>
+      <td>Abre el alta de licencia con la persona y la fecha ya puestas: el
+          aviso solo no justifica la falta, la licencia con su certificado
+          sí.</td>
+    </tr>
+  </tbody>
+</table>
+<p>
+  La dirección también puede responder: el aviso deja de estar pendiente para
+  los dos puestos en cuanto cualquiera lo marca.
 </p>
 
 <h2>La semana que viene</h2>
@@ -485,6 +526,7 @@
   <tbody>
     <tr><td>Ver qué cursos se quedan sin clase hoy</td><td class="camino">Cursos de hoy</td></tr>
     <tr><td>Marcar quién faltó hoy</td><td class="camino">Parte diario</td></tr>
+    <tr><td>Responder el aviso de un docente que falta</td><td class="camino">Avisos</td></tr>
     <tr><td>Ver cuántas faltas lleva alguien este mes</td><td class="camino">Resumen del mes</td></tr>
     <tr><td>Preparar lo que se le manda al liquidador</td><td class="camino">Novedades</td></tr>
     <tr><td>Dar de alta a un docente nuevo</td><td class="camino">Administración → Legajos</td></tr>
@@ -558,6 +600,14 @@
   de contacto. El legajo es la persona; lo que hace en la escuela son sus
   <strong>cargos</strong>.
 </p>
+<p>
+  Cada legajo dice además su <strong>plantel</strong>: docente, preceptor/a,
+  directivo, administrativo o maestranza/ordenanza. Acá va <em>todo</em> el
+  personal, no solo los docentes: la secretaria, el ordenanza y la preceptora
+  tienen su legajo, su documentación y su antigüedad igual que cualquiera. El
+  plantel es lo que separa las secciones de Personal y lo que le dice al
+  sistema a quién tiene sentido buscarle materias.
+</p>
 
 <h2>Los cargos</h2>
 <p>
@@ -610,20 +660,24 @@
 <p>
   En la barra, <strong>Personal</strong>: la planta completa, con cuántos
   cargos y horas tiene cada uno, si hoy está trabajando o de licencia, y qué
-  materias puede dar. Desde ahí se abre la <strong>ficha</strong> de cada
-  persona: sus datos, su antigüedad, sus cargos, su documentación y todo su
-  año —licencias, lo marcado en el parte, las suplencias que hizo— en una sola
-  pantalla de lectura. El formulario del panel queda para editar.
+  materias puede dar. Se filtra por materia y por <strong>plantel</strong>
+  —solo los preceptores, solo maestranza—, y a quien no da clases no se le
+  muestra la columna de materias: un ordenanza sin materias no es un dato que
+  falte. Desde ahí se abre la <strong>ficha</strong> de cada persona: sus
+  datos, su antigüedad, sus cargos, su documentación y todo su año —licencias,
+  lo marcado en el parte, las suplencias que hizo— en una sola pantalla de
+  lectura. El formulario del panel queda para editar.
 </p>
 
 <h2>Qué materias puede dar</h2>
 <p>
-  En cada persona se tildan las materias que está <strong>en condiciones de
-  dar</strong>, aunque este año no tenga horas de esa materia. No es lo mismo
-  que sus cargos: alguien habilitado en Química sirve para cubrir Química
-  aunque hoy no la dicte. Es lo que el sistema mira cuando hay que reemplazar
-  a alguien, así que conviene completarlo: cuanto más cargado, mejores
-  candidatos encuentra.
+  En cada docente (también preceptores y directivos con título) se tildan las
+  materias que está <strong>en condiciones de dar</strong>, aunque este año no
+  tenga horas de esa materia. No es lo mismo que sus cargos: alguien
+  habilitado en Química sirve para cubrir Química aunque hoy no la dicte. Es
+  lo que el sistema mira cuando hay que reemplazar a alguien, así que conviene
+  completarlo: cuanto más cargado, mejores candidatos encuentra. El personal
+  administrativo y de maestranza queda afuera de esa búsqueda.
 </p>
 
 <h2>El personal por planilla</h2>
@@ -652,6 +706,13 @@
   apto psicofísico, certificado de antecedentes, lo que corresponda. El
   tablero de inicio muestra un aviso de <strong>documentación a reclamar</strong>
   cuando algo está por vencer o ya venció, así no hay que ir a buscarlo.
+</p>
+<p>
+  A cada documento, título o servicio anterior se le puede <strong>adjuntar el
+  archivo</strong> (el PDF escaneado, la foto del certificado): se sube desde
+  el formulario del legajo, en su fila. Después se abre desde la ficha de la
+  persona con <strong>«Ver archivo»</strong>, sin volver al panel: la carpeta
+  de papel, pero que no se pierde.
 </p>
 
 <h2>Antigüedad</h2>
@@ -1103,8 +1164,12 @@
 
 <h2>Avisar una inasistencia</h2>
 <p>
-  El docente informa que no va a venir y el motivo. El aviso aparece en el
-  parte del día, junto a su nombre, antes de que llegue el certificado.
+  El docente informa que no va a venir y el motivo. El aviso le llega a
+  secretaría y dirección por correo en el momento, queda al frente de su
+  tablero hasta que lo respondan, y aparece en el parte del día junto a su
+  nombre, antes de que llegue el certificado. Cuando la escuela lo contesta,
+  el docente lo ve acá mismo como <em>«visto por secretaría»</em>: no hace
+  falta llamar para saber si el mensaje llegó.
 </p>
 <p>
   <strong>Un aviso no es una licencia.</strong> Es información temprana para

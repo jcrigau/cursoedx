@@ -87,7 +87,7 @@ Los roles se asignan **por institución** (una misma persona podría ser docente
 
 **Funciones:**
 
-- ABM de personas y legajos: datos personales (CUIL, DNI, contacto, domicilio, obra social), foto, estado (activo/baja).
+- ABM de personas y legajos: datos personales (CUIL, DNI, contacto, domicilio, obra social), foto, estado (activo/baja) y **plantel** (docente / preceptor / directivo / administrativo / maestranza): el legajo cubre a **todo el personal**, no solo a los docentes. El plantel separa las secciones de la pantalla Personal y define a quién se le buscan materias para cubrir cursos (administrativos y maestranza quedan afuera de esa búsqueda).
 - **Cargos** por legajo, cada uno con: tipo (cargo de base / horas cátedra de 40' / horas reloj de 60' — preceptores), nivel, materia y curso (si aplica), cantidad de horas semanales, **situación de revista** (titular / provisional / suplente), **fuente de pago** (subvencionado / interno), fecha de alta y de baja/cese, y **resolución de designación** (número, fecha, adjunto): en el piloto la planta aprobada por el estado consta por resoluciones individuales por cargo, así que la resolución es el respaldo del control "grilla vs. planta".
 - **Documentación con vencimientos:** apto psicofísico, certificado de antecedentes penales, títulos registrados, etc. Cada documento: tipo, archivo adjunto, fecha de emisión y de vencimiento. **Alertas configurables** (p. ej. 30/60 días antes de vencer).
 - **Títulos y formación:** títulos, postítulos y cursos, con puntaje/incumbencias como texto libre en v1.
@@ -155,7 +155,7 @@ Los roles se asignan **por institución** (una misma persona podría ser docente
 - **Parte diario autogenerado:** para cada fecha, el sistema arma la lista de quién debe estar, en qué bloques, en qué curso — a partir del horario vigente, descontando titulares con licencia y agregando suplentes activos.
 - **Carga por secretaría (v1, circuito actual):** desde el libro de firmas/parte en papel, la secretaría marca por docente y día: presente / ausente / llegada tarde / retiro anticipado / **ausencia parcial** (faltó a algunas horas), indicando las horas afectadas.
 - Justificación: una ausencia se vincula a una **licencia** (justificada) o queda **injustificada** (impacta en novedades).
-- **Aviso previo del docente (fase portal):** el docente notifica desde la app que faltará, con motivo; secretaría confirma y clasifica.
+- **Aviso previo del docente (fase portal):** el docente notifica desde la app que faltará, con motivo. El aviso dispara un **correo a secretaría y dirección** en el momento y queda como **comunicación sin responder** en el tablero de ambos puestos hasta que alguien lo conteste: **visto** (el docente lo ve en su portal como «visto por secretaría»), o respuesta por **WhatsApp/correo** con mensaje prearmado. Desde el mismo lugar se carga la licencia con la persona y la fecha prellenadas.
 - **Fichaje por app (objetivo, fase portal):** el docente marca presente desde su celular al llegar, con controles (ventana horaria y geolocalización dentro de la escuela).
 - Reportes: inasistencias del mes por docente, por cargo y **por fuente de pago**; ranking de ausentismo; llegadas tarde acumuladas.
 

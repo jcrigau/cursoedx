@@ -14,7 +14,8 @@ from django.core.mail import send_mail
 from django.core.management.base import BaseCommand
 
 from asistencia.parte import coberturas_pendientes, parte_diario
-from core.models import Institucion, Membresia, Rol
+from core.correo import emails_de_gestion
+from core.models import Institucion
 from core.tenancy import usar_institucion
 from licencias.models import EstadoLicencia, Licencia
 
@@ -51,7 +52,7 @@ class Command(BaseCommand):
                 self.stdout.write(f"{institucion}: sin clases hoy, no se envía.")
                 continue
 
-            destinos = opciones["a"] or self._destinatarios(institucion)
+            destinos = opciones["a"] or emails_de_gestion(institucion)
             if not destinos:
                 self.stdout.write(
                     self.style.WARNING(
@@ -76,19 +77,6 @@ class Command(BaseCommand):
 
         if enviados:
             self.stdout.write(self.style.SUCCESS(f"{enviados} resumen(es) enviados."))
-
-    def _destinatarios(self, institucion) -> list[str]:
-        return sorted(
-            {
-                membresia.usuario.email
-                for membresia in Membresia.objects.filter(
-                    institucion=institucion,
-                    activa=True,
-                    rol__in=[Rol.SECRETARIA, Rol.DIRECTIVO],
-                ).select_related("usuario")
-                if membresia.usuario.email
-            }
-        )
 
     def _resumen(self, institucion, hoy) -> str | None:
         """El texto del correo, o nada si hoy no hay clases."""

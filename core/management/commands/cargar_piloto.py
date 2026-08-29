@@ -36,6 +36,7 @@ from legajos.models import (
     FuentePago,
     Legajo,
     MotivoBaja,
+    Plantel,
     ServicioAnterior,
     SituacionRevista,
     TipoDocumento,
@@ -225,6 +226,7 @@ PERSONAL_DE_EJEMPLO = [
         "apellido": "Quiroga",
         "nombre": "Hernán Darío",
         "cuil": "20-28987654-3",
+        "plantel": Plantel.PRECEPTOR,
         "dias_de_antiguedad": 900,
         "cargos": [
             {
@@ -242,6 +244,7 @@ PERSONAL_DE_EJEMPLO = [
         "apellido": "Bustos",
         "nombre": "Verónica Andrea",
         "cuil": "27-25678912-7",
+        "plantel": Plantel.ADMINISTRATIVO,
         "dias_de_antiguedad": 2400,
         "cargos": [
             {
@@ -254,6 +257,25 @@ PERSONAL_DE_EJEMPLO = [
             }
         ],
         "documentos": [("Certificado de antecedentes penales", 15)],
+    },
+    {
+        # Personal no docente: no da clases y no aparece al buscar reemplazos.
+        "apellido": "Barroso",
+        "nombre": "Ramón Alberto",
+        "cuil": "20-24681357-9",
+        "plantel": Plantel.MAESTRANZA,
+        "dias_de_antiguedad": 4100,
+        "cargos": [
+            {
+                "tipo": TipoCargoLegajo.CARGO_BASE,
+                "denominacion": "Ordenanza",
+                "jornada_completa": True,
+                "revista": SituacionRevista.TITULAR,
+                "fuente": FuentePago.INTERNO,
+                "dias_desde_alta": 4100,
+            }
+        ],
+        "documentos": [("Certificado de antecedentes penales", 200)],
     },
     {
         # Suplente con designación a término.
@@ -601,6 +623,7 @@ class Command(BaseCommand):
                 defaults={
                     "apellido": datos["apellido"],
                     "nombre": datos["nombre"],
+                    "plantel": datos.get("plantel", Plantel.DOCENTE),
                     "obra_social": datos.get("obra_social", ""),
                     "fecha_ingreso": hoy - timedelta(days=datos["dias_de_antiguedad"]),
                     # Contacto inventado, para poder probar el aviso al suplente.
@@ -610,6 +633,11 @@ class Command(BaseCommand):
             )
             self._informar("Legajo", legajo, creado)
             if not creado:
+                # Una base cargada antes de que existiera el plantel: se corrige.
+                plantel = datos.get("plantel", Plantel.DOCENTE)
+                if legajo.plantel != plantel:
+                    legajo.plantel = plantel
+                    legajo.save(update_fields=["plantel", "actualizado_en"])
                 continue
 
             for cargo in datos["cargos"]:

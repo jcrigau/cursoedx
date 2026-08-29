@@ -22,6 +22,26 @@ class EstadoLegajo(models.TextChoices):
     BAJA = "BAJA", "De baja"
 
 
+class Plantel(models.TextChoices):
+    """En qué plantel trabaja la persona: docente o no docente.
+
+    El estatuto mete a preceptores y directivos en el plantel docente, pero a
+    la secretaría le sirve verlos por separado: son puestos distintos, con
+    tareas distintas. Administrativos y maestranza son el personal no docente.
+    """
+
+    DOCENTE = "DOCENTE", "Docente"
+    PRECEPTOR = "PRECEPTOR", "Preceptor/a"
+    DIRECTIVO = "DIRECTIVO", "Directivo"
+    ADMINISTRATIVO = "ADMINISTRATIVO", "Administrativo"
+    MAESTRANZA = "MAESTRANZA", "Maestranza / ordenanza"
+
+
+# Los que no están frente a alumnos: no se les buscan materias ni aparecen
+# como candidatos para cubrir un curso.
+PLANTELES_SIN_CLASES = (Plantel.ADMINISTRATIVO, Plantel.MAESTRANZA)
+
+
 class Legajo(ModeloInstitucional):
     """Carpeta administrativa de una persona que trabaja en la escuela.
 
@@ -68,6 +88,17 @@ class Legajo(ModeloInstitucional):
         blank=True,
         help_text="Primer día de trabajo en esta escuela.",
     )
+    plantel = models.CharField(
+        "plantel",
+        max_length=15,
+        choices=Plantel.choices,
+        default=Plantel.DOCENTE,
+        help_text=(
+            "Docente, preceptor, directivo, administrativo o maestranza. "
+            "Separa las secciones de Personal y define a quién se le buscan "
+            "materias para cubrir cursos."
+        ),
+    )
     estado = models.CharField(
         "estado", max_length=10, choices=EstadoLegajo.choices, default=EstadoLegajo.ACTIVO
     )
@@ -97,6 +128,11 @@ class Legajo(ModeloInstitucional):
     @property
     def nombre_completo(self) -> str:
         return f"{self.apellido}, {self.nombre}"
+
+    @property
+    def da_clases(self) -> bool:
+        """Si está frente a alumnos (o puede estarlo): docente, preceptor o directivo."""
+        return self.plantel not in PLANTELES_SIN_CLASES
 
     def cargos_vigentes(self, a_fecha: date | None = None):
         """Cargos activos a una fecha (por omisión, hoy)."""

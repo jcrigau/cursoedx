@@ -59,6 +59,26 @@ def pendientes_de(institucion, usuario, *, situacion, documentos_vencidos) -> li
     return [pendiente for pendiente in unicos if pendiente.cantidad]
 
 
+def _aviso_sin_responder(situacion) -> Pendiente:
+    """El docente avisó y nadie le contestó todavía.
+
+    Aparece en cuanto llega el aviso (además del correo que se manda en el
+    momento): es la comunicación recibida pendiente de contestar.
+    """
+    return Pendiente(
+        titulo="Avisos de docentes sin responder",
+        cantidad=situacion["avisos_sin_responder"],
+        detalle=(
+            "Avisaron desde el portal que faltan. Marcarlo visto les confirma "
+            "que la escuela ya lo sabe; también se puede responder por WhatsApp "
+            "o correo con el mensaje ya escrito."
+        ),
+        url=reverse("avisos_recibidos"),
+        accion="Responder",
+        urgente=True,
+    )
+
+
 def _del_directivo(institucion, situacion) -> list[Pendiente]:
     """Lo que solo el directivo puede destrabar."""
     from licencias.models import EstadoLicencia, Licencia
@@ -68,6 +88,7 @@ def _del_directivo(institucion, situacion) -> list[Pendiente]:
     ).count()
 
     return [
+        _aviso_sin_responder(situacion),
         Pendiente(
             titulo="Licencias esperando aprobación",
             cantidad=a_aprobar,
@@ -128,6 +149,7 @@ def _de_secretaria(institucion, situacion, documentos_vencidos) -> list[Pendient
     """El trabajo del día y el cierre del mes."""
     hoy = date.today()
     return [
+        _aviso_sin_responder(situacion),
         Pendiente(
             titulo="Avisos viejos sin licencia cargada",
             cantidad=_avisos_sin_licencia(institucion, hoy),

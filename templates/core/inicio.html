@@ -73,6 +73,12 @@
 
   <h2>Hoy</h2>
   <div class="grilla-indicadores">
+    <a class="tarjeta indicador {% if avisos_sin_responder %}pendiente{% endif %}"
+       href="{% url 'avisos_recibidos' %}">
+      <div class="numero">{{ avisos_sin_responder }}</div>
+      <div class="rotulo">Comunicaciones sin responder</div>
+      <div class="detalle">avisos de los docentes →</div>
+    </a>
     <a class="tarjeta indicador {% if parte_sin_registrar %}pendiente{% endif %}"
        href="{% url 'parte_diario' %}">
       <div class="numero">{{ parte_sin_registrar }}</div>

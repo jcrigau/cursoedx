@@ -92,6 +92,49 @@ class TestMateriasQuePuedeDar:
         assert con_personal["persona"].materias_que_puede_dar.count() == 0
 
 
+class TestElPlantel:
+    """Docentes y no docentes conviven en Personal, cada uno con lo suyo."""
+
+    @pytest.fixture
+    def ordenanza(self, con_personal):
+        from legajos.models import Plantel
+
+        return Legajo.objects.create(
+            institucion=con_personal["institucion"],
+            apellido="Domínguez",
+            nombre="Ramón",
+            cuil="20-24681357-9",
+            plantel=Plantel.MAESTRANZA,
+            fecha_ingreso=date.today(),
+        )
+
+    def test_se_filtra_por_plantel(self, client, con_personal, ordenanza, secretaria):
+        client.force_login(secretaria)
+        cuerpo = client.get(reverse("personal"), {"plantel": "MAESTRANZA"}).content.decode()
+        assert "Domínguez" in cuerpo
+        assert "Benítez" not in cuerpo
+
+    def test_al_no_docente_no_se_le_piden_materias(
+        self, client, con_personal, ordenanza, secretaria
+    ):
+        """Un ordenanza sin materias no es un dato que falte: no da clases."""
+        client.force_login(secretaria)
+        cuerpo = client.get(reverse("personal"), {"plantel": "MAESTRANZA"}).content.decode()
+        assert "no da clases" in cuerpo
+        assert reverse("materias_de", args=[ordenanza.pk]) not in cuerpo
+
+    def test_la_ficha_dice_el_puesto(self, client, con_personal, ordenanza, secretaria):
+        client.force_login(secretaria)
+        cuerpo = client.get(reverse("ficha_persona", args=[ordenanza.pk])).content.decode()
+        assert "maestranza" in cuerpo.lower()
+
+    def test_el_no_docente_no_aparece_para_cubrir_cursos(self, con_personal, ordenanza):
+        from legajos.models import PLANTELES_SIN_CLASES
+
+        assert not ordenanza.da_clases
+        assert ordenanza.plantel in PLANTELES_SIN_CLASES
+
+
 class TestLaFicha:
     def test_muestra_a_la_persona_completa(self, client, con_personal, secretaria):
         persona = con_personal["persona"]
@@ -103,6 +146,32 @@ class TestLaFicha:
         assert "Benítez" in cuerpo
         assert "Química" in cuerpo
         assert "Certificación de servicios" in cuerpo
+
+    def test_linkea_los_archivos_subidos(
+        self, client, con_personal, secretaria, settings, tmp_path
+    ):
+        """El PDF que se subió al legajo se abre desde la ficha, sin ir al panel."""
+        from django.core.files.uploadedfile import SimpleUploadedFile
+
+        from legajos.models import DocumentoLegajo, TipoDocumento
+
+        settings.MEDIA_ROOT = tmp_path
+        tipo = TipoDocumento.objects.create(
+            institucion=con_personal["institucion"], nombre="Apto psicofísico"
+        )
+        DocumentoLegajo.objects.create(
+            legajo=con_personal["persona"],
+            tipo=tipo,
+            archivo=SimpleUploadedFile("apto.pdf", b"%PDF-1.4 de prueba"),
+        )
+        client.force_login(secretaria)
+
+        cuerpo = client.get(
+            reverse("ficha_persona", args=[con_personal["persona"].pk])
+        ).content.decode()
+
+        assert "Ver archivo" in cuerpo
+        assert "/media/documentos/" in cuerpo
 
     def test_no_muestra_gente_de_otra_escuela(
         self, client, con_personal, otra_institucion, secretaria

@@ -17,7 +17,7 @@ from estructura.models import Materia
 from licencias.models import licencias_vigentes
 
 from .antiguedad import antiguedad_en_la_institucion, calcular_antiguedad
-from .models import EstadoLegajo, Legajo
+from .models import EstadoLegajo, Legajo, Plantel
 
 
 @login_required
@@ -113,6 +113,7 @@ def personal(request):
     consulta = request.GET.get("q", "").strip()
     solo = request.GET.get("solo", "activos")
     materia_id = request.GET.get("materia", "")
+    plantel = request.GET.get("plantel", "")
 
     personas = (
         Legajo.objects.del_contexto()
@@ -121,6 +122,8 @@ def personal(request):
     )
     if solo == "activos":
         personas = personas.filter(estado=EstadoLegajo.ACTIVO)
+    if plantel in Plantel.values:
+        personas = personas.filter(plantel=plantel)
 
     personas = list(personas)
     if consulta:
@@ -167,6 +170,8 @@ def personal(request):
             "solo": solo,
             "materias": materias,
             "materia_elegida": int(materia_id) if materia_id.isdigit() else None,
+            "planteles": Plantel.choices,
+            "plantel_elegido": plantel if plantel in Plantel.values else "",
             "puede_editar": request.user.has_perm("legajos.change_legajo"),
         },
     )
@@ -271,6 +276,7 @@ def ficha(request, pk: int):
             "antiguedad_total": calcular_antiguedad(legajo),
             "antiguedad_aca": antiguedad_en_la_institucion(legajo),
             "documentos": list(legajo.documentos.all()),
+            "titulos": list(legajo.titulos.all()),
             "puede_editar": request.user.has_perm("legajos.change_legajo"),
         },
     )
