@@ -26,6 +26,13 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
 - **Manual de la secretaría** en PDF, generado desde el propio sistema
   (`generar_manual`), y **control de versiones** visible al pie de cada
   pantalla y en `/sistema/`.
+- **«Cubrir ahora»**: desde cada hora en rojo, la lista de posibles reemplazos
+  con filtros —está en la escuela, da la materia, disponible—, designación en
+  un clic, y el aviso al suplente por email o WhatsApp.
+- **Personal**: la planta completa en una pantalla, con las **materias que cada
+  uno puede dar** para tildar. Es lo que alimenta la búsqueda de reemplazos.
+- **La búsqueda ignora tildes**: «benitez» encuentra a Benítez.
+- **Las tarjetas del tablero llevan al dato**.
 - **Las decisiones se toman donde aparece el problema**: designar suplente o
   dejar sin cubrir desde el propio parte, cargar la licencia desde el aviso del
   docente, y extender o cesar suplencias desde el tablero.

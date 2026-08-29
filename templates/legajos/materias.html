@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block titulo %}Materias de {{ legajo.apellido }} · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>¿Qué materias puede dar?</h1>
+  <p class="subtitulo">{{ legajo.nombre_completo }}</p>
+
+  <div class="aviso">
+    Tildá todas las que esta persona esté en condiciones de dar, aunque este año
+    no tenga horas de esa materia. Es lo que el sistema mira cuando hay que
+    cubrir un curso que quedó sin clase.
+  </div>
+
+  <form method="post" action="{% url 'guardar_materias' legajo.pk %}">
+    {% csrf_token %}
+    <input type="hidden" name="siguiente" value="{% url 'personal' %}">
+
+    <div class="grilla-materias">
+      {% for materia in materias %}
+        <label class="materia-elegible {% if materia.tildada %}elegida{% endif %}">
+          <input type="checkbox" name="materias" value="{{ materia.pk }}"
+                 {% if materia.tildada %}checked{% endif %}>
+          <span class="nombre">
+            {{ materia.nombre }}
+            {% if materia.ya_la_dio %}
+              <span class="secundario">ya tiene horas este año</span>
+            {% endif %}
+          </span>
+        </label>
+      {% empty %}
+        <p>Todavía no hay materias cargadas en la escuela.</p>
+      {% endfor %}
+    </div>
+
+    <p class="acciones">
+      <button type="submit" class="boton">Guardar</button>
+      <a class="ficha" href="{% url 'personal' %}">Volver al personal</a>
+    </p>
+  </form>
+{% endblock %}

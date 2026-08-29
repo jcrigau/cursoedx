@@ -105,7 +105,19 @@ class LegajoAdmin(AdminInstitucional):
         ("Identificación", {"fields": ("cuil", "dni", "fecha_nacimiento", "obra_social")}),
         ("Contacto", {"fields": ("email", "telefono", "domicilio", "localidad")}),
         ("En la institución", {"fields": ("fecha_ingreso", "usuario", "observaciones")}),
+        (
+            "Materias que puede dar",
+            {
+                "fields": ("materias_que_puede_dar",),
+                "description": (
+                    "No es lo que da hoy —eso sale de los cargos— sino lo que está "
+                    "en condiciones de dar. Es lo que el sistema mira para buscarle "
+                    "reemplazo a un curso que quedó sin clase."
+                ),
+            },
+        ),
     )
+    filter_horizontal = ("materias_que_puede_dar",)
 
     @admin.display(description="cargos vigentes")
     def resumen_cargos(self, obj):

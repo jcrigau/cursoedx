@@ -21,11 +21,10 @@ from django.core.mail import send_mail
 def mensaje_para(cobertura) -> str:
     """El texto del aviso, el mismo vaya por donde vaya."""
     cargo = cobertura.cargo
-    curso = f" en {cargo.curso}" if cargo.curso_id else ""
     return (
         f"Hola {cobertura.suplente.nombre}, te escribimos de "
         f"{cobertura.institucion}.\n\n"
-        f"Quedaste designado/a para cubrir {cargo.descripcion}{curso}, "
+        f"Quedaste designado/a para cubrir {cargo.descripcion}, "
         f"del {cobertura.fecha_inicio:%d/%m/%Y} al {cobertura.fecha_fin:%d/%m/%Y}, "
         f"en reemplazo de {cargo.legajo.nombre_completo}.\n\n"
         "Cualquier duda, respondé este mensaje.\n"

@@ -21,6 +21,13 @@ urlpatterns = [
         name="ocultar_bienvenida",
     ),
     path("sistema/", core_views.estado_del_sistema, name="estado_del_sistema"),
+    path("personal/", legajos_views.personal, name="personal"),
+    path("personal/<int:pk>/materias/", legajos_views.materias_de, name="materias_de"),
+    path(
+        "personal/<int:pk>/materias/guardar/",
+        legajos_views.guardar_materias,
+        name="guardar_materias",
+    ),
     path("legajos/buscar/", legajos_views.buscar, name="buscar_personas"),
     path(
         "legajos/<int:pk>/certificacion/",

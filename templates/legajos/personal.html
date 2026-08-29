@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block titulo %}Personal · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>El personal de la escuela</h1>
+  <p class="subtitulo">{{ personas|length }} persona{{ personas|length|pluralize }}.</p>
+
+  <form method="get" class="filtros-candidatos no-imprimir">
+    <input type="search" name="q" value="{{ consulta }}" placeholder="Buscar por apellido…"
+           style="min-width:16rem">
+    <label>
+      <input type="radio" name="solo" value="activos" {% if solo == "activos" %}checked{% endif %}>
+      Solo activos
+    </label>
+    <label>
+      <input type="radio" name="solo" value="todos" {% if solo != "activos" %}checked{% endif %}>
+      Todos
+    </label>
+    <button type="submit" class="boton">Filtrar</button>
+  </form>
+
+  {% if not personas %}
+    <div class="aviso warning">No hay nadie que coincida.</div>
+  {% else %}
+    <table class="datos">
+      <thead>
+        <tr>
+          <th>Persona</th><th>Cargos</th><th>Puede dar</th><th>Hoy</th>
+          <th class="no-imprimir"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for legajo in personas %}
+          <tr>
+            <td>
+              <strong>{{ legajo.nombre_completo }}</strong>
+              <div class="secundario">
+                {{ legajo.cuil }}
+                {% if legajo.estado != "ACTIVO" %} · {{ legajo.get_estado_display|lower }}{% endif %}
+              </div>
+            </td>
+            <td class="secundario">
+              {{ legajo.cargos_vigentes.count }} cargo{{ legajo.cargos_vigentes.count|pluralize }}
+              {% if legajo.horas %} · {{ legajo.horas }} hs{% endif %}
+            </td>
+            <td>
+              {% for materia in legajo.materias_que_puede_dar.all %}
+                <span class="etiqueta materia">{{ materia.nombre }}</span>
+              {% empty %}
+                <span class="secundario">sin declarar</span>
+              {% endfor %}
+            </td>
+            <td>
+              {% if legajo.esta_de_licencia %}
+                <span class="etiqueta alerta">de licencia</span>
+              {% else %}
+                <span class="secundario">trabajando</span>
+              {% endif %}
+            </td>
+            <td class="acciones-fila no-imprimir">
+              {% if puede_editar %}
+                <a class="ficha" href="{% url 'materias_de' legajo.pk %}">Materias</a>
+              {% endif %}
+              <a class="ficha" href="{% url 'admin:legajos_legajo_change' legajo.pk %}">Legajo</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <p class="pie no-imprimir">
+      «Puede dar» no es lo mismo que lo que da hoy: alguien puede estar
+      habilitado en Química sin tener horas de Química este año. Es lo que el
+      sistema usa para buscarle reemplazo a un curso que quedó sin clase.
+    </p>
+  {% endif %}
+{% endblock %}

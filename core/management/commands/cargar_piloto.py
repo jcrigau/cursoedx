@@ -49,8 +49,18 @@ from licencias.models import (
     TipoLicencia,
 )
 
+
 # La escuela de ejemplo se llama así y se pinta de naranja a propósito: es la
 # señal de que lo que se está mirando no es la escuela real.
+def _correo_de(nombre: str, apellido: str) -> str:
+    """Un correo inventado y consistente para el personal de ejemplo."""
+    from unicodedata import combining, normalize
+
+    junto = f"{nombre}.{apellido}".lower().replace(" ", "")
+    sin_tildes = "".join(letra for letra in normalize("NFKD", junto) if not combining(letra))
+    return f"{sin_tildes}@ejemplo.edu.ar"
+
+
 NOMBRE_ESCUELA_DE_PRUEBA = "Escuela Orange"
 COLOR_ESCUELA_DE_PRUEBA = "#c2560f"
 EMBLEMA_ESCUELA_DE_PRUEBA = "🍊"
@@ -592,6 +602,9 @@ class Command(BaseCommand):
                     "nombre": datos["nombre"],
                     "obra_social": datos.get("obra_social", ""),
                     "fecha_ingreso": hoy - timedelta(days=datos["dias_de_antiguedad"]),
+                    # Contacto inventado, para poder probar el aviso al suplente.
+                    "email": _correo_de(datos["nombre"], datos["apellido"]),
+                    "telefono": f"2664{datos['cuil'][-8:-2]}",
                 },
             )
             self._informar("Legajo", legajo, creado)
@@ -725,6 +738,10 @@ class Command(BaseCommand):
                 "apellido": apellido,
                 "nombre": nombre,
                 "fecha_ingreso": hoy - timedelta(days=400 + numero * 30),
+                # Datos de contacto inventados, para poder probar el aviso al
+                # suplente sin cargarlos a mano uno por uno.
+                "email": _correo_de(nombre, apellido),
+                "telefono": f"2664{500000 + indice_materia * 100 + numero:06d}",
             },
         )
 

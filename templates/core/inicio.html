@@ -41,7 +41,7 @@
 
   {% if ve_la_escuela %}
   <div class="grilla-indicadores">
-    <div class="tarjeta indicador">
+    <a class="tarjeta indicador" href="{% url 'personal' %}">
       <div class="numero">{{ cantidad_personal }}</div>
       <div class="rotulo">Personal activo</div>
       {% if cantidad_personal %}
@@ -50,50 +50,57 @@
           {{ personal_por_fuente.interno }} interno
         </div>
       {% endif %}
-    </div>
-    <div class="tarjeta indicador {% if documentos_vencidos %}pendiente{% endif %}">
+    </a>
+    <a class="tarjeta indicador {% if documentos_vencidos %}pendiente{% endif %}"
+       href="{% url 'admin:legajos_documentolegajo_changelist' %}">
       <div class="numero">{{ documentos_vencidos|length }}</div>
       <div class="rotulo">Documentos vencidos</div>
       {% if documentos_por_vencer %}
         <div class="detalle">{{ documentos_por_vencer|length }} por vencer</div>
       {% endif %}
-    </div>
-    <div class="tarjeta indicador {% if not cantidad_cursos %}pendiente{% endif %}">
+    </a>
+    <a class="tarjeta indicador {% if not cantidad_cursos %}pendiente{% endif %}"
+       href="{% url 'admin:estructura_curso_changelist' %}">
       <div class="numero">{{ cantidad_cursos }}</div>
       <div class="rotulo">Cursos del ciclo</div>
-    </div>
-    <div class="tarjeta indicador {% if not cantidad_materias %}pendiente{% endif %}">
+    </a>
+    <a class="tarjeta indicador {% if not cantidad_materias %}pendiente{% endif %}"
+       href="{% url 'admin:estructura_materia_changelist' %}">
       <div class="numero">{{ cantidad_materias }}</div>
       <div class="rotulo">Materias</div>
-    </div>
+    </a>
   </div>
 
   <h2>Hoy</h2>
   <div class="grilla-indicadores">
-    <div class="tarjeta indicador {% if parte_sin_registrar %}pendiente{% endif %}">
+    <a class="tarjeta indicador {% if parte_sin_registrar %}pendiente{% endif %}"
+       href="{% url 'parte_diario' %}">
       <div class="numero">{{ parte_sin_registrar }}</div>
       <div class="rotulo">Sin registrar en el parte</div>
-      <div class="detalle"><a href="{% url 'parte_diario' %}">abrir el parte del día →</a></div>
-    </div>
-    <div class="tarjeta indicador">
+      <div class="detalle">abrir el parte del día →</div>
+    </a>
+    <a class="tarjeta indicador"
+       href="{% url 'admin:licencias_licencia_changelist' %}?estado__exact=APROBADA">
       <div class="numero">{{ licencias_en_curso }}</div>
       <div class="rotulo">Licencias en curso</div>
-    </div>
-    <div class="tarjeta indicador {% if horas_sin_cobertura %}pendiente{% endif %}">
+    </a>
+    <a class="tarjeta indicador {% if horas_sin_cobertura %}pendiente{% endif %}"
+       href="{% url 'cursos_del_dia' %}">
       <div class="numero">{{ horas_sin_cobertura }}</div>
       <div class="rotulo">Horas sin docente hoy</div>
       {% if coberturas_pendientes %}
         <div class="detalle">{{ coberturas_pendientes }} cobertura{{ coberturas_pendientes|pluralize }} sin resolver</div>
       {% endif %}
-    </div>
-    <div class="tarjeta indicador {% if suplencias_por_vencer %}pendiente{% endif %}">
+    </a>
+    <a class="tarjeta indicador {% if suplencias_por_vencer %}pendiente{% endif %}"
+       href="#suplencias">
       <div class="numero">{{ suplencias_por_vencer|length }}</div>
       <div class="rotulo">Suplencias por vencer</div>
-    </div>
+    </a>
   </div>
 
   {% if suplencias_por_vencer %}
-    <table class="datos">
+    <table class="datos" id="suplencias">
       <thead>
         <tr>
           <th>Suplente</th><th>Cargo</th><th>Termina</th><th>Titular</th>

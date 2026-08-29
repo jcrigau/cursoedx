@@ -61,6 +61,9 @@
         <a href="{% url 'cursos_del_dia' %}">Cursos de hoy</a>
         <a href="{% url 'resumen_asistencia' %}">Resumen del mes</a>
       {% endif %}
+      {% if perms.legajos.view_legajo %}
+        <a href="{% url 'personal' %}">Personal</a>
+      {% endif %}
       {% if perms.novedades.view_novedad %}
         <a href="{% url 'novedades_periodos' %}">Novedades</a>
       {% endif %}

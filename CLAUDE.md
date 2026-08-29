@@ -117,6 +117,16 @@ instituciones expone datos laborales de otra escuela.
   cruce que el parte diario: son los mismos datos ordenados al revés —por curso
   en vez de por persona— y por eso no pueden contradecirse. Si se toca uno, se
   toca el otro.
+- Una suplencia **se apoya siempre en una licencia**: es lo que la justifica y
+  lo que la convierte en alta para la liquidación. Sin licencia no se designa;
+  se ofrece cargarla primero.
+- **Qué puede dar cada uno** (`Legajo.materias_que_puede_dar`) no es lo mismo
+  que lo que da hoy (los cargos): alguien habilitado en Química sirve para
+  cubrir Química aunque este año no tenga horas. La búsqueda de reemplazos usa
+  la unión de las dos cosas.
+- Las búsquedas de personas comparan **sin tildes** (`core.texto`), en Python:
+  nadie escribe «Benítez» con tilde, y el sistema tiene que andar igual sobre
+  SQLite.
 - El **tablero de inicio muestra lo del puesto** (`core/pendientes.py`): cada
   pendiente trae el link al lugar donde se resuelve, así nadie tiene que
   aprender el mapa del panel para trabajar. Al sumar una pantalla nueva hay

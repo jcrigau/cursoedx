@@ -40,6 +40,18 @@ class Legajo(ModeloInstitucional):
 
     email = models.EmailField("email", blank=True)
     telefono = models.CharField("teléfono", max_length=50, blank=True)
+
+    # Qué puede dar, más allá de lo que da hoy. Los cargos dicen lo segundo;
+    # esto dice lo primero, y es lo que permite encontrar un reemplazo cuando
+    # un curso queda sin clase: alguien puede estar habilitado en Química sin
+    # tener ninguna hora de Química este año.
+    materias_que_puede_dar = models.ManyToManyField(
+        "estructura.Materia",
+        blank=True,
+        related_name="personal_habilitado",
+        verbose_name="materias que puede dar",
+        help_text="Para buscarle reemplazo a un curso sin docente.",
+    )
     domicilio = models.CharField("domicilio", max_length=200, blank=True)
     localidad = models.CharField("localidad", max_length=100, blank=True)
 

@@ -100,14 +100,17 @@ def buscar(institucion, asignacion: AsignacionHoraria, fecha: date) -> list[Cand
     personas = (
         Legajo.objects.filter(institucion=institucion, estado=EstadoLegajo.ACTIVO)
         .exclude(pk=asignacion.legajo_id)
-        .prefetch_related("cargos__materia")
+        .prefetch_related("cargos__materia", "materias_que_puede_dar")
     )
 
     candidatos = []
     for legajo in personas:
+        # Lo que da hoy más lo que declaró que puede dar: alguien habilitado en
+        # Química sirve para cubrir Química aunque este año no tenga horas.
         materias = {
             cargo.materia.nombre for cargo in legajo.cargos.all() if cargo.materia_id is not None
         }
+        materias |= {materia.nombre for materia in legajo.materias_que_puede_dar.all()}
         candidatos.append(
             Candidato(
                 legajo=legajo,

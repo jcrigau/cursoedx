@@ -1,19 +1,23 @@
-"""Certificación de servicios: el documento que la escuela emite y firma."""
+"""Pantallas de legajos: la planta completa, la búsqueda y la certificación."""
 
 from datetime import date
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
-from django.db.models import Q
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
+from django.urls import reverse
+from django.views.decorators.http import require_POST
 
 from core.models import AccionAuditada, registrar_auditoria
 from core.pdf import responder_pdf
+from core.texto import contiene
+from estructura.models import Materia
 from licencias.models import licencias_vigentes
 
 from .antiguedad import antiguedad_en_la_institucion, calcular_antiguedad
-from .models import Legajo
+from .models import EstadoLegajo, Legajo
 
 
 @login_required
@@ -68,16 +72,20 @@ def buscar(request):
     encontrados = []
 
     if consulta:
-        encontrados = list(
-            Legajo.objects.del_contexto()
-            .filter(
-                Q(apellido__icontains=consulta)
-                | Q(nombre__icontains=consulta)
-                | Q(cuil__icontains=consulta)
-            )
-            .prefetch_related("cargos")
-            .order_by("apellido", "nombre")[:25]
+        # Se compara sin tildes y sin mayúsculas: nadie escribe «Benítez» con
+        # tilde al buscar. La base tiene un legajo por persona —unos cientos
+        # como mucho—, así que filtrar en Python cuesta nada y anda igual sobre
+        # SQLite, que es con lo que arranca una escuela chica.
+        todos = (
+            Legajo.objects.del_contexto().prefetch_related("cargos").order_by("apellido", "nombre")
         )
+        encontrados = [
+            legajo
+            for legajo in todos
+            if contiene(legajo.apellido, consulta)
+            or contiene(legajo.nombre, consulta)
+            or contiene(legajo.cuil, consulta)
+        ][:25]
 
     hoy = date.today()
     de_licencia = {
@@ -90,4 +98,97 @@ def buscar(request):
         request,
         "legajos/buscar.html",
         {"consulta": consulta, "encontrados": encontrados, "hoy": hoy},
+    )
+
+
+@login_required
+@permission_required("legajos.view_legajo", raise_exception=True)
+def personal(request):
+    """Todo el personal de la escuela, en una sola pantalla.
+
+    El listado del panel sirve para editar de a uno; esta sirve para mirar la
+    planta completa: quién está, cuántas horas tiene, y qué materias puede dar
+    —que es lo que después permite encontrarle reemplazo a un curso—.
+    """
+    consulta = request.GET.get("q", "").strip()
+    solo = request.GET.get("solo", "activos")
+
+    personas = (
+        Legajo.objects.del_contexto()
+        .prefetch_related("cargos__materia", "materias_que_puede_dar")
+        .order_by("apellido", "nombre")
+    )
+    if solo == "activos":
+        personas = personas.filter(estado=EstadoLegajo.ACTIVO)
+
+    personas = list(personas)
+    if consulta:
+        personas = [
+            legajo
+            for legajo in personas
+            if contiene(legajo.apellido, consulta)
+            or contiene(legajo.nombre, consulta)
+            or contiene(legajo.cuil, consulta)
+        ]
+
+    hoy = date.today()
+    de_licencia = {licencia.legajo_id for licencia in licencias_vigentes(request.institucion, hoy)}
+    for legajo in personas:
+        legajo.esta_de_licencia = legajo.id in de_licencia
+        legajo.horas = sum(
+            cargo.horas_semanales or 0
+            for cargo in legajo.cargos.all()
+            if cargo.fecha_baja is None or cargo.fecha_baja >= hoy
+        )
+
+    return render(
+        request,
+        "legajos/personal.html",
+        {
+            "personas": personas,
+            "consulta": consulta,
+            "solo": solo,
+            "puede_editar": request.user.has_perm("legajos.change_legajo"),
+        },
+    )
+
+
+@require_POST
+@login_required
+@permission_required("legajos.change_legajo", raise_exception=True)
+def guardar_materias(request, pk: int):
+    """Guarda las materias que una persona puede dar."""
+    legajo = get_object_or_404(Legajo.objects.del_contexto(), pk=pk)
+    elegidas = Materia.objects.del_contexto().filter(pk__in=request.POST.getlist("materias"))
+    legajo.materias_que_puede_dar.set(elegidas)
+
+    messages.success(
+        request,
+        f"{legajo.nombre_completo}: {elegidas.count()} materia"
+        f"{'s' if elegidas.count() != 1 else ''} habilitada"
+        f"{'s' if elegidas.count() != 1 else ''}.",
+    )
+    return HttpResponseRedirect(request.POST.get("siguiente") or reverse("personal"))
+
+
+@login_required
+@permission_required("legajos.change_legajo", raise_exception=True)
+def materias_de(request, pk: int):
+    """Las materias que puede dar una persona, para tildar."""
+    legajo = get_object_or_404(
+        Legajo.objects.del_contexto().prefetch_related("materias_que_puede_dar"), pk=pk
+    )
+    ya_dio = {cargo.materia_id for cargo in legajo.cargos.all() if cargo.materia_id is not None}
+    puede = set(legajo.materias_que_puede_dar.values_list("pk", flat=True))
+
+    materias = []
+    for materia in Materia.objects.del_contexto().select_related("nivel").order_by("nombre"):
+        materia.tildada = materia.pk in puede
+        materia.ya_la_dio = materia.pk in ya_dio
+        materias.append(materia)
+
+    return render(
+        request,
+        "legajos/materias.html",
+        {"legajo": legajo, "materias": materias},
     )
