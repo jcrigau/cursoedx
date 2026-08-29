@@ -56,6 +56,12 @@
                     {% if hora.nota %}<div class="secundario">{{ hora.nota }}</div>{% endif %}
                   </td>
                   <td class="hora-docente">
+                    {% if hora.sin_clase and puede_cubrir and hora.asignacion_id %}
+                      <a class="ficha cubrir-ahora no-imprimir"
+                         href="{% url 'cubrir_ahora' hora.asignacion_id %}?fecha={{ fecha|date:'Y-m-d' }}">
+                        Cubrir ahora
+                      </a>
+                    {% endif %}
                     {% if hora.docente %}
                       {{ hora.docente.nombre_completo }}
                       {% if hora.titular %}

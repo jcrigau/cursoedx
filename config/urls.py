@@ -39,6 +39,21 @@ urlpatterns = [
     path("asistencia/", asistencia_views.parte_del_dia, name="parte_diario"),
     path("asistencia/cursos/", asistencia_views.cursos_del_dia, name="cursos_del_dia"),
     path(
+        "licencias/cubrir/<int:pk>/",
+        licencias_views.cubrir_ahora,
+        name="cubrir_ahora",
+    ),
+    path(
+        "licencias/cubrir/<int:pk>/designar/",
+        licencias_views.designar_suplente,
+        name="designar_suplente",
+    ),
+    path(
+        "licencias/suplencia/<int:pk>/avisar/",
+        licencias_views.avisar_suplencia,
+        name="avisar_suplencia",
+    ),
+    path(
         "licencias/sin-cobertura/",
         licencias_views.dejar_sin_cobertura,
         name="dejar_sin_cobertura",

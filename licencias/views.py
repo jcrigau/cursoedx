@@ -11,13 +11,16 @@ from datetime import date, datetime
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views.decorators.http import require_POST
 
-from legajos.models import MotivoBaja
+from horarios.models import AsignacionHoraria
+from legajos.models import Legajo, MotivoBaja
 
-from .models import Cobertura, Licencia, TipoCobertura
+from . import avisos
+from . import candidatos as buscador
+from .models import Cobertura, Licencia, TipoCobertura, ViaAviso
 
 PERMISO = "licencias.change_cobertura"
 
@@ -132,3 +135,165 @@ def cesar_suplencia(request, pk: int):
         "La baja va a aparecer al compilar el mes.",
     )
     return _volver(request)
+
+
+@login_required
+@permission_required("licencias.add_cobertura", raise_exception=True)
+def cubrir_ahora(request, pk: int):
+    """A quién llamar para una hora que quedó sin docente.
+
+    Cruza lo que el sistema ya sabe —quién está hoy en el edificio, quién da
+    esa materia, quién tiene esa hora libre— y lo deja filtrable. Es la
+    pregunta urgente de la escuela cuando un curso se queda sin clase.
+    """
+    asignacion = get_object_or_404(
+        AsignacionHoraria.objects.select_related("version", "curso", "materia", "legajo", "cargo"),
+        pk=pk,
+        version__institucion=request.institucion,
+    )
+    fecha = _fecha(request.GET.get("fecha")) or date.today()
+
+    filtros = {
+        "en_la_escuela": request.GET.get("en_la_escuela") == "1",
+        "misma_materia": request.GET.get("misma_materia") == "1",
+        "solo_disponibles": request.GET.get("solo_disponibles", "1") == "1",
+    }
+    todos = buscador.buscar(request.institucion, asignacion, fecha)
+    licencia = buscador.licencia_de_la_hora(request.institucion, asignacion, fecha)
+
+    return render(
+        request,
+        "licencias/cubrir.html",
+        {
+            "asignacion": asignacion,
+            "fecha": fecha,
+            "licencia": licencia,
+            "candidatos": buscador.filtrar(todos, **filtros),
+            "total": len(todos),
+            "filtros": filtros,
+            "cobertura": licencia.coberturas.filter(cargo=asignacion.cargo).first()
+            if licencia
+            else None,
+        },
+    )
+
+
+@require_POST
+@login_required
+@permission_required("licencias.add_cobertura", raise_exception=True)
+def designar_suplente(request, pk: int):
+    """Designa a alguien para cubrir la licencia sobre ese cargo.
+
+    Le crea además el cargo que va a ocupar, copiado del titular: de ahí sale
+    su alta en las novedades del mes, sin cargarla a mano.
+    """
+    asignacion = get_object_or_404(
+        AsignacionHoraria.objects.select_related("cargo"),
+        pk=pk,
+        version__institucion=request.institucion,
+    )
+    fecha = _fecha(request.POST.get("fecha")) or date.today()
+    licencia = buscador.licencia_de_la_hora(request.institucion, asignacion, fecha)
+
+    if licencia is None:
+        messages.error(
+            request,
+            "Esa hora no tiene una licencia detrás. Cargá primero la licencia del "
+            "titular: la suplencia se apoya en ella y es lo que después la convierte "
+            "en alta para la liquidación.",
+        )
+        return _volver(request, "cursos_del_dia")
+
+    suplente = get_object_or_404(Legajo.objects.del_contexto(), pk=request.POST.get("suplente"))
+    if asignacion.cargo_id is None:
+        messages.error(request, "Esa hora no está asociada a un cargo del titular.")
+        return _volver(request, "cursos_del_dia")
+
+    cobertura, creada = Cobertura.objects.get_or_create(
+        institucion=request.institucion,
+        licencia=licencia,
+        cargo=asignacion.cargo,
+        defaults={
+            "tipo": TipoCobertura.SUPLENTE,
+            "suplente": suplente,
+            "fecha_inicio": licencia.fecha_inicio,
+            "fecha_fin": licencia.fecha_fin,
+        },
+    )
+    if not creada:
+        cobertura.tipo = TipoCobertura.SUPLENTE
+        cobertura.suplente = suplente
+        cobertura.save(update_fields=["tipo", "suplente", "actualizado_en"])
+    cobertura.designar_cargo_del_suplente()
+
+    messages.success(
+        request,
+        f"{suplente.nombre_completo} cubre {asignacion.cargo.descripcion} "
+        f"del {cobertura.fecha_inicio:%d/%m} al {cobertura.fecha_fin:%d/%m}. "
+        "Falta avisarle.",
+    )
+    return HttpResponseRedirect(
+        reverse("cubrir_ahora", args=[asignacion.pk]) + f"?fecha={fecha:%Y-%m-%d}"
+    )
+
+
+@login_required
+@permission_required("licencias.change_cobertura", raise_exception=True)
+def avisar_suplencia(request, pk: int):
+    """El aviso al suplente: el mismo mensaje, por email o por WhatsApp."""
+    cobertura = get_object_or_404(
+        Cobertura.objects.del_contexto().select_related(
+            "suplente", "cargo__legajo", "cargo__curso", "licencia"
+        ),
+        pk=pk,
+    )
+    if cobertura.suplente_id is None:
+        messages.error(request, "Esa cobertura no tiene suplente designado.")
+        return _volver(request)
+
+    if request.method == "POST":
+        return _mandar_el_aviso(request, cobertura)
+
+    return render(
+        request,
+        "licencias/avisar.html",
+        {
+            "cobertura": cobertura,
+            "mensaje": avisos.mensaje_para(cobertura),
+            "asunto": avisos.asunto_para(cobertura),
+            "link_whatsapp": avisos.link_de_whatsapp(cobertura),
+        },
+    )
+
+
+def _mandar_el_aviso(request, cobertura):
+    via = request.POST.get("via")
+
+    if via == ViaAviso.EMAIL:
+        if avisos.enviar_por_email(cobertura):
+            _registrar_aviso(cobertura, ViaAviso.EMAIL)
+            messages.success(request, f"Aviso enviado a {cobertura.suplente.email}.")
+        else:
+            messages.error(
+                request,
+                "No se pudo enviar el correo. Puede ser que la persona no tenga "
+                "email cargado, o que este servidor todavía no tenga configurado "
+                "el envío. Queda la opción de WhatsApp o el llamado.",
+            )
+    elif via in (ViaAviso.WHATSAPP, ViaAviso.OTRO):
+        # WhatsApp y el llamado los hace una persona; el sistema solo deja
+        # registrado que se avisó, para que nadie llame dos veces ni ninguna.
+        _registrar_aviso(cobertura, via)
+        messages.success(request, f"Anotado: {cobertura.suplente.nombre_completo} fue avisado/a.")
+    else:
+        messages.error(request, "No se indicó por dónde se avisó.")
+
+    return HttpResponseRedirect(reverse("avisar_suplencia", args=[cobertura.pk]))
+
+
+def _registrar_aviso(cobertura, via):
+    from django.utils import timezone
+
+    cobertura.notificada_en = timezone.now()
+    cobertura.notificada_por = via
+    cobertura.save(update_fields=["notificada_en", "notificada_por", "actualizado_en"])

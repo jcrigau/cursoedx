@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block titulo %}Avisarle a {{ cobertura.suplente.nombre }} · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Avisarle al suplente</h1>
+  <p class="subtitulo">
+    {{ cobertura.suplente.nombre_completo }} ·
+    {{ cobertura.cargo.descripcion }} ·
+    del {{ cobertura.fecha_inicio|date:"d/m/Y" }} al {{ cobertura.fecha_fin|date:"d/m/Y" }}
+  </p>
+
+  {% if cobertura.notificada_en %}
+    <div class="aviso">
+      Ya se le avisó el {{ cobertura.notificada_en|date:"d/m/Y" }} a las
+      {{ cobertura.notificada_en|date:"H:i" }}, por
+      {{ cobertura.get_notificada_por_display|lower }}.
+      Podés volver a hacerlo si hace falta.
+    </div>
+  {% endif %}
+
+  <h2>El mensaje</h2>
+  <div class="tarjeta">
+    <p class="secundario" style="margin-bottom:0.4rem">Asunto: {{ asunto }}</p>
+    <pre class="mensaje-aviso">{{ mensaje }}</pre>
+  </div>
+
+  <h2>Cómo avisarle</h2>
+  <div class="vias-de-aviso">
+
+    <div class="via">
+      <h3>Email</h3>
+      {% if cobertura.suplente.email %}
+        <p class="secundario">{{ cobertura.suplente.email }}</p>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="via" value="EMAIL">
+          <button type="submit" class="boton">Enviar el correo</button>
+        </form>
+      {% else %}
+        <p class="secundario">No tiene email cargado en su legajo.</p>
+        <a class="ficha" href="{% url 'admin:legajos_legajo_change' cobertura.suplente.pk %}">
+          Cargarlo →
+        </a>
+      {% endif %}
+    </div>
+
+    <div class="via">
+      <h3>WhatsApp</h3>
+      {% if link_whatsapp %}
+        <p class="secundario">{{ cobertura.suplente.telefono }}</p>
+        <a class="boton" href="{{ link_whatsapp }}" target="_blank" rel="noopener">
+          Abrir WhatsApp con el mensaje
+        </a>
+        <form method="post" style="margin-top:0.6rem">
+          {% csrf_token %}
+          <input type="hidden" name="via" value="WHATSAPP">
+          <button type="submit" class="ficha como-boton">Ya se lo mandé</button>
+        </form>
+      {% else %}
+        <p class="secundario">No tiene teléfono cargado en su legajo.</p>
+        <a class="ficha" href="{% url 'admin:legajos_legajo_change' cobertura.suplente.pk %}">
+          Cargarlo →
+        </a>
+      {% endif %}
+    </div>
+
+    <div class="via">
+      <h3>Por teléfono o en persona</h3>
+      <p class="secundario">
+        Si ya lo llamaste, dejalo anotado: así nadie vuelve a llamarlo, y nadie
+        se queda esperando que otro lo haga.
+      </p>
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="via" value="OTRO">
+        <button type="submit" class="ficha como-boton">Ya le avisé</button>
+      </form>
+    </div>
+  </div>
+
+  <p class="pie">
+    El link de WhatsApp abre la aplicación con el mensaje escrito: hay que
+    apretar enviar. Mandarlo solo, sin que nadie toque nada, requiere la API de
+    WhatsApp Business de Meta —empresa verificada, plantillas aprobadas y un
+    costo por conversación—, que es un trámite y no una configuración.
+  </p>
+{% endblock %}

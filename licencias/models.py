@@ -262,6 +262,12 @@ class TipoCobertura(models.TextChoices):
     SIN_COBERTURA = "SIN_COBERTURA", "Sin cobertura (los alumnos quedan libres)"
 
 
+class ViaAviso(models.TextChoices):
+    EMAIL = "EMAIL", "Email"
+    WHATSAPP = "WHATSAPP", "WhatsApp"
+    OTRO = "OTRO", "En persona o por teléfono"
+
+
 class Cobertura(ModeloInstitucional):
     """Qué se hace con las horas de un cargo mientras el titular está de licencia.
 
@@ -301,6 +307,14 @@ class Cobertura(ModeloInstitucional):
     fecha_inicio = models.DateField("desde")
     fecha_fin = models.DateField("hasta")
     observaciones = models.CharField("observaciones", max_length=300, blank=True)
+
+    # Designar no es avisar: el suplente tiene que enterarse, y la escuela
+    # necesita saber si ya se le avisó o todavía no. Sin esto, la pregunta
+    # «¿alguien lo llamó?» solo se responde preguntando.
+    notificada_en = models.DateTimeField("avisado el", null=True, blank=True)
+    notificada_por = models.CharField(
+        "avisado por", max_length=10, choices=ViaAviso.choices, blank=True
+    )
 
     class Meta:
         verbose_name = "cobertura"

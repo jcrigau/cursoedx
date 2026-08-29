@@ -716,3 +716,73 @@ table.datos.compacta td { border-color: rgba(0, 0, 0, 0.06); }
 .bienvenida ul { margin: 0 0 0.9rem; padding-left: 1.1rem; }
 .bienvenida li { margin-bottom: 0.35rem; font-size: 0.92rem; }
 .bienvenida .pie { margin-left: 0.75rem; }
+
+/* --- A quién llamar para cubrir una hora -------------------------------- */
+
+.filtros-candidatos {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.filtros-candidatos label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.filtros-candidatos .pie { margin: 0 0 0 auto; }
+
+/* Quien no puede sigue en la lista, atenuado y con el motivo: saber por qué
+   alguien no está disponible evita volver a preguntarse lo mismo mañana. */
+tr.no-disponible { opacity: 0.55; }
+tr.no-disponible strong { font-weight: 600; }
+
+/* --- El aviso al suplente ----------------------------------------------- */
+
+.mensaje-aviso {
+  white-space: pre-wrap;
+  font-family: inherit;
+  font-size: 0.92rem;
+  margin: 0;
+  color: var(--tinta);
+  line-height: 1.5;
+}
+
+.vias-de-aviso {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.vias-de-aviso .via {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--radio);
+  padding: 1rem;
+}
+
+.vias-de-aviso .via h3 { margin: 0 0 0.35rem; font-size: 1rem; }
+.vias-de-aviso .via p { font-size: 0.85rem; }
+
+/* «Cubrir ahora»: la salida de la hora que quedó sin docente, en la misma fila
+   donde el problema aparece. */
+.ficha.cubrir-ahora {
+  display: inline-block;
+  margin-bottom: 0.3rem;
+  font-size: 0.78rem;
+  padding: 0.15rem 0.6rem;
+  border-color: var(--alerta);
+  color: var(--alerta);
+  font-weight: 700;
+}
+.ficha.cubrir-ahora:hover { background: var(--alerta-clara); }

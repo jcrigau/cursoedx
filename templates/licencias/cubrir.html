@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block titulo %}Cubrir {{ asignacion.curso }} · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>¿A quién llamo?</h1>
+  <p class="subtitulo">
+    {{ asignacion.curso }} · {{ asignacion.materia.nombre }} ·
+    {{ asignacion.hora_inicio|time:"H:i" }} a {{ asignacion.hora_fin|time:"H:i" }} ·
+    {{ fecha|date:"l j \d\e F"|capfirst }}
+    {% if asignacion.legajo %}
+      <br>Titular: {{ asignacion.legajo.nombre_completo }}
+    {% endif %}
+  </p>
+
+  {% if cobertura and cobertura.suplente %}
+    <div class="aviso">
+      <strong>Ya está cubierta.</strong>
+      {{ cobertura.suplente.nombre_completo }} desde el
+      {{ cobertura.fecha_inicio|date:"d/m/Y" }} hasta el {{ cobertura.fecha_fin|date:"d/m/Y" }}.
+      {% if not cobertura.notificada_en %}
+        <a href="{% url 'avisar_suplencia' cobertura.pk %}">Avisarle →</a>
+      {% else %}
+        Avisado el {{ cobertura.notificada_en|date:"d/m/Y H:i" }}.
+      {% endif %}
+    </div>
+  {% elif not licencia %}
+    <div class="aviso warning">
+      Esa hora no tiene una licencia detrás, así que todavía no se puede
+      registrar una suplencia: primero hay que cargar la licencia del titular.
+      Es lo que la justifica y lo que después la convierte en alta para la
+      liquidación.
+      {% if asignacion.legajo %}
+        <a href="{% url 'admin:licencias_licencia_add' %}?legajo={{ asignacion.legajo.pk }}&fecha_inicio={{ fecha|date:'Y-m-d' }}&fecha_fin={{ fecha|date:'Y-m-d' }}">Cargarla ahora →</a>
+      {% endif %}
+      <div class="secundario">Mientras tanto, la lista de abajo sirve para saber a quién llamar.</div>
+    </div>
+  {% endif %}
+
+  <form method="get" class="filtros-candidatos no-imprimir">
+    <input type="hidden" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
+    <label>
+      <input type="checkbox" name="en_la_escuela" value="1" {% if filtros.en_la_escuela %}checked{% endif %}>
+      Está en la escuela hoy
+    </label>
+    <label>
+      <input type="checkbox" name="misma_materia" value="1" {% if filtros.misma_materia %}checked{% endif %}>
+      Da la misma materia
+    </label>
+    <label>
+      <input type="checkbox" name="solo_disponibles" value="1" {% if filtros.solo_disponibles %}checked{% endif %}>
+      Disponible para llamar
+    </label>
+    <button type="submit" class="boton">Filtrar</button>
+    <span class="pie">{{ candidatos|length }} de {{ total }} personas</span>
+  </form>
+
+  {% if not candidatos %}
+    <div class="aviso warning">
+      Nadie cumple con esos filtros. Probá destildando alguno: el sistema igual
+      muestra por qué cada persona no puede.
+    </div>
+  {% else %}
+    <table class="datos">
+      <thead>
+        <tr>
+          <th>Persona</th><th>Situación</th><th>Hoy</th><th>Avisar por</th>
+          {% if licencia %}<th class="no-imprimir"></th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for candidato in candidatos %}
+          <tr class="{% if not candidato.disponible %}no-disponible{% endif %}">
+            <td>
+              <strong>{{ candidato.legajo.nombre_completo }}</strong>
+              {% if candidato.otras_materias %}
+                <div class="secundario">también da {{ candidato.otras_materias|join:", " }}</div>
+              {% endif %}
+            </td>
+            <td>
+              {% if candidato.da_la_materia %}
+                <span class="etiqueta">da {{ asignacion.materia.nombre }}</span>
+              {% endif %}
+              {% if candidato.esta_en_la_escuela %}
+                <span class="etiqueta">está en la escuela</span>
+              {% endif %}
+              {% if not candidato.disponible %}
+                <span class="etiqueta alerta">{{ candidato.por_que_no }}</span>
+              {% endif %}
+            </td>
+            <td class="secundario">
+              {% if candidato.horas_hoy %}{{ candidato.horas_hoy }} hora{{ candidato.horas_hoy|pluralize }}{% else %}no viene{% endif %}
+            </td>
+            <td class="secundario">
+              {{ candidato.como_avisarle|join:" · "|default:"sin datos de contacto" }}
+            </td>
+            {% if licencia %}
+              <td class="no-imprimir">
+                <form method="post" action="{% url 'designar_suplente' asignacion.pk %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="fecha" value="{{ fecha|date:'Y-m-d' }}">
+                  <input type="hidden" name="suplente" value="{{ candidato.legajo.pk }}">
+                  <button type="submit" class="ficha como-boton">Designar</button>
+                </form>
+              </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <p class="pie no-imprimir">
+      El orden es por conveniencia: primero quien ya está en el edificio, da esa
+      materia y tiene la hora libre. Designar le crea el cargo de suplente, y de
+      ahí sale su alta al compilar el mes.
+    </p>
+  {% endif %}
+{% endblock %}

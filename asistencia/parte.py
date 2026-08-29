@@ -247,6 +247,9 @@ class HoraDelCurso:
     estado: str
     titular: Legajo | None = None  # cuando la cubre un suplente
     nota: str = ""
+    # La asignación del horario que generó esta hora: es lo que permite ir a
+    # buscarle reemplazo sin volver a averiguar de qué hora se trata.
+    asignacion_id: int | None = None
 
     @property
     def sin_clase(self) -> bool:
@@ -315,6 +318,7 @@ def _hora_del_curso(asignacion, licencias, coberturas, registros, avisados) -> H
         materia=asignacion.materia.nombre,
         docente=asignacion.legajo,
         estado=EstadoHora.NORMAL,
+        asignacion_id=asignacion.id,
     )
 
     if asignacion.legajo_id is None:

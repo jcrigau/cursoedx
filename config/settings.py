@@ -151,6 +151,22 @@ LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "inicio"
 LOGOUT_REDIRECT_URL = "login"
 
+# Correo: se usa para avisarle al suplente que lo designaron. Sin servidor
+# configurado los mensajes salen por consola y la pantalla lo dice, así que la
+# escuela puede seguir avisando por WhatsApp o por teléfono.
+EMAIL_BACKEND = os.environ.get(
+    "SGE_EMAIL_BACKEND",
+    "django.core.mail.backends.smtp.EmailBackend"
+    if os.environ.get("SGE_EMAIL_HOST")
+    else "django.core.mail.backends.console.EmailBackend",
+)
+EMAIL_HOST = os.environ.get("SGE_EMAIL_HOST", "")
+EMAIL_PORT = int(os.environ.get("SGE_EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.environ.get("SGE_EMAIL_USUARIO", "")
+EMAIL_HOST_PASSWORD = os.environ.get("SGE_EMAIL_CLAVE", "")
+EMAIL_USE_TLS = env_bool("SGE_EMAIL_TLS", True)
+DEFAULT_FROM_EMAIL = os.environ.get("SGE_EMAIL_REMITENTE", EMAIL_HOST_USER or "sge@localhost")
+
 LANGUAGE_CODE = "es-ar"
 TIME_ZONE = os.environ.get("SGE_TIME_ZONE", "America/Argentina/San_Luis")
 USE_I18N = True

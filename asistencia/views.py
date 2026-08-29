@@ -159,6 +159,7 @@ def cursos_del_dia(request):
         "dia_siguiente": fecha + timedelta(days=1),
         "cuadros": cuadros,
         "ayuda": AYUDA_CURSOS,
+        "puede_cubrir": request.user.has_perm("licencias.add_cobertura"),
         "horas_sin_clase": sum(cuadro.sin_clase for cuadro in cuadros),
         "cursos_afectados": sum(1 for cuadro in cuadros if cuadro.tiene_problemas),
         "parte": parte_diario(request.institucion, fecha) if not cuadros else None,
