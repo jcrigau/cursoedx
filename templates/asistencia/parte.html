@@ -121,15 +121,43 @@
               <td>{{ linea.horas }}</td>
               <td class="secundario">{{ linea.detalle_cursos }}</td>
               <td>
-                <select name="estado_{{ linea.legajo.id }}" {% if not puede_cargar %}disabled{% endif %}>
-                  <option value="">Presente</option>
-                  {% for valor, etiqueta in estados %}
-                    {% if valor != "PRESENTE" %}
-                      <option value="{{ valor }}"
-                        {% if linea.registro.estado == valor %}selected{% endif %}>{{ etiqueta }}</option>
-                    {% endif %}
-                  {% endfor %}
-                </select>
+                {% comment %}
+                  Botones en vez de desplegable: el estado se ve sin abrir nada
+                  y se marca de un clic. Son radios, así que solo uno queda
+                  activo. Verde presente, rojo ausente, ámbar lo demás.
+                {% endcomment %}
+                <div class="selector-estado" role="radiogroup" aria-label="Estado de {{ linea.legajo.nombre_completo }}">
+                  <label class="estado-verde">
+                    <input type="radio" name="estado_{{ linea.legajo.id }}" value=""
+                           {% if not linea.registro or linea.registro.estado == "PRESENTE" %}checked{% endif %}
+                           {% if not puede_cargar %}disabled{% endif %}>
+                    <span>Presente</span>
+                  </label>
+                  <label class="estado-rojo">
+                    <input type="radio" name="estado_{{ linea.legajo.id }}" value="AUSENTE"
+                           {% if linea.registro.estado == "AUSENTE" %}checked{% endif %}
+                           {% if not puede_cargar %}disabled{% endif %}>
+                    <span>Ausente</span>
+                  </label>
+                  <label class="estado-ambar">
+                    <input type="radio" name="estado_{{ linea.legajo.id }}" value="TARDE"
+                           {% if linea.registro.estado == "TARDE" %}checked{% endif %}
+                           {% if not puede_cargar %}disabled{% endif %}>
+                    <span>Tarde</span>
+                  </label>
+                  <label class="estado-ambar">
+                    <input type="radio" name="estado_{{ linea.legajo.id }}" value="RETIRO"
+                           {% if linea.registro.estado == "RETIRO" %}checked{% endif %}
+                           {% if not puede_cargar %}disabled{% endif %}>
+                    <span>Retiro</span>
+                  </label>
+                  <label class="estado-ambar">
+                    <input type="radio" name="estado_{{ linea.legajo.id }}" value="PARCIAL"
+                           {% if linea.registro.estado == "PARCIAL" %}checked{% endif %}
+                           {% if not puede_cargar %}disabled{% endif %}>
+                    <span>Parcial</span>
+                  </label>
+                </div>
               </td>
               <td>
                 <input type="number" min="1" max="20" style="width:4.5rem"

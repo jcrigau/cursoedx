@@ -938,3 +938,63 @@ a.boton:hover { color: #fff; text-decoration: none; }
 
 a.etiqueta.materia { text-decoration: none; cursor: pointer; }
 a.etiqueta.materia:hover { filter: brightness(0.94); }
+
+/* --- El estado del parte, en botones ------------------------------------ */
+/* Un desplegable esconde el estado hasta abrirlo; los botones lo muestran y
+   se marcan de un clic. Son radios: solo uno queda activo. El color dice qué
+   significa cada uno: verde presente, rojo ausente, ámbar lo intermedio. */
+
+.selector-estado {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+
+.selector-estado label {
+  cursor: pointer;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  padding: 0.22rem 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--tinta-suave);
+  background: var(--superficie);
+  user-select: none;
+}
+
+.selector-estado input { position: absolute; opacity: 0; pointer-events: none; }
+
+.selector-estado label:hover { border-color: var(--tinta-suave); }
+
+.selector-estado label:has(input:focus-visible) {
+  outline: 2px solid var(--acento);
+  outline-offset: 1px;
+}
+
+.selector-estado .estado-verde:has(input:checked) {
+  background: #e3f1e5;
+  border-color: var(--ok);
+  color: var(--ok);
+}
+
+.selector-estado .estado-rojo:has(input:checked) {
+  background: var(--alerta-clara);
+  border-color: #c22f22;
+  color: #c22f22;
+}
+
+.selector-estado .estado-ambar:has(input:checked) {
+  background: #fdf3dc;
+  border-color: #9a6b12;
+  color: #9a6b12;
+}
+
+.selector-estado label:has(input:disabled) {
+  cursor: default;
+  opacity: 0.6;
+}
+
+/* Que los cinco botones respiren: la celda del estado se reserva su ancho y
+   cada botón no se parte. */
+table.datos td:has(.selector-estado) { min-width: 23rem; }
+.selector-estado label { white-space: nowrap; }
