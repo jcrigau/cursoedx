@@ -18,6 +18,12 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
   administrativos y maestranza no aparecen al buscar reemplazos para un curso.
   La planilla Excel lleva y trae la columna «Plantel» escrita como sea
   («Ordenanza» también vale).
+- **Los adjuntos ahora se ven en el servidor, y solo con sesión iniciada**:
+  Django no sirve los archivos subidos cuando no está en modo desarrollo, así
+  que en producción las fotos y los certificados quedaban guardados pero daban
+  404. Los sirve la aplicación, detrás de login: en esa carpeta hay aptos
+  psicofísicos y certificados de antecedentes, que no pueden quedar públicos.
+  En el hosting **no** hay que mapear `/media/`.
 - **Los archivos del legajo se abren desde la ficha**: lo que se subió en
   Documentación y en Títulos (certificados, aptos, títulos escaneados) tiene su
   «Ver archivo», sin pasar por el panel.

@@ -1,10 +1,10 @@
 from django.conf import settings
-from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import include, path
+from django.urls import include, path, re_path
 
 from asistencia import views as asistencia_views
 from core import views as core_views
+from core.archivos import servir_media
 from horarios import views as horarios_views
 from legajos import views as legajos_views
 from licencias import views as licencias_views
@@ -103,7 +103,9 @@ urlpatterns = [
     path("portal/fichar/", portal_views.fichar, name="portal_fichar"),
     path("cuentas/", include("django.contrib.auth.urls")),
     path("admin/", admin.site.urls),
+    # Los adjuntos del legajo (fotos, certificados, títulos) los sirve la
+    # propia app, detrás de login: ver core/archivos.py. No hay que mapear
+    # /media/ en el hosting —eso los dejaría públicos— y así andan igual en
+    # desarrollo y en producción.
+    re_path(rf"^{settings.MEDIA_URL.lstrip('/')}(?P<path>.*)$", servir_media, name="media"),
 ]
-
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

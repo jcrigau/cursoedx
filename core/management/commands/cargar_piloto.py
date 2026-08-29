@@ -938,9 +938,10 @@ class Command(BaseCommand):
 
         carpeta = Path(__file__).parent / "fotos_piloto"
         if not carpeta.is_dir():
+            self.stdout.write(self.style.WARNING("  No hay fotos de ejemplo en el repositorio."))
             return
 
-        cargadas = 0
+        cargadas, ya_tenian = 0, 0
         for legajo in Legajo.objects.filter(institucion=institucion, foto=""):
             nombre_archivo = (
                 f"{sin_tildes(legajo.apellido).replace(' ', '-')}--"
@@ -952,8 +953,14 @@ class Command(BaseCommand):
             with archivo.open("rb") as contenido:
                 legajo.foto.save(nombre_archivo, File(contenido), save=True)
             cargadas += 1
+
+        ya_tenian = (
+            Legajo.objects.filter(institucion=institucion).exclude(foto="").count() - cargadas
+        )
         if cargadas:
             self.stdout.write(f"  + {cargadas} fotos de carnet")
+        elif ya_tenian:
+            self.stdout.write(f"  = {ya_tenian} fotos de carnet (ya estaban)")
 
     def _dar_acceso_al_portal(self, institucion, opciones):
         """Le crea usuario al primer docente, para poder probar el portal."""

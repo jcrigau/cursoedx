@@ -121,9 +121,15 @@ Después, en esa misma pestaña:
 2. **Code** → *WSGI configuration file*: abrilo, borrá todo y pegá el contenido
    de `despliegue/pythonanywhere_wsgi.py` de este repositorio, cambiando
    `USUARIO` por tu usuario.
-3. **Static files**: agregá una entrada
+3. **Static files**: agregá **una sola** entrada
    - URL: `/static/`
    - Directory: `/home/USUARIO/cursoedx/staticfiles`
+
+   **No agregues una entrada para `/media/`.** Los archivos que sube la
+   escuela —fotos del personal, aptos psicofísicos, certificados de
+   antecedentes— los sirve la propia aplicación y solo a quien esté
+   conectado. Un mapeo acá los dejaría accesibles para cualquiera que
+   adivine la dirección, y son datos de salud y personales.
 4. **Security**: activá *Force HTTPS*.
 5. Botón verde **Reload**.
 
