@@ -173,6 +173,18 @@ class TestLaFicha:
         assert "Ver archivo" in cuerpo
         assert "/media/documentos/" in cuerpo
 
+    def test_sin_foto_va_la_silueta_estandar(self, client, con_personal, secretaria):
+        """Nadie queda sin cara: sin foto cargada se muestra el perfil estándar."""
+        client.force_login(secretaria)
+
+        ficha = client.get(
+            reverse("ficha_persona", args=[con_personal["persona"].pk])
+        ).content.decode()
+        lista = client.get(reverse("personal")).content.decode()
+
+        assert "img/persona.svg" in ficha
+        assert "img/persona.svg" in lista
+
     def test_muestra_la_foto_carnet(self, client, con_personal, secretaria, settings, tmp_path):
         from io import BytesIO
 

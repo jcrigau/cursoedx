@@ -23,7 +23,8 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
   «Ver archivo», sin pasar por el panel.
 - **Foto tipo carnet en el legajo**: se sube desde el panel (JPG o PNG,
   cuadrada tipo 4x4; si no lo es, se recorta al mostrarla) y aparece en la
-  ficha y en el listado de Personal.
+  ficha y en el listado de Personal. Quien no tiene foto se muestra con una
+  silueta estándar.
 - **El aviso del docente llega con ruido**: al enviarlo desde el portal sale
   un **correo a secretaría y dirección** en el momento, y queda al frente del
   tablero como **«Comunicaciones sin responder»** (tarjeta y pendiente urgente

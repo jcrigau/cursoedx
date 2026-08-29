@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load materias %}
+{% load materias static %}
 
 {% block titulo %}{{ legajo.nombre_completo }} · SGE{% endblock %}
 
@@ -7,6 +7,8 @@
   <div class="ficha-encabezado">
     {% if legajo.foto %}
       <img class="foto-carnet" src="{{ legajo.foto.url }}" alt="Foto de {{ legajo.nombre_completo }}">
+    {% else %}
+      <img class="foto-carnet" src="{% static 'img/persona.svg' %}" alt="Sin foto cargada">
     {% endif %}
     <div>
       <h1>{{ legajo.nombre_completo }}</h1>

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Sin foto">
+  <!-- La silueta estándar para quien todavía no tiene foto en el legajo. -->
+  <rect width="100" height="100" fill="#e6ebef"/>
+  <circle cx="50" cy="38" r="17" fill="#9fb0bd"/>
+  <path d="M50 60 C 31 60 19 74 17 100 L 83 100 C 81 74 69 60 50 60 Z" fill="#9fb0bd"/>
+</svg>
