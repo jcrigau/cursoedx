@@ -70,6 +70,11 @@ class Command(BaseCommand):
             help="Cuántos días de clase hacia atrás se marcan con novedades.",
         )
         parser.add_argument(
+            "--reiniciar",
+            action="store_true",
+            help="Borrar la escuela de ejemplo y rearmarla desde cero.",
+        )
+        parser.add_argument(
             "--sin-piloto",
             dest="con_piloto",
             action="store_false",
@@ -82,6 +87,7 @@ class Command(BaseCommand):
                 "cargar_piloto",
                 email=opciones["email"],
                 password=opciones["password"],
+                reiniciar=opciones["reiniciar"],
             )
             self.stdout.write("")
 

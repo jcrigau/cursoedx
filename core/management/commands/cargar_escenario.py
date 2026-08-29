@@ -64,6 +64,14 @@ class Command(BaseCommand):
             "--segundos", type=int, default=45, help="Tiempo máximo del generador de horarios."
         )
         parser.add_argument(
+            "--reiniciar",
+            action="store_true",
+            help=(
+                "Borrar la escuela de ejemplo y rearmarla desde cero. Útil cuando una "
+                "base vieja quedó con datos de versiones anteriores."
+            ),
+        )
+        parser.add_argument(
             "--sin-demo",
             dest="con_demo",
             action="store_false",
@@ -77,6 +85,7 @@ class Command(BaseCommand):
                 password=opciones["password"],
                 email=f"secretaria@{opciones['dominio']}",
                 segundos=opciones["segundos"],
+                reiniciar=opciones["reiniciar"],
             )
             self.stdout.write("")
 

@@ -11,7 +11,7 @@ almuerzo). Los horarios exactos son aproximados: se ajustan desde el admin.
 from datetime import date, time, timedelta
 
 from django.core.management import call_command
-from django.core.management.base import BaseCommand
+from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 
 from core.models import Institucion, Jurisdiccion, Membresia, Rol, Usuario
@@ -287,6 +287,14 @@ class Command(BaseCommand):
             "--anio", type=int, default=date.today().year, help="Ciclo lectivo a crear."
         )
         parser.add_argument(
+            "--reiniciar",
+            action="store_true",
+            help=(
+                "Borrar la escuela de ejemplo y volver a armarla desde cero. "
+                "Solo toca esa escuela; cualquier otra institución queda intacta."
+            ),
+        )
+        parser.add_argument(
             "--sin-planta",
             dest="con_planta",
             action="store_false",
@@ -296,6 +304,9 @@ class Command(BaseCommand):
     @transaction.atomic
     def handle(self, *args, **opciones):
         anio = opciones["anio"]
+
+        if opciones["reiniciar"]:
+            self._borrar_la_escuela_de_prueba()
 
         institucion, creada = self._escuela_de_prueba()
         self._informar("Institución", institucion, creada)
@@ -323,6 +334,62 @@ class Command(BaseCommand):
             )
 
     # -- pasos ----------------------------------------------------------------
+
+    def _borrar_la_escuela_de_prueba(self):
+        """Vacía la escuela de ejemplo, sin tocar ninguna otra institución.
+
+        Sirve cuando una base vieja arrastra datos inconsistentes de versiones
+        anteriores. Se filtra por nombre: una escuela real nunca entra acá.
+
+        Las claves foráneas hacia la institución son ``PROTECT`` —lo que evita
+        borrados accidentales—, así que no alcanza con borrarla de un saque.
+        Se recorren sus modelos borrando los que se dejen, y se repite: en cada
+        vuelta caen los que quedaron sin quien los proteja. Lo que llega a la
+        institución por una relación (las asignaciones de un horario, la
+        documentación de un legajo) se va en cascada con su padre.
+        """
+        from django.apps import apps
+        from django.db import transaction
+        from django.db.models import ProtectedError
+
+        from core.models import ModeloInstitucional
+
+        institucion = Institucion.objects.filter(
+            nombre__in=[NOMBRE_ESCUELA_DE_PRUEBA, *NOMBRES_ANTERIORES]
+        ).first()
+        if institucion is None:
+            return
+
+        pendientes = [
+            modelo
+            for modelo in apps.get_models()
+            if issubclass(modelo, ModeloInstitucional) and not modelo._meta.abstract
+        ]
+        borrados = 0
+        while pendientes:
+            avanzo = False
+            for modelo in list(pendientes):
+                try:
+                    with transaction.atomic():
+                        cuantos, _ = modelo.objects.filter(institucion=institucion).delete()
+                except ProtectedError:
+                    continue  # todavía lo protege otro modelo; en la próxima vuelta
+                borrados += cuantos
+                pendientes.remove(modelo)
+                avanzo = True
+            if not avanzo:
+                nombres = ", ".join(m.__name__ for m in pendientes)
+                raise CommandError(
+                    f"No se pudo vaciar la escuela de ejemplo: quedaron {nombres}. "
+                    "Es un error del comando, no de tus datos: nada se borró."
+                )
+
+        if borrados:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Escuela de ejemplo vaciada ({borrados} registros). Se rearma de cero."
+                )
+            )
 
     def _escuela_de_prueba(self):
         """La escuela de ejemplo, creada o puesta al día.
@@ -615,24 +682,28 @@ class Command(BaseCommand):
                         creados += 1
                         self._cargar_ddjj(institucion, docente, periodos, orden)
 
-                Cargo.objects.get_or_create(
-                    institucion=institucion,
-                    legajo=docente,
-                    materia=materia,
-                    curso=curso,
-                    defaults={
-                        "tipo": TipoCargoLegajo.HORAS_CATEDRA,
-                        "nivel": nivel,
-                        "horas_semanales": horas,
-                        "situacion_revista": SituacionRevista.TITULAR
+                # No es get_or_create a propósito: una misma persona puede
+                # tener legítimamente dos cargos de la misma materia y curso
+                # —el caso mixto, uno por fuente de pago—, y una base vieja
+                # puede arrastrar duplicados. Lo que importa es no agregar otro.
+                ya_lo_tiene = Cargo.objects.filter(
+                    institucion=institucion, legajo=docente, materia=materia, curso=curso
+                ).exists()
+                if not ya_lo_tiene:
+                    Cargo.objects.create(
+                        institucion=institucion,
+                        legajo=docente,
+                        materia=materia,
+                        curso=curso,
+                        tipo=TipoCargoLegajo.HORAS_CATEDRA,
+                        nivel=nivel,
+                        horas_semanales=horas,
+                        situacion_revista=SituacionRevista.TITULAR
                         if orden % 3
                         else SituacionRevista.PROVISIONAL,
-                        "fuente_pago": FuentePago.SUBVENCIONADO
-                        if orden % 4
-                        else FuentePago.INTERNO,
-                        "fecha_alta": hoy - timedelta(days=400 + orden * 30),
-                    },
-                )
+                        fuente_pago=FuentePago.SUBVENCIONADO if orden % 4 else FuentePago.INTERNO,
+                        fecha_alta=hoy - timedelta(days=400 + orden * 30),
+                    )
                 acumuladas += horas
 
         self.stdout.write(f"  + {creados} docentes con sus cargos y declaraciones juradas")

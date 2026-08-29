@@ -86,3 +86,31 @@ def test_el_escenario_crea_un_usuario_por_puesto():
     institucion = Institucion.objects.get()
     roles = set(Membresia.objects.filter(institucion=institucion).values_list("rol", flat=True))
     assert roles == {Rol.SECRETARIA, Rol.DIRECTIVO, Rol.DOCENTE, Rol.LIQUIDADOR}
+
+
+@pytest.mark.django_db
+def test_reiniciar_deja_la_escuela_de_ejemplo_como_nueva():
+    """Una base vieja con datos inconsistentes se puede poner en cero."""
+    call_command("cargar_piloto", verbosity=0)
+    limpia = contar()
+
+    # Se ensucia como lo hacían las versiones anteriores del comando: cargos
+    # repetidos para la misma persona, materia y curso.
+    for cargo in list(Cargo.objects.all()[:10]):
+        cargo.pk = None
+        cargo.save()
+    assert contar()["cargos"] > limpia["cargos"]
+
+    call_command("cargar_piloto", "--reiniciar", verbosity=0)
+
+    assert contar() == limpia
+
+
+@pytest.mark.django_db
+def test_reiniciar_no_toca_otras_escuelas():
+    otra = Institucion.objects.create(nombre="Escuela real", nombre_corto="Real")
+    call_command("cargar_piloto", verbosity=0)
+
+    call_command("cargar_piloto", "--reiniciar", verbosity=0)
+
+    assert Institucion.objects.filter(pk=otra.pk).exists()
