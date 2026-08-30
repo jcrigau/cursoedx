@@ -67,7 +67,8 @@ pytest
 ```
 
 Despliegue: ver `DESPLIEGUE.md` (PythonAnywhere para la versión de prueba,
-Docker para uso real).
+Docker para uso real). Para cargar una escuela de verdad —estructura, personal
+por Excel, cargos— ver `MIGRAR-UNA-ESCUELA.md`.
 
 Con Docker: `docker compose up --build` (requiere `SGE_SECRET_KEY` en el `.env`).
 

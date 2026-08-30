@@ -16,6 +16,13 @@ db.sqlite3-journal
 /media/
 /staticfiles/
 
+# Respaldos: llevan la base entera y los adjuntos. Nunca al repositorio.
+/respaldos/
+
+# Datos reales de una escuela mientras se preparan para importar
+# (ver MIGRAR-UNA-ESCUELA.md). Son datos personales de terceros.
+/datos/
+
 # Herramientas
 .pytest_cache/
 .ruff_cache/
