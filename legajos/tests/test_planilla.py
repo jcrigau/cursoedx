@@ -180,3 +180,28 @@ class TestLasPantallas:
 
         assert respuesta.status_code == 200
         assert Legajo.objects.filter(cuil="20-55666777-8").exists()
+
+
+class TestLaFilaDeEjemplo:
+    """La plantilla vacía trae una muestra; si vuelve sin borrar, no crea a nadie."""
+
+    def test_la_planilla_vacia_muestra_como_son_los_datos(self, institucion):
+        hoja = planilla.exportar(institucion).active
+
+        assert hoja.max_row == 1 + len(planilla.EJEMPLOS)
+        assert str(hoja.cell(row=2, column=1).value).startswith(planilla.MARCA_EJEMPLO)
+
+    def test_con_gente_cargada_el_ejemplo_no_aparece(self, escuela_con_gente):
+        hoja = planilla.exportar(escuela_con_gente["institucion"]).active
+
+        assert hoja.max_row == 2
+        assert hoja.cell(row=2, column=2).value == "Benítez"
+
+    def test_volver_a_subir_el_ejemplo_no_crea_a_nadie(self, institucion):
+        libro = planilla.exportar(institucion)
+
+        resultado = planilla.importar(institucion, como_archivo(libro))
+
+        assert resultado.creados == 0
+        assert not resultado.observaciones
+        assert not Legajo.objects.filter(institucion=institucion).exists()

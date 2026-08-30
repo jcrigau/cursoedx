@@ -12,6 +12,21 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
 
 ## Sin publicar
 
+### Agregado
+
+- **Planilla única para cargar una escuela nueva**
+  (`python manage.py plantilla_carga`): un Excel con una hoja por cosa
+  —escuela, niveles, ciclo y períodos, turnos, grilla horaria, cursos,
+  materias, plan de estudios, personal, cargos, y las opcionales licencias,
+  documentación y disponibilidad—, con las columnas que el sistema espera,
+  desplegables con los valores válidos y **filas de ejemplo ya completadas**
+  en cada hoja. Es lo que se le manda a una escuela que quiere probar el
+  sistema con sus datos.
+- Las filas de ejemplo van marcadas (empiezan con `EJEMPLO`) y **los
+  importadores las saltean solas**: una muestra que vuelve sin borrar no crea
+  a una persona inventada. La planilla del personal, cuando todavía no hay
+  nadie cargado, también sale con su ejemplo.
+
 ### Corregido
 
 - **Una falta se informaba una vez por cargo, no por planilla.** Alguien con

@@ -60,6 +60,7 @@ python manage.py generar_manual                       # el manual de la secretar
 python manage.py enviar_resumen_diario --probar      # el correo de las 7:00
 python manage.py abrir_ciclo 2027                    # el año nuevo, copiado del anterior
 python manage.py respaldar                           # base + adjuntos en un ZIP
+python manage.py plantilla_carga                     # el Excel para cargar una escuela nueva
 python manage.py probar_correo vos@mail.com          # ¿el correo está bien configurado?
 python manage.py reclamar_documentacion --probar     # avisarle a cada uno qué se le vence
 python manage.py runserver

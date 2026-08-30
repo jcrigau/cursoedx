@@ -43,9 +43,26 @@ de código**. Si algo del contenido hace falta acá, se resume ("hay 134 persona
 
 ## 3. Qué tiene que preparar el chat de datos
 
-En el orden en que el sistema lo necesita. Los primeros cuatro se cargan a mano
-en el panel (son pocos y solo se hacen una vez al año); el quinto es el que
-importa por Excel.
+Todo esto entra en **una sola planilla**, que el sistema genera:
+
+```bash
+python manage.py plantilla_carga
+```
+
+Sale `plantilla-carga-escuela.xlsx`, con una hoja por cosa —Escuela, Niveles,
+Ciclo y períodos, Turnos, Grilla horaria, Cursos, Materias, Plan de estudios,
+Personal, Cargos, y las opcionales Licencias, Documentación y Disponibilidad—,
+las columnas que el sistema espera, desplegables con los valores válidos y
+**una o dos filas de ejemplo ya completadas** en cada hoja.
+
+Las filas de ejemplo van pintadas de amarillo y empiezan con la palabra
+`EJEMPLO`. Se pueden borrar o dejar: los importadores las saltean solas, así
+que una muestra olvidada nunca va a crear una persona inventada.
+
+Esa es la planilla que se le manda a la escuela, y la que después ordena el
+chat de datos. Abajo, qué significa cada hoja y cómo vuelve cada cosa al
+sistema: los primeros cuatro grupos se cargan a mano en el panel (son pocos y
+se hacen una vez al año); el personal es el que importa por Excel.
 
 ### 3.1 La estructura del colegio
 
@@ -64,9 +81,10 @@ checklist del tablero.
 
 ### 3.2 El personal, en Excel
 
-Este sí se importa: **Personal → Bajar Excel** para obtener la plantilla vacía,
-se completa, y **Personal → Subir planilla**. Las columnas son exactamente
-estas, en este orden:
+Este sí se importa: **Personal → Bajar Excel** para obtener la plantilla vacía
+—que también trae las filas de ejemplo—, se completa, y **Personal → Subir
+planilla**. Es la misma hoja «Personal» de `plantilla_carga`. Las columnas son
+exactamente estas, en este orden:
 
 | Columna | Qué va | Obligatorio |
 |---|---|---|
@@ -117,8 +135,8 @@ estudio, motivo personal).
 
 ## 4. El mensaje para abrir el chat de datos
 
-Copiá esto tal cual, adjuntá `CONTEXTO-EDUCATIVO.md` y los archivos de la
-escuela:
+Copiá esto tal cual, adjuntá `CONTEXTO-EDUCATIVO.md`,
+`plantilla-carga-escuela.xlsx` y los archivos de la escuela:
 
 > Estoy preparando datos reales de una escuela para cargarlos en un sistema de
 > gestión escolar. Necesito que me ayudes a **transformar y limpiar planillas**,
@@ -128,6 +146,9 @@ escuela:
 > - `CONTEXTO-EDUCATIVO.md`, que explica cómo funciona la escuela y el
 >   vocabulario (legajo, cargo, hora cátedra, situación de revista, fuente de
 >   pago).
+> - `plantilla-carga-escuela.xlsx`, que es **el formato de salida**: una hoja
+>   por cosa, con las columnas exactas, los valores válidos en desplegables y
+>   filas de ejemplo en amarillo (empiezan con EJEMPLO; se pueden borrar).
 > - Los archivos que me pasó la escuela.
 >
 > Lo que necesito, en este orden:
@@ -136,23 +157,11 @@ escuela:
 >    cargarlos: cuántas personas, cuántos cargos, qué datos vienen incompletos,
 >    qué inconsistencias hay (CUIL mal formados, nombres repetidos, materias
 >    escritas de dos maneras).
-> 2. **La estructura del colegio** en una lista ordenada para cargarla a mano:
->    niveles, ciclo y períodos con fechas, turnos y grilla horaria (hora por
->    hora, con recreos y almuerzo), cursos y divisiones, materias y plan de
->    estudios con horas semanales por curso.
-> 3. **Un Excel del personal** con exactamente estas columnas, en este orden:
->    CUIL, Apellido, Nombre, DNI, Email, Teléfono, Fecha de ingreso, Fecha de
->    nacimiento, Obra social, Domicilio, Localidad, Estado, Plantel, Materias
->    que puede dar.
->    - El CUIL es la identidad (con o sin guiones).
->    - Estado: `Activo` o `De baja`. Plantel: `Docente`, `Preceptor/a`,
->      `Directivo`, `Administrativo` o `Maestranza`.
->    - Materias separadas por `|`, escritas igual que en el plan de estudios.
->    - Fechas en dd/mm/aaaa.
-> 4. **Una planilla de cargos**, una fila por cargo: persona (CUIL), materia,
->    curso, horas semanales, situación de revista (titular / provisional /
->    suplente), fuente de pago (subvencionado / interno), fecha de alta y número
->    de resolución si lo hay.
+> 2. **La plantilla completada**: pasá lo que haya en los archivos a las hojas
+>    de `plantilla-carga-escuela.xlsx`, respetando las columnas y los valores de
+>    los desplegables. No inventes lo que falte: dejalo vacío y listámelo aparte.
+> 3. **Un resumen de lo que quedó afuera**: qué hojas quedaron incompletas, qué
+>    datos hay que pedirle a la escuela y qué decisiones tomaste.
 >
 > Importante: **preguntame cuando algo sea ambiguo** en lugar de suponer. Un
 > dato inventado en una planilla de sueldos es plata de más o de menos en el

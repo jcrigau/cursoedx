@@ -17,6 +17,7 @@ import re
 from dataclasses import dataclass, field
 from datetime import date, datetime
 
+from core.planillas import MARCA_EJEMPLO, es_ejemplo
 from estructura.models import Materia
 
 from .models import EstadoLegajo, Legajo, Plantel
@@ -39,6 +40,44 @@ ENCABEZADOS = [
 ]
 
 SEPARADOR_MATERIAS = " | "
+
+# La planilla vacía sale con una fila de muestra: es lo que evita que alguien
+# tipee el CUIL sin guiones o invente el nombre del plantel. Va marcada, así
+# que si vuelve sin borrar no crea a nadie (ver ``core.planillas``).
+EJEMPLOS = [
+    [
+        f"{MARCA_EJEMPLO} 27-30111222-4",
+        "Benítez",
+        "María Laura",
+        "30111222",
+        "mlbenitez@gmail.com",
+        "2657 55-1234",
+        "01/03/2018",
+        "14/06/1985",
+        "OSDE",
+        "San Martín 456",
+        "Villa Mercedes",
+        "Activo",
+        "Docente",
+        "Matemática | Física",
+    ],
+    [
+        f"{MARCA_EJEMPLO} 20-25888777-1",
+        "Ferreyra",
+        "Hugo Ramón",
+        "25888777",
+        "",
+        "2657 55-9876",
+        "10/04/2021",
+        "",
+        "",
+        "",
+        "Villa Mercedes",
+        "Activo",
+        "Maestranza / ordenanza",
+        "",
+    ],
+]
 
 
 def exportar(institucion):
@@ -83,7 +122,14 @@ def exportar(institucion):
             ]
         )
 
-    anchos = [15, 22, 22, 12, 32, 16, 14, 14, 18, 26, 16, 10, 16, 40]
+    if not personas:
+        for ejemplo in EJEMPLOS:
+            hoja.append(ejemplo)
+            for celda in hoja[hoja.max_row]:
+                celda.font = Font(italic=True, color="8A6D3B")
+                celda.fill = PatternFill("solid", fgColor="FFF8E1")
+
+    anchos = [22, 22, 22, 12, 32, 16, 14, 14, 18, 26, 16, 10, 18, 40]
     for indice, ancho in enumerate(anchos, start=1):
         hoja.column_dimensions[get_column_letter(indice)].width = ancho
     hoja.freeze_panes = "A2"
@@ -127,6 +173,8 @@ def importar(institucion, archivo) -> ResultadoImportacion:
     filas = hoja.iter_rows(min_row=2, values_only=True)
     for numero, fila in enumerate(filas, start=2):
         if fila is None or all(celda in (None, "") for celda in fila):
+            continue
+        if es_ejemplo(fila[0]):
             continue
         fila = list(fila) + [None] * (len(ENCABEZADOS) - len(fila))
 
