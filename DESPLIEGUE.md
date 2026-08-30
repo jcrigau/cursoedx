@@ -151,6 +151,19 @@ panel de administración.
 
 ### 7. Actualizar cuando haya cambios
 
+> **¿Dónde quedó instalado?** Acá se supone `~/cursoedx`, que es donde lo deja
+> el paso 1, pero si lo clonaste en otro lado —o dentro de otro proyecto— la
+> carpeta es otra. Se encuentra así, y esa es la ruta que va en todos los
+> comandos de abajo y en las tareas programadas:
+>
+> ```bash
+> find ~ -maxdepth 4 -name manage.py -not -path "*/.venv/*"
+> ```
+>
+> Con varios proyectos Django en la misma cuenta, conviene **no activar ningún
+> entorno** y usar el intérprete de este: `.venv/bin/python manage.py ...`. Así
+> nunca se corre un comando contra la base de otro sistema.
+
 ```bash
 cd ~/cursoedx && source .venv/bin/activate
 git pull
@@ -176,7 +189,7 @@ En PythonAnywhere: pestaña **Tasks** → *Create a new scheduled task*, a las
 **10:00 UTC** (las 7:00 de Argentina), con este comando:
 
 ```
-cd /home/USUARIO/medguard/escolarapp && .venv/bin/python manage.py enviar_resumen_diario
+cd /home/USUARIO/cursoedx && .venv/bin/python manage.py enviar_resumen_diario
 ```
 
 Probalo primero a mano con `--probar`, que muestra el mensaje sin enviarlo.
