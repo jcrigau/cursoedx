@@ -5,6 +5,10 @@ fuente de verdad**: alcance, módulos, modelo de datos y roadmap por fases. Si
 una decisión cambia, se actualiza ese documento en el mismo commit que el
 código.
 
+¿No conocés cómo funciona una escuela privada subvencionada argentina? Leé
+primero **`CONTEXTO-EDUCATIVO.md`**: casi todas las reglas raras de acá abajo
+se entienden solas después de eso.
+
 ## Cómo se trabaja
 
 - **Una fase por vez** (F0…F6 en `REQUERIMIENTOS.md` §7). Fase terminada =
