@@ -405,6 +405,10 @@ def importar_cargos(institucion, libro, ciclo=None) -> Resultado:
     alta_por_omision = ciclo.fecha_inicio if ciclo else date.today()
     hay_cursos = bool(ciclo) and Curso.objects.filter(ciclo_lectivo=ciclo).exists()
     sin_cursos = 0
+    # Dos filas que caen en el mismo cargo no se fusionan calladas: una que se
+    # pierde son horas que nadie cobra. Dentro de una misma corrida, la segunda
+    # se observa; entre corridas, la clave sigue sirviendo para actualizar.
+    vistos: dict[tuple, int] = {}
 
     for numero, fila in leer(libro, "Cargos"):
         legajo, duda = _quien_es(
@@ -475,6 +479,26 @@ def importar_cargos(institucion, libro, ciclo=None) -> Resultado:
             alta = alta_por_omision
             resultado.avisar(f"cargos sin fecha de alta: se usó {alta_por_omision:%d/%m/%Y}")
 
+        denominacion = texto(fila.get("Denominación"))[:120]
+        firma = (
+            legajo.pk,
+            tipo,
+            materia.pk if materia else None,
+            curso.pk if curso else None,
+            fuente,
+            denominacion,
+        )
+        if firma in vistos:
+            resultado.observar(
+                numero,
+                f"no se distingue de la fila {vistos[firma]}: misma persona, mismo tipo, "
+                "misma materia, mismo curso y misma fuente de pago. Si son dos cargos "
+                "distintos hay que diferenciarlos —el curso, o la denominación—; si es "
+                "el mismo, sobra una fila.",
+            )
+            continue
+        vistos[firma] = numero
+
         cargo = Cargo.objects.filter(
             institucion=institucion,
             legajo=legajo,
@@ -482,7 +506,7 @@ def importar_cargos(institucion, libro, ciclo=None) -> Resultado:
             materia=materia,
             curso=curso,
             fuente_pago=fuente,
-            denominacion=texto(fila.get("Denominación"))[:120],
+            denominacion=denominacion,
         ).first()
         creado = cargo is None
         if creado:
@@ -493,7 +517,7 @@ def importar_cargos(institucion, libro, ciclo=None) -> Resultado:
                 materia=materia,
                 curso=curso,
                 fuente_pago=fuente,
-                denominacion=texto(fila.get("Denominación"))[:120],
+                denominacion=denominacion,
             )
 
         cargo.nivel = nivel
@@ -505,6 +529,7 @@ def importar_cargos(institucion, libro, ciclo=None) -> Resultado:
         cargo.motivo_baja = opcion(fila.get("Motivo de baja"), MotivoBaja.choices, defecto="") or ""
         cargo.resolucion_numero = texto(fila.get("Resolución n°"))[:50]
         cargo.resolucion_fecha = fecha(fila.get("Fecha de resolución"))
+        cargo.observaciones = texto(fila.get("Observaciones"))
 
         try:
             cargo.full_clean(exclude=["resolucion_archivo"])

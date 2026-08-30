@@ -39,6 +39,14 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
   un filtro del panel («datos que faltan»), y se completan subiendo de nuevo la
   planilla: la fila se reconoce por apellido y nombre. Dos homónimos sin CUIL
   no se tocan; hace falta el dato para distinguirlos.
+- **Dos filas que caen en el mismo cargo no se fusionan calladas.** Una planta
+  funcional trae la misma persona y la misma materia en dos filas —dos
+  resoluciones, o un curso combinado— y al cargarlas una se comía a la otra:
+  horas que nadie cobra. Ahora la segunda queda observada con el número de la
+  primera, para que alguien decida si son dos cargos o si sobra una fila.
+- La hoja de Cargos tiene **apellido y nombre** (para colgar el cargo cuando no
+  hay CUIL) y **observaciones**, donde queda lo que no entra en ningún campo:
+  «se dicta a 3°A y 3°B juntos», por ejemplo.
 - El informe de la carga **agrupa lo repetido** («64 personas sin fecha de
   ingreso») y nombra los campos como los ve la secretaría, no como se llaman
   en la base.

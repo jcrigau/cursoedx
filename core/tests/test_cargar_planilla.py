@@ -266,6 +266,69 @@ class TestCuandoFaltaAlgo:
         assert not Institucion.objects.exists()
 
 
+class TestNadaSePierde:
+    def test_dos_filas_iguales_no_se_fusionan_calladas(self, db, planilla, capsys):
+        """Un cargo que se pierde son horas que alguien no cobra."""
+        escuela_minima(planilla)
+        fila = [
+            "27-30111222-4",
+            "Benítez",
+            "Ana",
+            "Horas cátedra (40 min)",
+            "",
+            "Secundario",
+            "Matemática",
+            "1°A",
+            5,
+            "No",
+            "Titular",
+            "Subvencionado (lo paga el estado)",
+            "01/03/2020",
+            "",
+            "",
+            "",
+            "",
+            "",
+        ]
+        planilla("Cargos", [fila, list(fila)])
+        call_command("cargar_planilla", planilla.guardar())
+
+        assert Cargo.objects.count() == 1
+        assert "no se distingue de la fila" in capsys.readouterr().out
+
+    def test_el_mismo_docente_en_dos_cursos_son_dos_cargos(self, db, planilla):
+        escuela_minima(planilla)
+        planilla(
+            "Cargos",
+            [
+                [
+                    "27-30111222-4",
+                    "Benítez",
+                    "Ana",
+                    "Horas cátedra (40 min)",
+                    "",
+                    "Secundario",
+                    "Matemática",
+                    curso,
+                    5,
+                    "No",
+                    "Titular",
+                    "Subvencionado (lo paga el estado)",
+                    "01/03/2020",
+                    "",
+                    "",
+                    "",
+                    "",
+                    "",
+                ]
+                for curso in ("1°A", "1°B")
+            ],
+        )
+        call_command("cargar_planilla", planilla.guardar())
+
+        assert Cargo.objects.count() == 2
+
+
 class TestLosCargosSinCuil:
     def test_se_cuelgan_de_la_persona_por_apellido_y_nombre(self, db, planilla):
         escuela_minima(planilla)

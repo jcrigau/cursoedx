@@ -262,8 +262,9 @@ HOJAS = [
             "Motivo de baja",
             "Resolución n°",
             "Fecha de resolución",
+            "Observaciones",
         ],
-        anchos=[22, 22, 22, 24, 26, 14, 26, 16, 15, 16, 22, 32, 14, 14, 18, 16, 18],
+        anchos=[22, 22, 22, 24, 26, 14, 26, 16, 15, 16, 22, 32, 14, 14, 18, 16, 18, 40],
         listas={
             "Tipo de cargo": _etiquetas(TipoCargo.choices),
             "Nivel": _etiquetas(TipoNivel.choices),
@@ -291,6 +292,7 @@ HOJAS = [
                 "",
                 "1234-ME-2018",
                 "20/02/2018",
+                "",
             ],
             [
                 EJ + "27-30111222-4",
@@ -310,6 +312,7 @@ HOJAS = [
                 "",
                 "",
                 "",
+                "Reemplaza a la titular con licencia por maternidad.",
             ],
         ],
     ),
