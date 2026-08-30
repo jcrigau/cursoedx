@@ -149,10 +149,23 @@ instituciones expone datos laborales de otra escuela.
   aplica ninguno. Es lo que evita cargar datos reales en la escuela de prueba.
 - Las columnas del export viven en `novedades/exportar.py`: si otra escuela usa
   otra planilla, se cambia solo ahí.
-- Los **archivos subidos los sirve la app** (`core/archivos.py`), detrás de
-  login: hay certificados médicos y de antecedentes, y un mapeo `/media/` en el
-  hosting los dejaría públicos. En el PDF no se usa la URL sino la ruta del
-  archivo: WeasyPrint no tiene sesión.
+- Los **archivos subidos los sirve la app** (`core/archivos.py`) y se autorizan
+  **por objeto, no por login**: los docentes también tienen usuario, así que
+  «estar conectado» no puede alcanzar para abrir el certificado de otro. La
+  regla es la de siempre —el rol dice qué, la institución sobre qué datos— más
+  «lo propio siempre». Un archivo que no cuelga de ningún registro conocido no
+  se entrega: se falla cerrado. Un `/media/` mapeado en el hosting saltearía
+  todo esto. En el PDF no se usa la URL sino la ruta del archivo: WeasyPrint no
+  tiene sesión.
+- Lo que se sube es **un papel escaneado o una foto** (`validar_adjunto`): lista
+  blanca de extensiones y tope de tamaño. `.html` y `.svg` quedan afuera a
+  propósito —los ejecuta el navegador— y lo que no se puede mostrar sin riesgo
+  se entrega como descarga, con `nosniff`.
+- El ingreso **se registra y se frena** (`core/seguridad.py`): cada intento
+  queda en `IntentoDeAcceso`, y tras varios fallos seguidos hay que esperar. El
+  mensaje de credenciales es genérico a propósito: no dice si el email existe.
+- Los **borrados del panel quedan en la bitácora** (`AdminInstitucional`): el
+  respaldo permite recuperar, la auditoría permite darse cuenta.
 - Los **gráficos se dibujan en SVG a mano** (`asistencia/graficos.py` calcula la
   geometría, la plantilla la dibuja): sin librerías ni CDN. Dentro del `<svg>`
   va **`{% localize off %}`**: en es-AR los decimales salen con coma y el

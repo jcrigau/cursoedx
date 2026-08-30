@@ -17,6 +17,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from core.archivos import CarpetaProtegida, validar_adjunto
 from core.models import ModeloInstitucional, Usuario
 from legajos.models import Cargo, Legajo
 
@@ -98,10 +99,16 @@ class Licencia(ModeloInstitucional):
         help_text="Si se deja vacío, se entiende que afecta a todos los cargos vigentes.",
     )
 
-    certificado = models.FileField("certificado", upload_to="licencias/", blank=True)
+    certificado = models.FileField(
+        "certificado",
+        upload_to=CarpetaProtegida("licencias"),
+        blank=True,
+        validators=[validar_adjunto],
+    )
     aval = models.FileField(
         "aval de la extensión",
-        upload_to="licencias/avales/",
+        upload_to=CarpetaProtegida("licencias/avales"),
+        validators=[validar_adjunto],
         blank=True,
         help_text="Junta médica u otra autorización, cuando se supera el tope.",
     )

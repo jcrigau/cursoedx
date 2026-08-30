@@ -44,3 +44,41 @@ class InstitucionActualMiddleware:
         elif CLAVE_SESION in request.session:
             del request.session[CLAVE_SESION]
         return institucion
+
+
+class CabecerasDeSeguridad:
+    """Le dice al navegador qué tiene permitido hacer en nuestras páginas.
+
+    El sistema no carga nada de afuera —ni tipografías, ni librerías, ni
+    imágenes de otros sitios—, así que se le puede decir al navegador que
+    **solo** acepte contenido propio. Si algún día alguien logra inyectar algo
+    en una pantalla, esto le impide mandar los datos a otro servidor, meter la
+    página dentro de un iframe ajeno o cambiar a dónde apunta un formulario.
+
+    El `unsafe-inline` está porque el panel de Django y el portal usan estilos
+    y scripts escritos dentro de la página. Es la parte floja de la política y
+    conviene saberlo: lo que sí corta es la salida de datos hacia afuera.
+    """
+
+    POLITICA = "; ".join(
+        [
+            "default-src 'self'",
+            "img-src 'self' data:",
+            "style-src 'self' 'unsafe-inline'",
+            "script-src 'self' 'unsafe-inline'",
+            "font-src 'self'",
+            "connect-src 'self'",
+            "object-src 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
+            "frame-ancestors 'none'",
+        ]
+    )
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        respuesta = self.get_response(request)
+        respuesta.setdefault("Content-Security-Policy", self.POLITICA)
+        return respuesta

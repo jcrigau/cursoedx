@@ -1,3 +1,5 @@
+import os
+
 from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
@@ -5,6 +7,7 @@ from django.urls import include, path, re_path
 from asistencia import views as asistencia_views
 from core import views as core_views
 from core.archivos import servir_media
+from core.vistas_acceso import IngresoView
 from horarios import views as horarios_views
 from legajos import views as legajos_views
 from licencias import views as licencias_views
@@ -105,8 +108,14 @@ urlpatterns = [
     path("portal/avisar/", portal_views.avisar, name="portal_avisar"),
     path("portal/avisar/<int:pk>/anular/", portal_views.anular_aviso, name="portal_anular_aviso"),
     path("portal/fichar/", portal_views.fichar, name="portal_fichar"),
+    # La propia va antes que las de Django: registra los intentos y frena la
+    # fuerza bruta (core/seguridad.py).
+    path("cuentas/login/", IngresoView.as_view(), name="login"),
     path("cuentas/", include("django.contrib.auth.urls")),
-    path("admin/", admin.site.urls),
+    # La dirección del panel se puede cambiar en el .env. No es una defensa
+    # de verdad —quien tenga la clave entra igual—, pero saca de encima el
+    # ruido constante de los robots que prueban /admin/ en todo internet.
+    path(os.environ.get("SGE_URL_PANEL", "admin/"), admin.site.urls),
     # Los adjuntos del legajo (fotos, certificados, títulos) los sirve la
     # propia app, detrás de login: ver core/archivos.py. No hay que mapear
     # /media/ en el hosting —eso los dejaría públicos— y así andan igual en

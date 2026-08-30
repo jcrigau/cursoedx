@@ -13,6 +13,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
+from core.archivos import CarpetaProtegida, validar_adjunto
 from core.models import ModeloInstitucional, Usuario, validador_cuit
 from estructura.models import Curso, Materia, Nivel
 
@@ -56,7 +57,8 @@ class Legajo(ModeloInstitucional):
     nombre = models.CharField("nombre", max_length=100)
     foto = models.ImageField(
         "foto",
-        upload_to="fotos/",
+        upload_to=CarpetaProtegida("fotos"),
+        validators=[validar_adjunto],
         blank=True,
         help_text=(
             "Tipo carnet, cuadrada (4x4). JPG o PNG; si no es exactamente "
@@ -264,7 +266,10 @@ class Cargo(ModeloInstitucional):
     resolucion_numero = models.CharField("resolución n°", max_length=50, blank=True)
     resolucion_fecha = models.DateField("fecha de la resolución", null=True, blank=True)
     resolucion_archivo = models.FileField(
-        "archivo de la resolución", upload_to="resoluciones/", blank=True
+        "archivo de la resolución",
+        upload_to=CarpetaProtegida("resoluciones"),
+        blank=True,
+        validators=[validar_adjunto],
     )
     observaciones = models.TextField("observaciones", blank=True)
 
@@ -364,7 +369,12 @@ class DocumentoLegajo(models.Model):
     tipo = models.ForeignKey(
         TipoDocumento, on_delete=models.PROTECT, related_name="documentos", verbose_name="tipo"
     )
-    archivo = models.FileField("archivo", upload_to="documentos/", blank=True)
+    archivo = models.FileField(
+        "archivo",
+        upload_to=CarpetaProtegida("documentos"),
+        blank=True,
+        validators=[validar_adjunto],
+    )
     fecha_emision = models.DateField("emitido el", null=True, blank=True)
     fecha_vencimiento = models.DateField("vence el", null=True, blank=True)
     observaciones = models.CharField("observaciones", max_length=300, blank=True)
@@ -438,7 +448,12 @@ class Titulo(models.Model):
     registrado = models.BooleanField(
         "registrado", default=False, help_text="Título registrado ante el organismo."
     )
-    archivo = models.FileField("archivo", upload_to="titulos/", blank=True)
+    archivo = models.FileField(
+        "archivo",
+        upload_to=CarpetaProtegida("titulos"),
+        blank=True,
+        validators=[validar_adjunto],
+    )
 
     class Meta:
         verbose_name = "título"
@@ -468,7 +483,12 @@ class ServicioAnterior(models.Model):
         default=True,
         help_text="Desmarcar si el servicio no computa como docente.",
     )
-    archivo = models.FileField("certificación", upload_to="servicios/", blank=True)
+    archivo = models.FileField(
+        "certificación",
+        upload_to=CarpetaProtegida("servicios"),
+        blank=True,
+        validators=[validar_adjunto],
+    )
 
     class Meta:
         verbose_name = "servicio anterior"

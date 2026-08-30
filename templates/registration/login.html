@@ -7,7 +7,13 @@
     <h1>Ingresar</h1>
     <p class="subtitulo">Sistema de gestión escolar</p>
 
-    {% if form.errors %}
+    {% if bloqueado %}
+      <p class="errores">{{ bloqueado }}</p>
+    {% elif form.errors %}
+      {% comment %}
+        A propósito el mismo mensaje exista o no el email: decir cuál de las dos
+        cosas está mal le regala al atacante la mitad del trabajo.
+      {% endcomment %}
       <p class="errores">Email o contraseña incorrectos.</p>
     {% endif %}
 

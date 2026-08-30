@@ -14,7 +14,14 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.forms import AdminPasswordChangeForm, UserChangeForm, UserCreationForm
 from django.db import models as django_models
 
-from .models import Institucion, Membresia, RegistroAuditoria, Usuario
+from .models import (
+    AccionAuditada,
+    Institucion,
+    Membresia,
+    RegistroAuditoria,
+    Usuario,
+    registrar_auditoria,
+)
 
 # Modelos que llegan a la institución por una relación en vez de tenerla propia.
 RUTAS_INSTITUCION: dict[type, str] = {}
@@ -77,6 +84,29 @@ class AdminInstitucional(MezclaInstitucional, admin.ModelAdmin):
         if request.institucion is None:
             return False
         return super().has_add_permission(request)
+
+    # -- Borrados: quién borró qué ------------------------------------------
+    #
+    # El respaldo permite recuperar lo borrado; esto permite saber que se
+    # borró y quién lo hizo. Sin las dos cosas, un dato que desaparece es
+    # indistinguible de un dato que nunca existió.
+
+    def delete_model(self, request, obj):
+        self._anotar_el_borrado(request, obj)
+        super().delete_model(request, obj)
+
+    def delete_queryset(self, request, queryset):
+        for objeto in queryset:
+            self._anotar_el_borrado(request, objeto)
+        super().delete_queryset(request, queryset)
+
+    def _anotar_el_borrado(self, request, objeto):
+        registrar_auditoria(
+            AccionAuditada.BAJA,
+            objeto,
+            usuario=request.user,
+            descripcion=f"Borrado desde el panel: {objeto}",
+        )
 
 
 class InlineInstitucional(MezclaInstitucional, admin.TabularInline):

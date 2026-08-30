@@ -271,6 +271,9 @@ class ModeloInstitucional(models.Model):
 
 
 class AccionAuditada(models.TextChoices):
+    ACCESO = "ACCESO", "Ingreso al sistema"
+    ACCESO_FALLIDO = "ACCESO_FALLIDO", "Intento de ingreso fallido"
+    BLOQUEO = "BLOQUEO", "Ingreso bloqueado"
     CREACION = "CREACION", "Creación"
     MODIFICACION = "MODIFICACION", "Modificación"
     BAJA = "BAJA", "Baja"
@@ -362,3 +365,30 @@ def registrar_auditoria(
         descripcion=descripcion,
         datos=datos or {},
     )
+
+
+class IntentoDeAcceso(models.Model):
+    """Cada intento de entrar al sistema, haya salido bien o mal.
+
+    Sirve para dos cosas: cortar un ataque de fuerza bruta —probar claves hasta
+    acertar— y poder mirar después qué pasó. No guarda la contraseña probada
+    (obvio) ni sirve para saber si una dirección existe: se registra igual.
+    """
+
+    email = models.CharField("email probado", max_length=254)
+    ip = models.GenericIPAddressField("dirección IP", null=True, blank=True)
+    exito = models.BooleanField("entró", default=False)
+    creado_en = models.DateTimeField("cuándo", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "intento de acceso"
+        verbose_name_plural = "intentos de acceso"
+        ordering = ["-creado_en"]
+        indexes = [
+            models.Index(fields=["email", "creado_en"]),
+            models.Index(fields=["ip", "creado_en"]),
+        ]
+
+    def __str__(self) -> str:
+        estado = "entró" if self.exito else "falló"
+        return f"{self.email} {estado} el {self.creado_en:%d/%m/%Y %H:%M}"

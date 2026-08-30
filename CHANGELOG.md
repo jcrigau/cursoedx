@@ -12,6 +12,35 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
 
 ## Sin publicar
 
+### Seguridad
+
+- **Cada archivo se autoriza contra su dueño, no contra el login.** Los
+  docentes tienen usuario del portal: hasta ahora, con estar conectado y
+  adivinar una dirección se podía abrir el certificado médico de otro. Ahora
+  se comprueba de qué registro cuelga cada archivo y quién lo pide; lo propio
+  siempre se puede ver, y lo que no cuelga de nada no se entrega.
+- **Los nombres no se pueden adivinar**: cada adjunto se guarda en una carpeta
+  con identificador al azar.
+- **Solo se suben papeles y fotos**: lista blanca de extensiones y tope de
+  10 MB. Quedan afuera `.html` y `.svg`, que el navegador ejecuta y servirían
+  para robarle la sesión a un compañero. Lo que no se puede mostrar sin riesgo
+  se entrega como descarga, y siempre con `nosniff`.
+- **El ingreso se registra y se frena**: cada intento queda anotado y, tras
+  cinco fallos seguidos, esa dirección desde esa computadora espera quince
+  minutos (con un tope más alto por IP para cortar un barrido). Entrar bien
+  limpia la cuenta. El bloqueo queda en la bitácora.
+- **Los borrados del panel quedan registrados**: quién borró qué y cuándo. El
+  respaldo permite recuperarlo; esto permite darse cuenta.
+- **Sesión de ocho horas** que se renueva mientras se trabaja, en lugar de dos
+  semanas: la computadora de secretaría la usan varias personas.
+- **Contraseñas de diez caracteres** como mínimo.
+- **El navegador solo acepta contenido propio** (política de seguridad de
+  contenido): nada de recursos externos, ni el sistema dentro de un iframe
+  ajeno, ni formularios apuntando a otro servidor.
+- La **dirección del panel** se puede cambiar en el `.env` (`SGE_URL_PANEL`).
+
+### Lo demás
+
 - **Respaldo en un comando** (`respaldar`): un ZIP con la base de datos y todos
   los archivos subidos, con rotación de los últimos ocho. Se programa semanal
   y se baja del servidor. Una copia de la base sin los certificados deja

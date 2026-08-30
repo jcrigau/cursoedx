@@ -16,6 +16,7 @@ from datetime import time
 from django.core.exceptions import ValidationError
 from django.db import models
 
+from core.archivos import CarpetaProtegida, validar_adjunto
 from core.models import ModeloInstitucional, Usuario
 from estructura.models import BloqueHorario, Curso, DiaSemana, Materia, PeriodoAcademico
 from legajos.models import Cargo, Legajo
@@ -43,7 +44,12 @@ class DeclaracionDisponibilidad(ModeloInstitucional):
         verbose_name="período",
     )
     presentada_en = models.DateField("presentada el", null=True, blank=True)
-    archivo = models.FileField("declaración firmada", upload_to="ddjj/", blank=True)
+    archivo = models.FileField(
+        "declaración firmada",
+        upload_to=CarpetaProtegida("ddjj"),
+        blank=True,
+        validators=[validar_adjunto],
+    )
     observaciones = models.TextField("observaciones", blank=True)
 
     class Meta:

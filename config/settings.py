@@ -76,6 +76,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "core.middleware.InstitucionActualMiddleware",
+    "core.middleware.CabecerasDeSeguridad",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -142,10 +143,24 @@ AUTH_USER_MODEL = "core.Usuario"
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        # Ocho es el mínimo de Django y hoy es poco: con diez ya no se prueba
+        # a mano. La secretaría reparte estas claves, así que tienen que
+        # aguantar que alguien las intente adivinar desde afuera.
+        "OPTIONS": {"min_length": 10},
+    },
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
+
+# La computadora de secretaría la usan varias personas y queda prendida: una
+# sesión eterna es una puerta abierta. Ocho horas cubren la jornada y se
+# renuevan mientras se trabaja.
+SESSION_COOKIE_AGE = int(os.environ.get("SGE_HORAS_DE_SESION", "8")) * 60 * 60
+SESSION_SAVE_EVERY_REQUEST = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_REFERRER_POLICY = "same-origin"
 
 LOGIN_URL = "login"
 LOGIN_REDIRECT_URL = "inicio"

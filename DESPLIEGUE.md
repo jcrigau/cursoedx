@@ -281,6 +281,40 @@ librerías para los PDF, así que ahí sí salen siempre en PDF.
 Para exponerlo a internet sin servidor propio ni IP fija, sirve **Cloudflare
 Tunnel** desde una PC de la escuela.
 
+### Seguridad: qué trae puesto y qué depende de vos
+
+Una escuela con el sistema publicado en internet recibe intentos automáticos
+de entrar desde el primer día. Lo que el sistema hace solo:
+
+| Riesgo | Qué hace el sistema |
+|---|---|
+| Probar contraseñas hasta acertar | Registra cada intento y frena quince minutos después de cinco fallos seguidos (más un tope por IP, para un barrido). |
+| Que alguien de adentro abra el legajo de otro | Cada archivo se autoriza contra su dueño: lo propio siempre, lo ajeno solo con el rol y en la escuela que corresponde. |
+| Que suban algo que no es un papel | Solo entran PDF, imágenes y documentos, hasta 10 MB. `.html` y `.svg` quedan afuera: el navegador los ejecuta. |
+| Que borren datos para tapar algo | Todo borrado desde el panel queda en la bitácora, con quién y cuándo. |
+| Una sesión abierta en una máquina compartida | La sesión dura ocho horas y se renueva mientras se trabaja (`SGE_HORAS_DE_SESION`). |
+| Robo de datos desde una pantalla inyectada | El navegador solo acepta contenido del propio sitio; no puede mandar nada afuera ni ser embebido en otra página. |
+
+Lo que depende de la escuela, y es donde se pierden los sistemas:
+
+1. **Contraseñas distintas por persona.** Mínimo diez caracteres (lo exige el
+   sistema). Nada de una clave compartida «para la compu de secretaría»: si
+   entran, no hay forma de saber quién fue.
+2. **Bajar los respaldos** y guardarlos fuera del servidor (arriba).
+3. **Dar de baja a quien se va**, el mismo día. Un usuario activo de alguien
+   que ya no trabaja ahí es la puerta más usada.
+4. **No compartir el usuario del panel.** Dirección y secretaría ven cosas
+   distintas a propósito.
+5. Si el hospedaje lo permite, cambiar la dirección del panel con
+   `SGE_URL_PANEL=una-palabra-cualquiera/` en el `.env`. No es una defensa
+   real, pero saca de encima el ruido de los robots.
+
+Para revisar que no se aflojó nada al actualizar:
+
+```bash
+.venv/bin/python manage.py check --deploy
+```
+
 ### Copias de seguridad (importante)
 
 Son datos laborales: hacé una copia diaria y guardala fuera del servidor.
