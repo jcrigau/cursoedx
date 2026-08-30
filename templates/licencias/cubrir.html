@@ -33,6 +33,18 @@
       {% if asignacion.legajo %}
         <a href="{% url 'admin:licencias_licencia_add' %}?legajo={{ asignacion.legajo.pk }}&fecha_inicio={{ fecha|date:'Y-m-d' }}&fecha_fin={{ fecha|date:'Y-m-d' }}">Cargarla ahora →</a>
       {% endif %}
+
+  {% if licencia %}
+    <p class="acciones no-imprimir">
+      <a class="ficha" href="{% url 'cubrir_licencia' licencia.pk %}">
+        Cubrir todos los cargos de esta licencia →
+      </a>
+      <span class="pie">
+        Esta pantalla resuelve esta hora; la otra resuelve de una vez todo lo
+        que la licencia deja libre.
+      </span>
+    </p>
+  {% endif %}
       <div class="secundario">Mientras tanto, la lista de abajo sirve para saber a quién llamar.</div>
     </div>
   {% endif %}

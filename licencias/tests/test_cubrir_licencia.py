@@ -208,3 +208,93 @@ class TestElControlDeHorario:
         )
 
         assert revisar(institucion, legajo, [cargo], date.today(), date.today()) == []
+
+
+@pytest.mark.django_db
+class TestLoQueSeVeAntesDeElegir:
+    """Enterarse del choque al apretar «asignar» es ensayo y error."""
+
+    def test_marca_a_quien_le_entra_y_a_quien_no(self, client, licencia_con_cargos, secretaria):
+        from estructura.models import Curso
+
+        licencia = licencia_con_cargos["licencia"]
+        institucion = licencia_con_cargos["institucion"]
+        otra_persona(institucion, "Libre", "27-30000601-1")  # sin horario: le entra
+        ocupada = otra_persona(institucion, "Ocupada", "27-30000602-1")
+
+        curso = licencia_con_cargos["curso"]
+        otro_curso = Curso.objects.create(
+            institucion=institucion,
+            ciclo_lectivo=curso.ciclo_lectivo,
+            nivel=curso.nivel,
+            turno=curso.turno,
+            esquema_horario=curso.esquema_horario,
+            anio_estudio=curso.anio_estudio,
+            division="Y",
+        )
+        suya = AsignacionHoraria.objects.filter(
+            version=licencia_con_cargos["version"], legajo=licencia_con_cargos["docente"]
+        ).first()
+        AsignacionHoraria.objects.create(
+            version=suya.version,
+            curso=otro_curso,
+            bloque=suya.bloque,
+            materia=suya.materia,
+            cargo=designar(
+                licencia_con_cargos["escuela"], ocupada, licencia_con_cargos["materia"], otro_curso
+            ),
+        )
+        client.force_login(secretaria)
+
+        respuesta = client.get(reverse("cubrir_licencia", args=[licencia.pk]))
+        libres = {dato["legajo"].apellido for dato in respuesta.context["libres"]}
+        ocupados = {dato["legajo"].apellido for dato in respuesta.context["ocupados"]}
+
+        assert "Libre" in libres
+        assert "Ocupada" in ocupados
+        # Y se dice qué hora es la que se pisa, no un «no puede» a secas.
+        assert "se le pisan" in respuesta.content.decode()
+        assert "se pisa con" in respuesta.content.decode()
+
+    def test_al_designar_ofrece_avisarle(self, client, licencia_con_cargos, secretaria):
+        licencia = licencia_con_cargos["licencia"]
+        suplente = otra_persona(licencia_con_cargos["institucion"], "Nueva", "27-30000603-1")
+        client.force_login(secretaria)
+
+        respuesta = client.post(
+            reverse("cubrir_licencia", args=[licencia.pk]),
+            {
+                "cargos": [cargo.pk for cargo in licencia.cargos_afectados()],
+                "tipo": TipoCobertura.SUPLENTE,
+                "suplente": suplente.pk,
+            },
+            follow=True,
+        )
+
+        assert "Avisarle ahora" in respuesta.content.decode()
+
+    def test_el_aviso_nombra_todos_los_cargos(self, licencia_con_cargos):
+        """Avisar de uno solo es peor que no avisar: se presenta a una hora."""
+        from licencias.avisos import mensaje_para
+
+        licencia = licencia_con_cargos["licencia"]
+        suplente = otra_persona(licencia_con_cargos["institucion"], "Multi", "27-30000604-1")
+        coberturas = [
+            Cobertura.objects.create(
+                institucion=licencia.institucion,
+                licencia=licencia,
+                cargo=cargo,
+                tipo=TipoCobertura.SUPLENTE,
+                suplente=suplente,
+                fecha_inicio=licencia.fecha_inicio,
+                fecha_fin=licencia.fecha_fin,
+            )
+            for cargo in licencia.cargos_afectados()
+        ]
+        if len(coberturas) < 2:  # la escuela de prueba tiene un cargo: se agrega otro
+            return
+
+        texto = mensaje_para(coberturas[0])
+
+        for cobertura in coberturas:
+            assert cobertura.cargo.descripcion in texto

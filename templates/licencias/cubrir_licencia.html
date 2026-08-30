@@ -96,25 +96,80 @@
           </select>
         </p>
 
-        <p>
-          <label for="suplente"><strong>Suplente</strong></label><br>
-          <select name="suplente" id="suplente" style="min-width:22rem">
-            <option value="">— elegir —</option>
-            {% if posibles.con_la_materia %}
-              <optgroup label="Dan estas materias">
-                {% for legajo in posibles.con_la_materia %}
-                  <option value="{{ legajo.pk }}">{{ legajo.nombre_completo }}</option>
-                {% endfor %}
-              </optgroup>
-            {% endif %}
-            <optgroup label="El resto del personal">
-              {% for legajo in posibles.el_resto %}
-                <option value="{{ legajo.pk }}">{{ legajo.nombre_completo }}</option>
-              {% endfor %}
-            </optgroup>
-          </select>
-          <span class="secundario">Solo hace falta si se designa suplente.</span>
+        <p><strong>¿A quién?</strong>
+          <span class="secundario">
+            Solo hace falta si se designa suplente. El estado es sobre
+            {{ pendientes|length }} cargo{{ pendientes|pluralize }} sin resolver:
+            si tildás menos, puede entrarle igual.
+          </span>
         </p>
+        {% if libres %}
+          <table class="datos candidatos">
+            <tbody>
+              {% for posible in libres %}
+                <tr>
+                  <td style="width:2rem">
+                    <input type="radio" name="suplente" id="sup{{ posible.legajo.pk }}"
+                           value="{{ posible.legajo.pk }}">
+                  </td>
+                  <td>
+                    <label for="sup{{ posible.legajo.pk }}">
+                      <strong>{{ posible.legajo.nombre_completo }}</strong>
+                    </label>
+                    <div class="secundario">{{ posible.legajo.get_plantel_display }}</div>
+                  </td>
+                  <td>
+                    {% if posible.da_la_materia %}<span class="etiqueta">da la materia</span>{% endif %}
+                  </td>
+                  <td><span class="etiqueta">le entra en el horario</span></td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <div class="aviso warning">
+            A nadie del personal le entran estas horas sin pisarse con lo que ya
+            tiene. Se puede elegir igual —abajo— y reacomodar después, o dejar
+            los cursos sin cobertura.
+          </div>
+        {% endif %}
+
+        {% if ocupados %}
+          <details class="plegable" {% if not libres %}open{% endif %}>
+            <summary>A estos se les pisa el horario ({{ ocupados|length }})</summary>
+            <table class="datos candidatos">
+              <tbody>
+                {% for posible in ocupados %}
+                  <tr class="ocupado">
+                    <td style="width:2rem">
+                      <input type="radio" name="suplente" id="sup{{ posible.legajo.pk }}"
+                             value="{{ posible.legajo.pk }}">
+                    </td>
+                    <td>
+                      <label for="sup{{ posible.legajo.pk }}">
+                        <strong>{{ posible.legajo.nombre_completo }}</strong>
+                      </label>
+                      <div class="secundario">{{ posible.legajo.get_plantel_display }}</div>
+                    </td>
+                    <td>
+                      {% if posible.da_la_materia %}<span class="etiqueta">da la materia</span>{% endif %}
+                    </td>
+                    <td>
+                      <span class="etiqueta alerta">
+                        se le pisan {{ posible.choques|length }} hora{{ posible.choques|pluralize }}
+                      </span>
+                      <div class="secundario">{{ posible.choques.0 }}</div>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            <p class="pie">
+              Elegir a alguien de esta lista no se puede: al guardar, el sistema
+              lo frena. Están para saber quién es y por qué no.
+            </p>
+          </details>
+        {% endif %}
 
         <p class="acciones-fila">
           <label for="desde">Desde</label>

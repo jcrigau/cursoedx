@@ -18,13 +18,41 @@ from django.conf import settings
 from django.core.mail import send_mail
 
 
+def cargos_de_la_misma_suplencia(cobertura) -> list:
+    """Todo lo que esa persona cubre de esa licencia, no solo un cargo.
+
+    Cuando se designa a alguien para varios cargos de una licencia —tres
+    cursos de la misma materia, por ejemplo—, avisarle de uno solo es peor que
+    no avisarle: se presenta a una hora y falta a las otras dos.
+    """
+    from .models import Cobertura, TipoCobertura
+
+    hermanas = (
+        Cobertura.objects.filter(
+            institucion=cobertura.institucion,
+            licencia=cobertura.licencia,
+            suplente=cobertura.suplente,
+            tipo=TipoCobertura.SUPLENTE,
+        )
+        .select_related("cargo__materia", "cargo__curso")
+        .order_by("cargo__materia__nombre", "cargo__curso__anio_estudio")
+    )
+    return [otra.cargo for otra in hermanas] or [cobertura.cargo]
+
+
 def mensaje_para(cobertura) -> str:
     """El texto del aviso, el mismo vaya por donde vaya."""
     cargo = cobertura.cargo
+    cargos = cargos_de_la_misma_suplencia(cobertura)
+    if len(cargos) == 1:
+        que_cubre = cargos[0].descripcion
+    else:
+        detalle = "\n".join(f"  · {otro.descripcion}" for otro in cargos)
+        que_cubre = f"{len(cargos)} cargos:\n{detalle}\n"
     return (
         f"Hola {cobertura.suplente.nombre}, te escribimos de "
         f"{cobertura.institucion}.\n\n"
-        f"Quedaste designado/a para cubrir {cargo.descripcion}, "
+        f"Quedaste designado/a para cubrir {que_cubre}, "
         f"del {cobertura.fecha_inicio:%d/%m/%Y} al {cobertura.fecha_fin:%d/%m/%Y}, "
         f"en reemplazo de {cargo.legajo.nombre_completo}.\n\n"
         "Cualquier duda, respondé este mensaje.\n"

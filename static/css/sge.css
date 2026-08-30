@@ -1084,3 +1084,9 @@ table.calendario td.otro-mes .numero { opacity: 0.5; }
   min-width: 2px;
   vertical-align: middle;
 }
+
+/* La lista de posibles suplentes: primero a quien conviene llamar. */
+table.candidatos { margin-bottom: 1rem; }
+table.candidatos td { vertical-align: middle; }
+table.candidatos tr.ocupado { background: #fbfcfc; }
+table.candidatos tr.ocupado strong { color: var(--tinta-suave); }

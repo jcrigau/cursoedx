@@ -62,6 +62,10 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
   horas con lo que el suplente ya da —y con las suplencias que ya tomó—
   comparando horarios reales: si algo se pisa, **no guarda nada** y dice qué
   hora es. También sirve para dejar varios cargos sin cobertura de una vez.
+  La lista de suplentes viene **ya evaluada**: adelante los que tienen esas
+  horas libres (con la marca de quién da la materia) y plegados los que no,
+  cada uno con la hora que se le pisa. Al terminar ofrece avisarle, y el
+  mensaje nombra todos los cargos asignados, no uno solo.
 - **Respaldo en un comando** (`respaldar`): un ZIP con la base de datos y todos
   los archivos subidos, con rotación de los últimos ocho. Se programa semanal
   y se baja del servidor. Una copia de la base sin los certificados deja

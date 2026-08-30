@@ -117,3 +117,79 @@ def hay_horario(institucion, fecha: date) -> bool:
     from asistencia.parte import version_vigente
 
     return version_vigente(institucion, fecha) is not None
+
+
+def revisar_varios(institucion, legajos, cargos, desde: date, hasta: date) -> dict:
+    """Los choques de cada candidato, resolviendo el horario una sola vez.
+
+    La pantalla necesita saber, antes de que la secretaría elija, a quién le
+    entra y a quién no. Hacerlo persona por persona serían dos consultas por
+    cada una; acá se trae el horario y las coberturas una vez y se compara en
+    memoria, que para una escuela es instantáneo.
+    """
+    from asistencia.parte import version_vigente
+
+    from .models import Cobertura, TipoCobertura
+
+    version = version_vigente(institucion, desde)
+    if version is None or not cargos:
+        return {legajo.id: [] for legajo in legajos}
+
+    # Lo que hay que cubrir.
+    a_cubrir = []
+    for cargo in cargos:
+        for asignacion in _asignaciones_de(version, cargo):
+            a_cubrir.append(asignacion)
+
+    # Lo que cada uno ya tiene: sus horas del horario…
+    ocupacion: dict[int, list] = {legajo.id: [] for legajo in legajos}
+    for asignacion in AsignacionHoraria.objects.filter(
+        version=version, legajo__in=[legajo.id for legajo in legajos]
+    ).select_related("materia", "curso"):
+        ocupacion[asignacion.legajo_id].append(
+            (
+                asignacion.dia_semana,
+                asignacion.hora_inicio,
+                asignacion.hora_fin,
+                _etiqueta(asignacion),
+            )
+        )
+
+    # …y lo que ya se comprometió a suplir en esas fechas.
+    otras = Cobertura.objects.filter(
+        institucion=institucion,
+        suplente__in=[legajo.id for legajo in legajos],
+        tipo=TipoCobertura.SUPLENTE,
+        fecha_inicio__lte=hasta,
+        fecha_fin__gte=desde,
+    ).select_related("cargo__legajo", "cargo__materia", "cargo__curso")
+    for cobertura in otras:
+        for asignacion in _asignaciones_de(version, cobertura.cargo):
+            ocupacion.setdefault(cobertura.suplente_id, []).append(
+                (
+                    asignacion.dia_semana,
+                    asignacion.hora_inicio,
+                    asignacion.hora_fin,
+                    f"{_etiqueta(asignacion)} (suplencia de {cobertura.cargo.legajo.apellido})",
+                )
+            )
+
+    choques: dict[int, list] = {}
+    for legajo in legajos:
+        propios = []
+        for nueva in a_cubrir:
+            for dia, inicio, fin, que_es in ocupacion.get(legajo.id, []):
+                if dia == nueva.dia_semana and se_superponen(
+                    nueva.hora_inicio, nueva.hora_fin, inicio, fin
+                ):
+                    propios.append(
+                        Choque(
+                            dia=dia,
+                            hora_inicio=nueva.hora_inicio,
+                            hora_fin=nueva.hora_fin,
+                            lo_nuevo=_etiqueta(nueva),
+                            lo_que_ya_tiene=que_es,
+                        )
+                    )
+        choques[legajo.id] = propios
+    return choques

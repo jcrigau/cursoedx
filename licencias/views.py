@@ -13,6 +13,7 @@ from django.contrib.auth.decorators import login_required, permission_required
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
+from django.utils.html import format_html
 from django.views.decorators.http import require_POST
 
 from core.models import AccionAuditada, registrar_auditoria
@@ -37,7 +38,7 @@ def cubrir_licencia(request, pk):
     revisando que no le queden dos cursos a la misma hora.
     """
     from .models import EstadoLicencia, Licencia, TipoCobertura
-    from .superposicion import hay_horario, revisar
+    from .superposicion import hay_horario
 
     licencia = get_object_or_404(
         Licencia.objects.del_contexto().select_related("legajo", "tipo"), pk=pk
@@ -53,6 +54,8 @@ def cubrir_licencia(request, pk):
         if resultado is not None:
             return resultado
 
+    pendientes = [cargo for cargo in cargos if cargo.id not in ya_resueltos]
+    posibles = _posibles_suplentes(licencia, cargos, pendientes)
     return render(
         request,
         "licencias/cubrir_licencia.html",
@@ -61,36 +64,64 @@ def cubrir_licencia(request, pk):
             "cargos": [
                 {"cargo": cargo, "cobertura": ya_resueltos.get(cargo.id)} for cargo in cargos
             ],
-            "pendientes": [cargo for cargo in cargos if cargo.id not in ya_resueltos],
-            "posibles": _posibles_suplentes(licencia, cargos),
+            "pendientes": pendientes,
+            "libres": [dato for dato in posibles if dato["libre"]],
+            "ocupados": [dato for dato in posibles if not dato["libre"]],
             "hay_horario": hay_horario(request.institucion, licencia.fecha_inicio),
             "aprobada": licencia.estado == EstadoLicencia.APROBADA,
             "tipos": TipoCobertura.choices,
             "choques": getattr(request, "_choques", []),
             "elegidos": [int(c) for c in request.POST.getlist("cargos") if c.isdigit()],
-            "revisar": revisar,  # se usa solo en las pruebas de la vista
         },
     )
 
 
-def _posibles_suplentes(licencia, cargos):
-    """Personal que puede tomar esos cargos, primero quien da esas materias."""
+def _posibles_suplentes(licencia, cargos, pendientes):
+    """A quién se le puede dar esto, y a quién no, dicho de antemano.
+
+    Enterarse del choque recién al apretar «asignar» convierte una decisión en
+    un ensayo y error. Acá cada persona viene con lo que hace falta saber para
+    elegir: si da esas materias, y si le entra en el horario.
+    """
     from legajos.models import PLANTELES_SIN_CLASES, EstadoLegajo, Legajo
 
+    from .superposicion import revisar_varios
+
     materias = {cargo.materia_id for cargo in cargos if cargo.materia_id}
-    gente = (
+    gente = list(
         Legajo.objects.filter(institucion=licencia.institucion, estado=EstadoLegajo.ACTIVO)
         .exclude(pk=licencia.legajo_id)
         .exclude(plantel__in=PLANTELES_SIN_CLASES)
         .prefetch_related("cargos", "materias_que_puede_dar")
         .order_by("apellido", "nombre")
     )
-    con_la_materia, el_resto = [], []
+    choques = revisar_varios(
+        licencia.institucion, gente, pendientes, licencia.fecha_inicio, licencia.fecha_fin
+    )
+
+    posibles = []
     for legajo in gente:
         suyas = {cargo.materia_id for cargo in legajo.cargos.all() if cargo.materia_id}
         suyas |= {materia.id for materia in legajo.materias_que_puede_dar.all()}
-        (con_la_materia if materias & suyas else el_resto).append(legajo)
-    return {"con_la_materia": con_la_materia, "el_resto": el_resto}
+        propios = choques.get(legajo.id, [])
+        posibles.append(
+            {
+                "legajo": legajo,
+                "da_la_materia": bool(materias & suyas),
+                "choques": propios,
+                "libre": not propios,
+            }
+        )
+
+    # Primero a quien conviene llamar: le entra en el horario y da la materia.
+    posibles.sort(
+        key=lambda dato: (
+            not dato["libre"],
+            not dato["da_la_materia"],
+            dato["legajo"].apellido,
+        )
+    )
+    return posibles
 
 
 def _guardar_la_cobertura(request, licencia, cargos, ya_resueltos):
@@ -136,7 +167,7 @@ def _guardar_la_cobertura(request, licencia, cargos, ya_resueltos):
             )
             return None
 
-    creadas = 0
+    creadas, cobertura = 0, None
     for cargo in seleccionados:
         cobertura, creada = Cobertura.objects.get_or_create(
             institucion=licencia.institucion,
@@ -162,11 +193,20 @@ def _guardar_la_cobertura(request, licencia, cargos, ya_resueltos):
             + (f"cubiertos por {suplente.nombre_completo}" if suplente else "sin cobertura")
         ),
     )
-    messages.success(
-        request,
-        f"Listo: {creadas} cargo(s) resueltos"
-        + (f" con {suplente.nombre_completo}." if suplente else " sin cobertura."),
-    )
+    if suplente is not None and cobertura is not None:
+        # Designar no es avisar: hasta que alguien no lo llama, el suplente no
+        # sabe que mañana tiene que estar.
+        messages.success(
+            request,
+            format_html(
+                'Listo: {} cargo(s) para {}. <a href="{}">Avisarle ahora →</a>',
+                creadas or len(seleccionados),
+                suplente.nombre_completo,
+                reverse("avisar_suplencia", args=[cobertura.pk]),
+            ),
+        )
+    else:
+        messages.success(request, f"Listo: {creadas} cargo(s) quedan sin cobertura.")
     return HttpResponseRedirect(reverse("cubrir_licencia", args=[licencia.pk]))
 
 
