@@ -23,6 +23,13 @@ class Command(BaseCommand):
         destino = opciones["destino"]
         self._mostrar_la_configuracion()
 
+        # Sin servidor configurado, Django «envía» a la pantalla y devuelve que
+        # salió todo bien. Decir «enviado» ahí sería mentir: hay que avisar que
+        # el mensaje no se movió de la máquina.
+        sale_de_verdad = not any(
+            backend in settings.EMAIL_BACKEND for backend in ("console", "locmem", "dummy")
+        )
+
         if "console" in settings.EMAIL_BACKEND:
             self.stdout.write(
                 self.style.WARNING(
@@ -54,7 +61,16 @@ class Command(BaseCommand):
         except Exception as error:  # noqa: BLE001 — hay que explicarlo, no propagarlo
             raise CommandError(f"{self._explicar(error)}\n\nDetalle técnico: {error}") from error
 
-        if enviados:
+        if not sale_de_verdad:
+            self.stdout.write(
+                self.style.WARNING(
+                    "El mensaje se escribió acá arriba y NADA MÁS: no salió de la "
+                    "máquina, porque no hay servidor de correo configurado. Cargá "
+                    "las variables SGE_EMAIL_* en el .env, recargá la aplicación "
+                    "y volvé a probar."
+                )
+            )
+        elif enviados:
             self.stdout.write(
                 self.style.SUCCESS(
                     "Enviado. Revisá la bandeja (y la carpeta de correo no deseado)."

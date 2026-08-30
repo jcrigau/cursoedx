@@ -54,3 +54,11 @@ class TestProbarCorreo:
         assert "FALTA" in salida or "puesta" in salida
         assert len(mailoutbox) == 1
         assert mailoutbox[0].to == ["alguien@escuela.edu.ar"]
+
+    def test_sin_servidor_no_dice_que_lo_mando(self, capsys):
+        """Django «envía» a la pantalla y devuelve éxito: decir «enviado» miente."""
+        call_command("probar_correo", "alguien@escuela.edu.ar")
+
+        salida = capsys.readouterr().out
+        assert "no salió de la" in salida
+        assert "Revisá la bandeja" not in salida
