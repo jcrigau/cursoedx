@@ -36,6 +36,7 @@
     </select>
     <button type="submit" class="boton">Filtrar</button>
     <span style="margin-left:auto" class="acciones-fila">
+      <a class="ficha" href="{% url 'control_de_planta' %}">Control de la planta</a>
       <a class="ficha" href="{% url 'exportar_personal' %}">Bajar Excel</a>
       {% if puede_editar %}
         <a class="ficha" href="{% url 'importar_personal' %}">Subir planilla</a>

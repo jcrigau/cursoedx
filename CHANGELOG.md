@@ -12,6 +12,28 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
 
 ## Sin publicar
 
+- **Respaldo en un comando** (`respaldar`): un ZIP con la base de datos y todos
+  los archivos subidos, con rotación de los últimos ocho. Se programa semanal
+  y se baja del servidor. Una copia de la base sin los certificados deja
+  legajos incompletos, por eso van juntos.
+- **`probar_correo`**: manda un mensaje de prueba, muestra la configuración
+  —nunca la contraseña— y traduce los errores típicos («con Gmail va una
+  contraseña de aplicación», «el hospedaje bloquea el correo saliente»).
+- **La documentación se reclama sola** (`reclamar_documentacion`): al docente
+  que se le vence el apto o los antecedentes le llega el aviso por correo, con
+  copia a secretaría, y no se le insiste antes de dos semanas.
+- **El legajo completo en PDF**: datos, cargos, títulos, servicios anteriores y
+  documentación en un documento, para la junta o una inspección. Queda
+  registrado en la auditoría porque sale de la escuela con datos personales.
+- **Calendario mensual de licencias**: el mes entero, con quién falta cada día
+  y las licencias sin aprobar punteadas. Es lo que hay que mirar antes de
+  autorizar una más.
+- **Control de la planta**: cruza las horas designadas en los cargos con las
+  que realmente se dan en el horario, y marca los cargos subvencionados sin
+  número de resolución —donde se cobra algo cuyo respaldo no está cargado—.
+- **Ausentismo**: los últimos doce meses en un gráfico, separando días de
+  licencia de inasistencias sin licencia, con el detalle por motivo y la tabla
+  de números al lado. El gráfico es SVG propio, sin librerías.
 - **Personal no docente**: cada legajo dice su **plantel** —docente,
   preceptor/a, directivo, administrativo o maestranza/ordenanza—. Personal se
   filtra por plantel, a quien no da clases no se le piden materias, y

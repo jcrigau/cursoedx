@@ -471,6 +471,30 @@
   descubre el lunes a las 7:45.
 </p>
 
+<h2>El calendario del mes</h2>
+<p>
+  En la barra, <strong>Calendario</strong>: el mes entero con quién está de
+  licencia cada día. Los nombres <em>punteados</em> son licencias que todavía
+  no se aprobaron —las que hay que decidir—. Sirve para lo que la tabla no
+  muestra: si el martes que viene ya hay tres personas de licencia, esa cuarta
+  solicitud no se autoriza igual que si estuviera sola.
+</p>
+
+<h2>Ausentismo: ¿esto es mucho?</h2>
+<p>
+  En la barra, <strong>Ausentismo</strong>: los últimos doce meses en un
+  gráfico. Un mes con seis ausencias no dice nada solo; al lado de los once
+  anteriores dice todo.
+</p>
+<p>
+  Separa dos cosas que no son lo mismo aunque las dos dejen un curso sin su
+  docente: los <strong>días de licencia</strong> —avisados, con su artículo y su
+  certificado— y las <strong>inasistencias sin licencia</strong>, que son las que
+  quedan injustificadas si nadie carga nada. La segunda columna es la que hay
+  que mirar. Abajo del gráfico está el detalle por motivo y la tabla con los
+  números, por si hay que copiarlos a un informe.
+</p>
+
 <h2>Lo último que pasó</h2>
 <p>
   Al pie del tablero, las últimas acciones de la escuela: licencias aprobadas,
@@ -527,6 +551,9 @@
     <tr><td>Ver qué cursos se quedan sin clase hoy</td><td class="camino">Cursos de hoy</td></tr>
     <tr><td>Marcar quién faltó hoy</td><td class="camino">Parte diario</td></tr>
     <tr><td>Responder el aviso de un docente que falta</td><td class="camino">Avisos</td></tr>
+    <tr><td>Ver cómo se apilan las licencias del mes</td><td class="camino">Calendario</td></tr>
+    <tr><td>Saber si este mes se falta más que lo habitual</td><td class="camino">Ausentismo</td></tr>
+    <tr><td>Controlar las horas contra las resoluciones</td><td class="camino">Personal → Control de la planta</td></tr>
     <tr><td>Ver cuántas faltas lleva alguien este mes</td><td class="camino">Resumen del mes</td></tr>
     <tr><td>Preparar lo que se le manda al liquidador</td><td class="camino">Novedades</td></tr>
     <tr><td>Dar de alta a un docente nuevo</td><td class="camino">Administración → Legajos</td></tr>
@@ -726,6 +753,56 @@
   el formulario del legajo, en su fila. Después se abre desde la ficha de la
   persona con <strong>«Ver archivo»</strong>, sin volver al panel: la carpeta
   de papel, pero que no se pierde.
+</p>
+
+<h2>El legajo completo en PDF</h2>
+<p>
+  En la ficha de cada persona, <strong>Legajo completo en PDF</strong>: datos,
+  cargos, títulos, servicios anteriores y documentación en un solo documento.
+  Es lo que se presenta cuando lo pide la junta o una inspección, y lo que se
+  archiva cuando alguien se va. No reemplaza a la <em>certificación de
+  servicios</em>, que es un documento formal con firma; esto es la carpeta.
+</p>
+<div class="ojo">
+  <span class="titulo">Sale de la escuela con datos personales</span>
+  <p>
+    Cada vez que se genera queda registrado en la auditoría: quién lo emitió y
+    cuándo. Tiene CUIL, domicilio y el estado de la documentación de salud, así
+    que no se manda por mail a cualquiera ni se deja en un escritorio.
+  </p>
+</div>
+
+<h2>Control de la planta</h2>
+<p>
+  En <strong>Personal → Control de la planta</strong>, el sistema cruza dos
+  cosas que se desalinean solas a lo largo del año y que nadie mira hasta que
+  el organismo las devuelve:
+</p>
+<ul>
+  <li><strong>Horas designadas contra horas que realmente se dan</strong>: si el
+      horario le da a alguien más —o menos— horas de las que dicen sus cargos.
+      No siempre es un error (puede ser una licencia cubierta o un alta a mitad
+      de período), pero conviene saberlo.</li>
+  <li><strong>Cargos subvencionados sin número de resolución</strong>: ahí se
+      está cobrando algo cuyo respaldo no está cargado en el sistema. Eso sí hay
+      que resolverlo, y el botón lleva directo al cargo.</li>
+</ul>
+<p>
+  Se comparan solo <strong>horas cátedra</strong>: un cargo de jornada
+  —preceptoría, secretaría, maestranza— no ocupa bloques del horario de clases.
+</p>
+
+<h2>La documentación se reclama sola</h2>
+<p>
+  Si el servidor tiene el correo configurado, el sistema le avisa por mail a
+  cada persona cuando su apto psicofísico o su certificado de antecedentes está
+  por vencer o ya venció, <strong>con copia a secretaría</strong> para que quede
+  constancia de que se reclamó. No insiste todos los días: espera dos semanas
+  entre un aviso y el siguiente.
+</p>
+<p>
+  El tablero sigue mostrando lo vencido, pero ya no hay que llamar a cada uno:
+  la persona se entera sola y viene con el papel.
 </p>
 
 <h2>Antigüedad</h2>
@@ -1306,6 +1383,51 @@
     </tr>
   </tbody>
 </table>
+
+<h2>El respaldo: la única cosa que no se puede improvisar</h2>
+<p>
+  Todo lo que carga la escuela —legajos, licencias, cierres— vive en la base de
+  datos del servidor, y los certificados escaneados en su carpeta de archivos.
+  El sistema arma una copia de las dos cosas juntas en un solo archivo:
+</p>
+<table>
+  <thead><tr><th>Para</th><th>Se hace</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>Guardar una copia hoy</td>
+      <td class="camino">python manage.py respaldar</td>
+    </tr>
+    <tr>
+      <td>Que se haga sola todas las semanas</td>
+      <td>Se programa ese mismo comando en el hospedaje (en PythonAnywhere,
+          pestaña <em>Tasks</em>), como el resumen de las 7:00.</td>
+    </tr>
+  </tbody>
+</table>
+<div class="ojo">
+  <span class="titulo">Un respaldo que vive en el servidor no es un respaldo</span>
+  <p>
+    El archivo queda en la carpeta <em>respaldos/</em> del propio servidor.
+    Hay que <strong>bajarlo y guardarlo en otro lado</strong> —una computadora
+    de la escuela, un pendrive, un disco en la nube—: si se pierde la cuenta del
+    hospedaje, se pierde con ella todo lo que esté ahí adentro. El sistema
+    conserva los últimos ocho y borra los más viejos, para no llenar el disco.
+  </p>
+</div>
+
+<h2>Si los correos no llegan</h2>
+<p>
+  Varias cosas dependen del correo: el aviso de inasistencia que llega a
+  secretaría, el resumen del día, el reclamo de documentación. Para saber si
+  está bien configurado sin esperar a que pase algo real:
+</p>
+<p class="camino">python manage.py probar_correo tu.correo@gmail.com</p>
+<p>
+  Muestra la configuración actual —nunca la contraseña—, manda un mensaje de
+  prueba y, si falla, explica por qué en castellano: la causa más común es que
+  con Gmail hay que usar una <strong>contraseña de aplicación</strong> y no la
+  de la cuenta.
+</p>
 
 <h1><span class="numero">12</span>Glosario</h1>
 <p class="bajada">Las palabras que usa el sistema.</p>

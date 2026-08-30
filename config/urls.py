@@ -32,6 +32,8 @@ urlpatterns = [
         name="guardar_materias",
     ),
     path("legajos/buscar/", legajos_views.buscar, name="buscar_personas"),
+    path("personal/planta/", legajos_views.control_de_planta, name="control_de_planta"),
+    path("personal/<int:pk>/pdf/", legajos_views.legajo_en_pdf, name="legajo_pdf"),
     path(
         "legajos/<int:pk>/certificacion/",
         legajos_views.certificacion_servicios,
@@ -80,8 +82,10 @@ urlpatterns = [
     ),
     path("avisos/", portal_views.avisos_recibidos, name="avisos_recibidos"),
     path("avisos/<int:pk>/responder/", portal_views.responder_aviso, name="responder_aviso"),
+    path("licencias/calendario/", licencias_views.calendario, name="calendario_licencias"),
     path("asistencia/semana/", asistencia_views.semana, name="semana"),
     path("asistencia/resumen/", asistencia_views.resumen_del_mes, name="resumen_asistencia"),
+    path("asistencia/ausentismo/", asistencia_views.ausentismo, name="ausentismo"),
     path("novedades/", novedades_views.periodos, name="novedades_periodos"),
     path("novedades/<int:anio>/<int:mes>/", novedades_views.detalle, name="novedades_detalle"),
     path(

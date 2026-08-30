@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block titulo %}Control de la planta · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Control de la planta</h1>
+  <p class="subtitulo">
+    Lo designado en los cargos contra lo que realmente se da en el horario, al
+    {{ hoy|date:"d/m/Y" }}.
+  </p>
+
+  {% if not version %}
+    <div class="aviso warning">
+      No hay un horario publicado para hoy, así que solo se puede controlar la
+      documentación de los cargos, no las horas.
+    </div>
+  {% endif %}
+
+  <div class="grilla-indicadores">
+    <div class="tarjeta indicador {% if resumen.con_diferencia %}pendiente{% endif %}">
+      <div class="numero">{{ resumen.con_diferencia }}</div>
+      <div class="rotulo">Con diferencia de horas</div>
+      <div class="detalle">{{ resumen.horas_designadas }} designadas · {{ resumen.horas_en_el_horario }} en el horario</div>
+    </div>
+    <div class="tarjeta indicador {% if resumen.sin_resolucion %}pendiente{% endif %}">
+      <div class="numero">{{ resumen.cargos_sin_resolucion }}</div>
+      <div class="rotulo">Cargos sin resolución</div>
+      <div class="detalle">subvencionados, en {{ resumen.sin_resolucion }} persona{{ resumen.sin_resolucion|pluralize }}</div>
+    </div>
+    <div class="tarjeta indicador">
+      <div class="numero">{{ resumen.personas }}</div>
+      <div class="rotulo">Personas con horas</div>
+    </div>
+  </div>
+
+  <h2>Persona por persona</h2>
+  <table class="datos">
+    <thead>
+      <tr>
+        <th>Persona</th><th>Designadas</th><th>En el horario</th><th>Qué pasa</th>
+        <th class="no-imprimir"></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for linea in lineas %}
+        <tr>
+          <td>
+            <strong>{{ linea.legajo.nombre_completo }}</strong>
+            <div class="secundario">{{ linea.legajo.get_plantel_display }}</div>
+          </td>
+          <td>{{ linea.horas_designadas }} hs</td>
+          <td>{{ linea.horas_en_el_horario }} hs</td>
+          <td>
+            {% if linea.que_pasa %}
+              <span class="etiqueta alerta">{{ linea.que_pasa }}</span>
+            {% endif %}
+            {% for cargo in linea.cargos_sin_resolucion %}
+              <div class="secundario">Sin resolución: {{ cargo.descripcion }}</div>
+            {% endfor %}
+            {% if not linea.hay_que_mirarla %}<span class="secundario">en orden</span>{% endif %}
+          </td>
+          <td class="acciones-fila no-imprimir">
+            <a class="ficha" href="{% url 'ficha_persona' linea.legajo.pk %}">Ficha</a>
+            {% if linea.cargos_sin_resolucion %}
+              <a class="ficha" href="{% url 'admin:legajos_cargo_changelist' %}?legajo__id__exact={{ linea.legajo.pk }}">Cargar resolución</a>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td class="secundario">No hay cargos con horas cargados todavía.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="pie no-imprimir">
+    Las horas se comparan solo sobre <strong>horas cátedra</strong>: un cargo de
+    jornada —preceptor, secretaría, maestranza— no ocupa bloques del horario de
+    clases. Una diferencia no siempre es un error: puede ser una licencia
+    cubierta o un cargo que se dio de alta a mitad de período. Lo que no puede
+    quedar sin explicación es un cargo <em>subvencionado sin resolución</em>:
+    ahí se está cobrando algo cuyo respaldo no está en el sistema.
+  </p>
+{% endblock %}

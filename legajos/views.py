@@ -21,6 +21,95 @@ from .models import EstadoLegajo, Legajo, Plantel
 
 
 @login_required
+@permission_required("legajos.view_cargo", raise_exception=True)
+def control_de_planta(request):
+    """Lo designado contra lo que realmente se da, y los cargos sin resolución.
+
+    Es el control «grilla vs. planta»: la escuela cobra los cargos
+    subvencionados contra resoluciones, y a lo largo del año el horario y las
+    designaciones se desalinean sin que nadie lo note hasta que el organismo
+    lo devuelve.
+    """
+    from asistencia.parte import version_vigente
+
+    from .planta import resumen, revisar
+
+    hoy = date.today()
+    version = version_vigente(request.institucion, hoy)
+    lineas = revisar(request.institucion, version, hoy)
+
+    return render(
+        request,
+        "legajos/planta.html",
+        {
+            "lineas": lineas,
+            "resumen": resumen(lineas),
+            "version": version,
+            "hoy": hoy,
+        },
+    )
+
+
+def _uri_de_archivo(campo) -> str:
+    """La dirección file:// de un adjunto, para componer el PDF."""
+    from pathlib import Path as _Path
+
+    if not campo:
+        return ""
+    try:
+        return _Path(campo.path).as_uri()
+    except (NotImplementedError, ValueError):
+        # Un almacenamiento que no es de disco (por ejemplo, en las pruebas).
+        return ""
+
+
+@login_required
+@permission_required("legajos.view_legajo", raise_exception=True)
+def legajo_en_pdf(request, pk):
+    """La carpeta completa de una persona, para imprimir o adjuntar.
+
+    Es lo que pide la junta o una inspección: datos, cargos, títulos,
+    servicios anteriores y documentación en un solo documento. La
+    certificación de servicios es otra cosa —un documento formal con firma—;
+    esto es la carpeta.
+    """
+    legajo = get_object_or_404(Legajo.objects.del_contexto().select_related("institucion"), pk=pk)
+    hoy = date.today()
+
+    contexto = {
+        "legajo": legajo,
+        "institucion": legajo.institucion,
+        # WeasyPrint no tiene sesión: si le pasáramos la URL de la foto se
+        # toparía con el login. Se le da la ruta del archivo en el disco.
+        "foto_uri": _uri_de_archivo(legajo.foto),
+        "cargos": list(
+            legajo.cargos.select_related("materia", "curso", "nivel").order_by("-fecha_alta")
+        ),
+        "titulos": list(legajo.titulos.all()),
+        "servicios_anteriores": list(legajo.servicios_anteriores.order_by("desde")),
+        "documentos": list(legajo.documentos.select_related("tipo")),
+        "materias": list(legajo.materias_que_puede_dar.all()),
+        "antiguedad_total": calcular_antiguedad(legajo, hoy),
+        "antiguedad_aca": antiguedad_en_la_institucion(legajo, hoy),
+        "fecha": hoy,
+        "emitido_por": request.user,
+    }
+    html = render_to_string("legajos/legajo_pdf.html", contexto, request=request)
+
+    if request.GET.get("formato") == "html":
+        return HttpResponse(html)
+
+    # Sale de la escuela con datos personales y de salud: queda registrado.
+    registrar_auditoria(
+        AccionAuditada.EXPORTACION,
+        legajo,
+        usuario=request.user,
+        descripcion=f"Legajo completo en PDF de {legajo.nombre_completo}",
+    )
+    return responder_pdf(html, request, f"legajo-{legajo.apellido}-{legajo.nombre}")
+
+
+@login_required
 @permission_required("legajos.view_legajo", raise_exception=True)
 def certificacion_servicios(request, pk):
     """Genera la certificación de servicios de un legajo.

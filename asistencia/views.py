@@ -168,6 +168,60 @@ def cursos_del_dia(request):
 
 
 @login_required
+@permission_required("asistencia.view_registroasistencia", raise_exception=True)
+def ausentismo(request):
+    """Cómo viene el ausentismo, con los meses anteriores al lado.
+
+    Un mes con seis ausencias no dice nada solo; al lado de los once meses
+    anteriores dice todo. Separa los días de licencia —avisados, con su
+    artículo— de las inasistencias sin licencia, que son las que hay que
+    mirar.
+    """
+    from .ausentismo import por_mes, por_motivo
+    from .graficos import barras_apiladas
+
+    hoy = date.today()
+    meses = por_mes(request.institucion, hoy)
+    series = ["Con licencia", "Sin licencia"]
+    grafico = barras_apiladas(
+        [
+            {
+                "etiqueta": mes.etiqueta,
+                "titulo": mes.nombre_largo,
+                "valores": {"Con licencia": mes.con_licencia, "Sin licencia": mes.sin_licencia},
+            }
+            for mes in meses
+        ],
+        series,
+    )
+
+    motivos = por_motivo(request.institucion, meses)
+    mayor = max((dias for _, dias in motivos), default=0)
+    motivos = [
+        {"nombre": nombre, "dias": dias, "ancho": round(dias / mayor * 100) if mayor else 0}
+        for nombre, dias in motivos
+    ]
+
+    este_mes = meses[-1] if meses else None
+    anteriores = [mes.total for mes in meses[:-1]]
+    promedio = round(sum(anteriores) / len(anteriores), 1) if anteriores else 0
+
+    return render(
+        request,
+        "asistencia/ausentismo.html",
+        {
+            "meses": list(reversed(meses)),
+            "grafico": grafico,
+            "series": series,
+            "motivos": motivos,
+            "este_mes": este_mes,
+            "promedio": promedio,
+            "hoy": hoy,
+        },
+    )
+
+
+@login_required
 @permission_required(PERMISO_VER, raise_exception=True)
 def semana(request):
     """Los próximos siete días, antes de que lleguen.

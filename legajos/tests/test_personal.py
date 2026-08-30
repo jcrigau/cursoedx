@@ -217,6 +217,28 @@ class TestLaFicha:
         assert "foto-carnet" in cuerpo
         assert "/media/fotos/" in cuerpo
 
+    def test_el_legajo_completo_sale_en_pdf(self, client, con_personal, secretaria):
+        """Es lo que pide la junta o una inspección: la carpeta entera."""
+        from core.models import AccionAuditada, RegistroAuditoria
+
+        client.force_login(secretaria)
+        persona = con_personal["persona"]
+
+        # En HTML se revisa antes de imprimir; el PDF es lo mismo compuesto.
+        cuerpo = client.get(
+            reverse("legajo_pdf", args=[persona.pk]), {"formato": "html"}
+        ).content.decode()
+        assert "Benítez" in cuerpo
+        assert "Datos personales" in cuerpo and "Documentación" in cuerpo
+
+        respuesta = client.get(reverse("legajo_pdf", args=[persona.pk]))
+
+        assert respuesta.status_code == 200
+        # Sale de la escuela con datos personales: tiene que quedar registrado.
+        assert RegistroAuditoria.objects.filter(
+            accion=AccionAuditada.EXPORTACION, descripcion__icontains="Legajo completo"
+        ).exists()
+
     def test_no_muestra_gente_de_otra_escuela(
         self, client, con_personal, otra_institucion, secretaria
     ):

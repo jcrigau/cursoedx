@@ -511,7 +511,10 @@ tr.hora-con_novedad td:first-child { box-shadow: inset 3px 0 0 #b58020; }
 
 .lista-pendientes { display: grid; gap: 0.6rem; }
 
-.pendiente {
+/* Ojo: se acota a la lista de pendientes. Suelta, «.pendiente» también
+   alcanzaba a las tarjetas indicadoras —que la usan para pintarse en rojo— y
+   las volvía horizontales. */
+.pendientes .pendiente {
   display: flex;
   align-items: center;
   gap: 1rem;
@@ -524,10 +527,10 @@ tr.hora-con_novedad td:first-child { box-shadow: inset 3px 0 0 #b58020; }
   color: inherit;
 }
 
-.pendiente:hover { box-shadow: var(--sombra); border-color: var(--acento); }
-.pendiente.urgente { border-left-color: var(--alerta); }
+.pendientes .pendiente:hover { box-shadow: var(--sombra); border-color: var(--acento); }
+.pendientes .pendiente.urgente { border-left-color: var(--alerta); }
 
-.pendiente .cuenta {
+.pendientes .pendiente .cuenta {
   font-size: 1.6rem;
   font-weight: 700;
   min-width: 2.2rem;
@@ -536,9 +539,9 @@ tr.hora-con_novedad td:first-child { box-shadow: inset 3px 0 0 #b58020; }
   font-variant-numeric: tabular-nums;
 }
 
-.pendiente.urgente .cuenta { color: var(--alerta); }
+.pendientes .pendiente.urgente .cuenta { color: var(--alerta); }
 
-.pendiente .cuerpo { flex: 1; }
+.pendientes .pendiente .cuerpo { flex: 1; }
 .pendiente .titulo { display: block; font-weight: 600; }
 .pendiente .detalle {
   display: block;
@@ -1014,3 +1017,70 @@ a.etiqueta.materia:hover { filter: brightness(0.94); }
    cada botón no se parte. */
 table.datos td:has(.selector-estado) { min-width: 23rem; }
 .selector-estado label { white-space: nowrap; }
+
+/* Calendario de licencias: el mes entero, para ver cómo se apilan las
+   ausencias antes de autorizar una más. */
+table.calendario { width: 100%; border-collapse: collapse; table-layout: fixed; margin-bottom: 1rem; }
+table.calendario th {
+  text-align: left;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tinta-suave);
+  padding: 0.3rem 0.4rem;
+}
+table.calendario td {
+  border: 1px solid var(--borde);
+  vertical-align: top;
+  height: 5.5rem;
+  padding: 0.3rem;
+  background: #fff;
+}
+table.calendario td.otro-mes { background: #f7f9fa; }
+table.calendario td.fin-de-semana { background: #f2f5f7; }
+table.calendario td.hoy { outline: 2px solid var(--acento); outline-offset: -2px; }
+table.calendario .numero { font-size: 0.8rem; color: var(--tinta-suave); margin-bottom: 0.2rem; }
+table.calendario td.otro-mes .numero { opacity: 0.5; }
+.licencia-dia {
+  display: block;
+  font-size: 0.78rem;
+  padding: 0.1rem 0.3rem;
+  margin-bottom: 0.15rem;
+  border-radius: 4px;
+  background: var(--acento-claro, #e8f1f0);
+  color: var(--tinta);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.licencia-dia.sin-decidir { background: transparent; border: 1px dashed var(--acento); }
+
+/* Gráficos: SVG dibujado por el propio sistema, sin librerías ni CDN.
+   Los dos colores están validados para daltonismo (ΔE 21.6) y además cada
+   serie va nombrada en la leyenda y en la tabla: nunca se depende del color. */
+.grafico { margin: 0 0 1.5rem; }
+.grafico svg { width: 100%; height: auto; display: block; }
+.grafico .reja { stroke: var(--borde); stroke-width: 1; }
+.grafico .rotulo-eje { fill: var(--tinta-suave); font-size: 11px; }
+.grafico .valor { fill: var(--tinta); font-size: 12px; font-weight: 700; }
+.grafico .barra { transition: opacity 0.12s ease; }
+.grafico .barra:hover { opacity: 0.75; }
+.serie-licencia { fill: #2a78d6; }
+.serie-sin-licencia { fill: #e34948; }
+
+.leyenda { display: flex; gap: 1.25rem; margin: 0 0 0.5rem; font-size: 0.85rem; color: var(--tinta-suave); }
+.leyenda .clave { display: inline-flex; align-items: center; gap: 0.4rem; }
+.leyenda .marca { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.leyenda .marca.serie-licencia { background: #2a78d6; }
+.leyenda .marca.serie-sin-licencia { background: #e34948; }
+
+/* La barra de una fila de tabla: magnitud comparada dentro del listado. */
+.barra-fila {
+  display: inline-block;
+  height: 10px;
+  border-radius: 4px;
+  background: var(--acento);
+  min-width: 2px;
+  vertical-align: middle;
+}

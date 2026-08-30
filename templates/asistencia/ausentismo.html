@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% load l10n %}
+
+{% block titulo %}Ausentismo · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Ausentismo</h1>
+  <p class="subtitulo">
+    Los últimos doce meses, hasta {{ hoy|date:"d/m/Y" }}. Se cuentan días de
+    ausencia del personal, no horas de clase.
+  </p>
+
+  {% if este_mes %}
+    <div class="grilla-indicadores">
+      <div class="tarjeta indicador">
+        <div class="numero">{{ este_mes.total }}</div>
+        <div class="rotulo">Días este mes</div>
+        <div class="detalle">promedio de los meses anteriores: {{ promedio }}</div>
+      </div>
+      <div class="tarjeta indicador {% if este_mes.sin_licencia %}pendiente{% endif %}">
+        <div class="numero">{{ este_mes.sin_licencia }}</div>
+        <div class="rotulo">Sin licencia este mes</div>
+        <div class="detalle">quedan injustificadas si no se carga nada</div>
+      </div>
+      <div class="tarjeta indicador">
+        <div class="numero">{{ este_mes.con_licencia }}</div>
+        <div class="rotulo">Con licencia este mes</div>
+      </div>
+    </div>
+  {% endif %}
+
+  <h2>Mes a mes</h2>
+
+  <p class="leyenda">
+    <span class="clave"><span class="marca serie-licencia"></span> Con licencia</span>
+    <span class="clave"><span class="marca serie-sin-licencia"></span> Sin licencia</span>
+  </p>
+
+  {% comment %}
+    Sin «localize off» el idioma es-AR escribe los decimales con coma
+    («x="65,9"») y SVG lee eso como dos coordenadas: el gráfico sale roto.
+  {% endcomment %}
+  {% localize off %}
+  <figure class="grafico">
+    <svg viewBox="0 0 {{ grafico.ancho }} {{ grafico.alto }}" role="img"
+         aria-label="Días de ausencia por mes en los últimos doce meses">
+      {% for linea in grafico.lineas %}
+        <line class="reja" x1="{{ grafico.izquierda }}" x2="{{ grafico.derecha }}"
+              y1="{{ linea.y }}" y2="{{ linea.y }}"></line>
+        <text class="rotulo-eje" x="{{ grafico.izquierda }}" y="{{ linea.y }}"
+              dx="-8" dy="4" text-anchor="end">{{ linea.valor }}</text>
+      {% endfor %}
+
+      {% for columna in grafico.columnas %}
+        {% for segmento in columna.segmentos %}
+          <path class="barra {% if segmento.serie == 'Sin licencia' %}serie-sin-licencia{% else %}serie-licencia{% endif %}"
+                d="{{ segmento.ruta }}">
+            <title>{{ columna.titulo }}: {{ segmento.valor }} día(s) {{ segmento.serie|lower }}</title>
+          </path>
+        {% endfor %}
+        {% if columna.destacada %}
+          <text class="valor" x="{{ columna.x_centro }}" y="{{ columna.y_total }}"
+                text-anchor="middle">{{ columna.total }}</text>
+        {% endif %}
+        <text class="rotulo-eje" x="{{ columna.x_centro }}" y="{{ grafico.base }}"
+              dy="16" text-anchor="middle">{{ columna.etiqueta }}</text>
+      {% endfor %}
+    </svg>
+  </figure>
+  {% endlocalize %}
+
+  {% if motivos %}
+    <h2>Por qué faltan</h2>
+    <table class="datos">
+      <thead><tr><th>Motivo</th><th style="width:45%">Días</th><th>Total</th></tr></thead>
+      <tbody>
+        {% for motivo in motivos %}
+          <tr>
+            <td>{{ motivo.nombre }}</td>
+            <td>
+              <span class="barra-fila" style="width: {{ motivo.ancho }}%"
+                    title="{{ motivo.dias }} día(s)"></span>
+            </td>
+            <td>{{ motivo.dias }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <h2>Los números</h2>
+  <table class="datos">
+    <thead>
+      <tr><th>Mes</th><th>Con licencia</th><th>Sin licencia</th><th>Total</th></tr>
+    </thead>
+    <tbody>
+      {% for mes in meses %}
+        <tr>
+          <td>{{ mes.nombre_largo|capfirst }}</td>
+          <td>{{ mes.con_licencia }}</td>
+          <td>{{ mes.sin_licencia }}</td>
+          <td><strong>{{ mes.total }}</strong></td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="pie no-imprimir">
+    «Con licencia» son días de licencia aprobada —tienen su artículo y su
+    certificado—. «Sin licencia» son las ausencias marcadas en el parte que
+    nadie respaldó todavía: si no se carga la licencia, el mes las informa como
+    injustificadas. Un mes alto no es en sí un problema; un mes alto <em>de la
+    segunda columna</em>, sí.
+  </p>
+{% endblock %}

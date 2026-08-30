@@ -369,6 +369,12 @@ class DocumentoLegajo(models.Model):
     fecha_vencimiento = models.DateField("vence el", null=True, blank=True)
     observaciones = models.CharField("observaciones", max_length=300, blank=True)
     creado_en = models.DateTimeField("cargado en", auto_now_add=True)
+    reclamado_en = models.DateTimeField(
+        "último reclamo",
+        null=True,
+        blank=True,
+        help_text="Cuándo se le avisó por última vez a la persona que vence.",
+    )
 
     class Meta:
         verbose_name = "documento del legajo"

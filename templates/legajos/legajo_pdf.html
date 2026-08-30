@@ -1,0 +1,163 @@
+{% load static %}<!doctype html>
+<html lang="es-AR">
+<head>
+  <meta charset="utf-8">
+  <title>Legajo · {{ legajo.nombre_completo }}</title>
+  <style>
+    @page { size: A4; margin: 1.8cm 1.8cm 2.2cm; }
+
+    body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 10pt; color: #16232e; line-height: 1.45; }
+
+    .membrete { border-bottom: 2px solid #16232e; padding-bottom: 0.6rem; margin-bottom: 1.2rem; }
+    .membrete .nombre { font-size: 14pt; font-weight: 700; }
+    .membrete .datos { font-size: 8.5pt; color: #4a5c6b; }
+
+    .encabezado { display: flex; gap: 1rem; align-items: center; margin-bottom: 1.2rem; }
+    .encabezado img { width: 3cm; height: 3cm; object-fit: cover; border: 1px solid #b9c4cb; }
+    .encabezado h1 { font-size: 14pt; margin: 0 0 0.2rem; }
+    .encabezado .datos { font-size: 9pt; color: #4a5c6b; }
+
+    h2 { font-size: 10.5pt; margin: 1.2rem 0 0.4rem; padding-bottom: 0.15rem; border-bottom: 1px solid #b9c4cb; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 9pt; }
+    th, td { border: 1px solid #b9c4cb; padding: 3px 6px; text-align: left; vertical-align: top; }
+    th { background: #eef2f4; font-size: 8pt; text-transform: uppercase; letter-spacing: 0.03em; }
+
+    .datos-personales td:first-child { width: 30%; background: #f7f9fa; font-weight: 600; }
+    .vencido { color: #b4451f; font-weight: 700; }
+    .vacio { color: #7c8b96; font-style: italic; font-size: 9pt; }
+    .pie { position: fixed; bottom: -1.2cm; left: 0; right: 0; font-size: 7.5pt; color: #7c8b96; text-align: center; }
+  </style>
+</head>
+<body>
+
+<div class="membrete">
+  <div class="nombre">{{ institucion.nombre }}</div>
+  <div class="datos">
+    {% if institucion.cue %}CUE {{ institucion.cue }} · {% endif %}
+    {% if institucion.domicilio %}{{ institucion.domicilio }}{% if institucion.localidad %}, {{ institucion.localidad }}{% endif %}{% endif %}
+    {% if institucion.telefono %} · Tel. {{ institucion.telefono }}{% endif %}
+  </div>
+</div>
+
+<div class="encabezado">
+  {% if foto_uri %}<img src="{{ foto_uri }}" alt="">{% endif %}
+  <div>
+    <h1>{{ legajo.nombre_completo }}</h1>
+    <div class="datos">
+      Legajo{% if legajo.numero %} n° {{ legajo.numero }}{% endif %} ·
+      {{ legajo.get_plantel_display }} · {{ legajo.get_estado_display|lower }}
+    </div>
+  </div>
+</div>
+
+<h2>Datos personales</h2>
+<table class="datos-personales">
+  <tbody>
+    <tr><td>CUIL</td><td>{{ legajo.cuil }}{% if legajo.dni %} · DNI {{ legajo.dni }}{% endif %}</td></tr>
+    <tr><td>Fecha de nacimiento</td><td>{{ legajo.fecha_nacimiento|date:"d/m/Y"|default:"—" }}</td></tr>
+    <tr><td>Contacto</td><td>{{ legajo.email|default:"—" }}{% if legajo.telefono %} · {{ legajo.telefono }}{% endif %}</td></tr>
+    <tr><td>Domicilio</td><td>{{ legajo.domicilio|default:"—" }}{% if legajo.localidad %}, {{ legajo.localidad }}{% endif %}</td></tr>
+    <tr><td>Obra social</td><td>{{ legajo.obra_social|default:"—" }}</td></tr>
+    <tr><td>Ingreso a la institución</td><td>{{ legajo.fecha_ingreso|date:"d/m/Y"|default:"—" }}</td></tr>
+    <tr><td>Antigüedad total</td><td>{{ antiguedad_total }}</td></tr>
+    <tr><td>Antigüedad en esta escuela</td><td>{{ antiguedad_aca }}</td></tr>
+    {% if materias %}
+      <tr><td>Materias que puede dar</td>
+          <td>{% for materia in materias %}{{ materia.nombre }}{% if not forloop.last %} · {% endif %}{% endfor %}</td></tr>
+    {% endif %}
+  </tbody>
+</table>
+
+<h2>Cargos</h2>
+{% if cargos %}
+  <table>
+    <thead>
+      <tr><th>Cargo</th><th>Revista</th><th>Fuente de pago</th><th>Horas</th><th>Desde</th><th>Hasta</th><th>Resolución</th></tr>
+    </thead>
+    <tbody>
+      {% for cargo in cargos %}
+        <tr>
+          <td>{{ cargo.descripcion }}</td>
+          <td>{{ cargo.get_situacion_revista_display }}</td>
+          <td>{{ cargo.get_fuente_pago_display|cut:" (lo paga el estado)"|cut:" (lo paga la escuela)" }}</td>
+          <td>{{ cargo.horas_semanales|default:"—" }}</td>
+          <td>{{ cargo.fecha_alta|date:"d/m/Y" }}</td>
+          <td>{% if cargo.fecha_baja %}{{ cargo.fecha_baja|date:"d/m/Y" }}{% else %}vigente{% endif %}</td>
+          <td>{{ cargo.resolucion_numero|default:"—" }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}<p class="vacio">Sin cargos cargados.</p>{% endif %}
+
+<h2>Títulos y formación</h2>
+{% if titulos %}
+  <table>
+    <thead><tr><th>Denominación</th><th>Tipo</th><th>Otorgado por</th><th>Egreso</th><th>Registrado</th></tr></thead>
+    <tbody>
+      {% for titulo in titulos %}
+        <tr>
+          <td>{{ titulo.nombre }}</td>
+          <td>{{ titulo.get_tipo_display }}</td>
+          <td>{{ titulo.institucion_otorgante|default:"—" }}</td>
+          <td>{{ titulo.fecha_egreso|date:"d/m/Y"|default:"—" }}</td>
+          <td>{% if titulo.registrado %}sí{% else %}no{% endif %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}<p class="vacio">Sin títulos cargados.</p>{% endif %}
+
+<h2>Documentación</h2>
+{% if documentos %}
+  <table>
+    <thead><tr><th>Documento</th><th>Emitido</th><th>Vence</th><th>Situación</th><th>Adjunto</th></tr></thead>
+    <tbody>
+      {% for documento in documentos %}
+        <tr>
+          <td>{{ documento.tipo }}</td>
+          <td>{{ documento.fecha_emision|date:"d/m/Y"|default:"—" }}</td>
+          <td>{{ documento.fecha_vencimiento|date:"d/m/Y"|default:"sin vencimiento" }}</td>
+          <td>
+            {% if documento.esta_vencido %}<span class="vencido">vencido</span>
+            {% elif documento.por_vencer %}por vencer
+            {% else %}al día{% endif %}
+          </td>
+          <td>{% if documento.archivo %}sí{% else %}—{% endif %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% else %}<p class="vacio">Sin documentación cargada.</p>{% endif %}
+
+{% if servicios_anteriores %}
+  <h2>Servicios anteriores</h2>
+  <table>
+    <thead><tr><th>Institución</th><th>Cargo</th><th>Desde</th><th>Hasta</th><th>Docente</th></tr></thead>
+    <tbody>
+      {% for servicio in servicios_anteriores %}
+        <tr>
+          <td>{{ servicio.institucion_nombre }}</td>
+          <td>{{ servicio.cargo_descripcion|default:"—" }}</td>
+          <td>{{ servicio.desde|date:"d/m/Y" }}</td>
+          <td>{{ servicio.hasta|date:"d/m/Y" }}</td>
+          <td>{% if servicio.es_docente %}sí{% else %}no{% endif %}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endif %}
+
+{% if legajo.observaciones %}
+  <h2>Observaciones</h2>
+  <p>{{ legajo.observaciones|linebreaksbr }}</p>
+{% endif %}
+
+<div class="pie">
+  Legajo emitido por {{ emitido_por.nombre_completo }} · {{ fecha|date:"d/m/Y" }} · {{ institucion.nombre }}
+  — contiene datos personales: no difundir.
+</div>
+
+</body>
+</html>

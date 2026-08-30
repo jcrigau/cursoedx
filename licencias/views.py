@@ -6,7 +6,7 @@ curso queda libre», «el suplente sigue una semana más», «se termina hoy».
 Puestas donde la decisión aparece —el parte, el tablero— dejan de ser trámite.
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required, permission_required
@@ -24,6 +24,84 @@ from . import candidatos as buscador
 from .models import Cobertura, Licencia, TipoCobertura, ViaAviso
 
 PERMISO = "licencias.change_cobertura"
+
+
+@login_required
+@permission_required("licencias.view_licencia", raise_exception=True)
+def calendario(request):
+    """El mes completo: quién falta cada día, de un vistazo.
+
+    El parte mira un día y «La semana» los próximos siete. Para decidir si se
+    puede autorizar una licencia más hay que ver cómo se apilan: tres personas
+    el mismo martes es un problema aunque cada licencia por separado sea
+    razonable.
+    """
+    import calendar as calendario_py
+
+    from .models import EstadoLicencia
+
+    hoy = date.today()
+    anio = _entero(request.GET.get("anio"), hoy.year)
+    mes = _entero(request.GET.get("mes"), hoy.month)
+    if not 1 <= mes <= 12:
+        anio, mes = hoy.year, hoy.month
+
+    primero = date(anio, mes, 1)
+    ultimo = date(anio, mes, calendario_py.monthrange(anio, mes)[1])
+
+    # Una licencia solicitada todavía no descuenta a nadie, pero hay que verla:
+    # es justo la que se está por decidir.
+    licencias = list(
+        Licencia.objects.filter(
+            institucion=request.institucion,
+            estado__in=[EstadoLicencia.APROBADA, EstadoLicencia.SOLICITADA],
+            fecha_inicio__lte=ultimo,
+            fecha_fin__gte=primero,
+        ).select_related("legajo", "tipo")
+    )
+
+    semanas = []
+    for semana_py in calendario_py.Calendar(firstweekday=0).monthdatescalendar(anio, mes):
+        fila = []
+        for dia in semana_py:
+            del_dia = [
+                licencia
+                for licencia in licencias
+                if licencia.fecha_inicio <= dia <= licencia.fecha_fin
+            ]
+            fila.append(
+                {
+                    "fecha": dia,
+                    "del_mes": dia.month == mes,
+                    "es_hoy": dia == hoy,
+                    "fin_de_semana": dia.weekday() >= 5,
+                    "licencias": sorted(del_dia, key=lambda lic: lic.legajo.apellido),
+                    "aprobadas": sum(1 for lic in del_dia if lic.estado == EstadoLicencia.APROBADA),
+                }
+            )
+        semanas.append(fila)
+
+    anterior = (primero - timedelta(days=1)).replace(day=1)
+    siguiente = (ultimo + timedelta(days=1)).replace(day=1)
+    return render(
+        request,
+        "licencias/calendario.html",
+        {
+            "semanas": semanas,
+            "mes": primero,
+            "anterior": anterior,
+            "siguiente": siguiente,
+            "personas": len({licencia.legajo_id for licencia in licencias}),
+            "cantidad": len(licencias),
+        },
+    )
+
+
+def _entero(crudo, por_defecto: int) -> int:
+    try:
+        return int(crudo)
+    except (TypeError, ValueError):
+        return por_defecto
 
 
 def _volver(request, por_defecto="inicio"):

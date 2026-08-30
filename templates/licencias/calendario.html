@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block titulo %}Calendario de licencias · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Calendario de licencias</h1>
+  <p class="subtitulo">
+    {{ mes|date:"F Y"|capfirst }} ·
+    {% if cantidad %}
+      {{ cantidad }} licencia{{ cantidad|pluralize }} de {{ personas }} persona{{ personas|pluralize }}
+    {% else %}
+      sin licencias en el mes
+    {% endif %}
+  </p>
+
+  <div class="navegacion-fecha no-imprimir">
+    <a class="ficha" href="?anio={{ anterior|date:'Y' }}&mes={{ anterior|date:'n' }}">← {{ anterior|date:"F" }}</a>
+    <a class="ficha" href="{% url 'calendario_licencias' %}">Este mes</a>
+    <a class="ficha" href="?anio={{ siguiente|date:'Y' }}&mes={{ siguiente|date:'n' }}">{{ siguiente|date:"F" }} →</a>
+  </div>
+
+  <table class="calendario">
+    <thead>
+      <tr>
+        <th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th><th>Dom</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for semana in semanas %}
+        <tr>
+          {% for dia in semana %}
+            <td class="{% if not dia.del_mes %}otro-mes{% endif %} {% if dia.fin_de_semana %}fin-de-semana{% endif %} {% if dia.es_hoy %}hoy{% endif %}">
+              <div class="numero">{{ dia.fecha|date:"j" }}</div>
+              {% for licencia in dia.licencias %}
+                <a class="licencia-dia {% if licencia.estado == 'SOLICITADA' %}sin-decidir{% endif %}"
+                   href="{% url 'ficha_persona' licencia.legajo.pk %}"
+                   title="{{ licencia.legajo.nombre_completo }} · {{ licencia.tipo }}{% if licencia.estado == 'SOLICITADA' %} · sin aprobar{% endif %}">
+                  {{ licencia.legajo.apellido }}
+                </a>
+              {% endfor %}
+            </td>
+          {% endfor %}
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <p class="pie no-imprimir">
+    Cada nombre es un día de licencia. Los que están <span class="licencia-dia sin-decidir">punteados</span>
+    todavía no se aprobaron: son los que hay que decidir. Un día con varios
+    nombres es el que conviene mirar antes de autorizar una licencia más.
+  </p>
+{% endblock %}

@@ -55,6 +55,9 @@ python manage.py cargar_catalogo_licencias            # régimen de San Luis
 python manage.py generar_manual                       # el manual de la secretaría en PDF
 python manage.py enviar_resumen_diario --probar      # el correo de las 7:00
 python manage.py abrir_ciclo 2027                    # el año nuevo, copiado del anterior
+python manage.py respaldar                           # base + adjuntos en un ZIP
+python manage.py probar_correo vos@mail.com          # ¿el correo está bien configurado?
+python manage.py reclamar_documentacion --probar     # avisarle a cada uno qué se le vence
 python manage.py runserver
 pytest
 ```
@@ -146,6 +149,16 @@ instituciones expone datos laborales de otra escuela.
   aplica ninguno. Es lo que evita cargar datos reales en la escuela de prueba.
 - Las columnas del export viven en `novedades/exportar.py`: si otra escuela usa
   otra planilla, se cambia solo ahí.
+- Los **archivos subidos los sirve la app** (`core/archivos.py`), detrás de
+  login: hay certificados médicos y de antecedentes, y un mapeo `/media/` en el
+  hosting los dejaría públicos. En el PDF no se usa la URL sino la ruta del
+  archivo: WeasyPrint no tiene sesión.
+- Los **gráficos se dibujan en SVG a mano** (`asistencia/graficos.py` calcula la
+  geometría, la plantilla la dibuja): sin librerías ni CDN. Dentro del `<svg>`
+  va **`{% localize off %}`**: en es-AR los decimales salen con coma y el
+  navegador lee `x="65,9"` como dos coordenadas.
+- El **respaldo lleva base y adjuntos juntos** (`respaldar`): una copia de la
+  base sin los certificados deja legajos incompletos.
 
 ## Decisiones tomadas
 

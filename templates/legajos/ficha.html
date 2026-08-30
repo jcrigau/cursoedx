@@ -24,6 +24,7 @@
 
   <p class="acciones no-imprimir">
     <a class="ficha" href="{% url 'certificacion_servicios' legajo.pk %}">Certificación de servicios</a>
+    <a class="ficha" href="{% url 'legajo_pdf' legajo.pk %}">Legajo completo en PDF</a>
     {% if puede_editar %}
       {% if legajo.da_clases %}
         <a class="ficha" href="{% url 'materias_de' legajo.pk %}">Materias que puede dar</a>

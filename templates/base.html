@@ -60,7 +60,9 @@
         <a href="{% url 'parte_diario' %}">Parte diario</a>
         <a href="{% url 'cursos_del_dia' %}">Cursos de hoy</a>
         <a href="{% url 'semana' %}">La semana</a>
+        <a href="{% url 'calendario_licencias' %}">Calendario</a>
         <a href="{% url 'resumen_asistencia' %}">Resumen del mes</a>
+        <a href="{% url 'ausentismo' %}">Ausentismo</a>
       {% endif %}
       {% if perms.portal.view_avisoinasistencia %}
         <a href="{% url 'avisos_recibidos' %}">Avisos</a>

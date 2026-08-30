@@ -276,6 +276,21 @@ Son datos laborales: hacé una copia diaria y guardala fuera del servidor.
 docker compose exec db pg_dump -U sge sge > respaldo-$(date +%F).sql
 ```
 
-En PythonAnywhere, con SQLite, alcanza con descargar `db.sqlite3` desde la
-pestaña **Files** y guardar también la carpeta `media/` (los adjuntos de los
-legajos).
+En cualquier hospedaje, el sistema arma la copia completa —base y adjuntos
+juntos— en un solo archivo:
+
+```bash
+python manage.py respaldar                    # deja respaldos/respaldo-AAAA-MM-DD.zip
+python manage.py respaldar --conservar 12     # cuántos guardar antes de borrar los viejos
+```
+
+En PythonAnywhere se programa en la pestaña **Tasks** (una vez por semana
+alcanza) y el ZIP se baja desde la pestaña **Files**.
+
+> **Bajalo y guardalo fuera del servidor.** Un respaldo que vive en la misma
+> máquina que puede fallar no es un respaldo: si se pierde la cuenta del
+> hospedaje, se pierde con ella. Una copia en una computadora de la escuela o
+> en un disco en la nube es lo que salva los legajos.
+
+Con PostgreSQL, el respaldo de la base lo hace el motor (`pg_dump`, arriba) y
+el comando se encarga de los adjuntos.
