@@ -65,7 +65,17 @@ class Legajo(ModeloInstitucional):
             "cuadrada, se recorta al mostrarla."
         ),
     )
-    cuil = models.CharField("CUIL", max_length=13, validators=[validador_cuit])
+    cuil = models.CharField(
+        "CUIL",
+        max_length=13,
+        blank=True,
+        validators=[validador_cuit],
+        help_text=(
+            "Es la identidad de la persona para la liquidación. Puede quedar "
+            "vacío al arrancar y completarse después; mientras tanto figura "
+            "como pendiente."
+        ),
+    )
     dni = models.CharField("DNI", max_length=15, blank=True)
     fecha_nacimiento = models.DateField("fecha de nacimiento", null=True, blank=True)
 
@@ -129,7 +139,15 @@ class Legajo(ModeloInstitucional):
         verbose_name_plural = "legajos"
         ordering = ["apellido", "nombre"]
         constraints = [
-            models.UniqueConstraint(fields=["institucion", "cuil"], name="legajo_unico_por_cuil")
+            # Condicional a propósito: dos personas sin CUIL todavía no chocan
+            # entre sí —una escuela arranca con la lista de apellidos y los CUIL
+            # llegan después—, pero dos con el mismo CUIL siguen siendo la misma
+            # persona y el sistema no lo permite.
+            models.UniqueConstraint(
+                fields=["institucion", "cuil"],
+                condition=~models.Q(cuil=""),
+                name="legajo_unico_por_cuil",
+            )
         ]
         indexes = [models.Index(fields=["institucion", "apellido", "nombre"])]
 

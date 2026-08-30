@@ -201,3 +201,26 @@ class TestLaSemana:
         cuerpo = client.get(reverse("semana")).content.decode()
 
         assert "empieza" in cuerpo
+
+
+class TestLoQueFaltaCargar:
+    """Una escuela recién migrada tiene legajos a medio llenar: hay que verlo."""
+
+    def test_la_secretaria_ve_los_legajos_sin_cuil(self, client, escuela_cargada):
+        from legajos.models import Legajo
+
+        Legajo.objects.create(
+            institucion=escuela_cargada, apellido="Ochoa", nombre="Ramiro", cuil=""
+        )
+
+        client.force_login(crear(escuela_cargada, Rol.SECRETARIA, "sec-cuil@uno.edu.ar"))
+        cuerpo = client.get(reverse("inicio")).content.decode()
+
+        assert "Legajos sin CUIL" in cuerpo
+        assert "faltan=cuil" in cuerpo
+
+    def test_con_todos_los_cuil_cargados_no_molesta(self, client, escuela_cargada):
+        client.force_login(crear(escuela_cargada, Rol.SECRETARIA, "sec-ok@uno.edu.ar"))
+        cuerpo = client.get(reverse("inicio")).content.decode()
+
+        assert "Legajos sin CUIL" not in cuerpo

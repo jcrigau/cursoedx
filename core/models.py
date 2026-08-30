@@ -281,6 +281,7 @@ class AccionAuditada(models.TextChoices):
     REAPERTURA_PERIODO = "REAPERTURA_PERIODO", "Reapertura de período"
     APROBACION = "APROBACION", "Aprobación"
     EXPORTACION = "EXPORTACION", "Exportación de datos"
+    IMPORTACION = "IMPORTACION", "Carga masiva desde planilla"
 
 
 class RegistroAuditoria(models.Model):

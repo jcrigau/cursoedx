@@ -24,6 +24,29 @@ for modelo in (DocumentoLegajo, Titulo, ServicioAnterior):
     registrar_ruta_institucion(modelo, "legajo__institucion")
 
 
+class DatosQueFaltan(admin.SimpleListFilter):
+    """Los legajos a medio cargar, que es como queda una escuela recién migrada."""
+
+    title = "datos que faltan"
+    parameter_name = "faltan"
+
+    def lookups(self, request, model_admin):
+        return [
+            ("cuil", "Sin CUIL"),
+            ("ingreso", "Sin fecha de ingreso"),
+            ("completos", "Con CUIL y fecha de ingreso"),
+        ]
+
+    def queryset(self, request, queryset):
+        if self.value() == "cuil":
+            return queryset.filter(cuil="")
+        if self.value() == "ingreso":
+            return queryset.filter(fecha_ingreso__isnull=True)
+        if self.value() == "completos":
+            return queryset.exclude(cuil="").filter(fecha_ingreso__isnull=False)
+        return queryset
+
+
 class EstadoVencimiento(admin.SimpleListFilter):
     """Filtro por vencimiento: lo que la secretaría necesita reclamar."""
 
@@ -98,7 +121,13 @@ class LegajoAdmin(AdminInstitucional):
         "alerta_documentacion",
         "certificacion",
     )
-    list_filter = ("plantel", "estado", "cargos__fuente_pago", "cargos__situacion_revista")
+    list_filter = (
+        "plantel",
+        "estado",
+        DatosQueFaltan,
+        "cargos__fuente_pago",
+        "cargos__situacion_revista",
+    )
     search_fields = ("apellido", "nombre", "cuil", "dni", "numero")
     inlines = [CargoInline, DocumentoInline, TituloInline, ServicioAnteriorInline]
 

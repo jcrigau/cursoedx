@@ -26,6 +26,22 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
   importadores las saltean solas**: una muestra que vuelve sin borrar no crea
   a una persona inventada. La planilla del personal, cuando todavía no hay
   nadie cargado, también sale con su ejemplo.
+- **`python manage.py cargar_planilla escuela.xlsx`**: la escuela entera de una
+  vez —institución, niveles, ciclo y períodos, turnos, grilla horaria, cursos,
+  materias, plan de estudios, personal y cargos—, con `--simular` para ver qué
+  entraría sin tocar nada. Todo idempotente: se corrige el Excel y se vuelve a
+  correr las veces que haga falta.
+- **Importador de cargos.** Eran lo único que había que tipear a mano; con
+  trescientos cargos eso es una semana. Cada fila pasa por las validaciones del
+  modelo, así que un cargo de horas cátedra sin materia o una baja sin motivo
+  quedan observados en vez de entrar a medias.
+- **Se puede arrancar sin los CUIL.** Quedan como pendiente en el tablero y en
+  un filtro del panel («datos que faltan»), y se completan subiendo de nuevo la
+  planilla: la fila se reconoce por apellido y nombre. Dos homónimos sin CUIL
+  no se tocan; hace falta el dato para distinguirlos.
+- El informe de la carga **agrupa lo repetido** («64 personas sin fecha de
+  ingreso») y nombra los campos como los ve la secretaría, no como se llaman
+  en la base.
 
 ### Corregido
 

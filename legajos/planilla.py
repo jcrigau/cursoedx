@@ -5,19 +5,25 @@ la secretaría ya conoce de las planillas: se descarga la lista actual, se
 corrige o se agregan filas en Excel, y se sube. Lo que ya existe se
 actualiza, lo nuevo se crea, y lo dudoso se observa sin tocar nada.
 
-La identidad es el CUIL: es el único dato que no cambia. Una fila sin CUIL, o
-con uno inválido, se observa y se saltea.
+La identidad es el CUIL: es el único dato que no cambia. Pero una escuela que
+recién arranca tiene la lista de apellidos mucho antes que los CUIL, así que
+cuando la columna viene vacía se identifica por apellido y nombre y el CUIL se
+completa después, en cuanto aparezca. Un CUIL *mal escrito* es otra cosa: eso
+se saltea, porque termina en la liquidación.
 
-Los cargos no viajan acá a propósito: un cargo tiene materia, curso, fuente
-de pago y situación de revista, y eso mal importado son errores de
-liquidación. Se cargan en el sistema, donde cada campo valida.
+Los cargos van en su propia hoja de la planilla de carga (``importar_cargos``)
+y no en esta: un cargo tiene materia, curso, fuente de pago y situación de
+revista, y eso mal importado son errores de liquidación. Por eso cada fila pasa
+por ``full_clean`` antes de guardarse y lo que no valida queda observado en vez
+de entrar a medias.
 """
 
 import re
-from dataclasses import dataclass, field
 from datetime import date, datetime
 
-from core.planillas import MARCA_EJEMPLO, es_ejemplo
+from django.core.exceptions import ValidationError
+
+from core.planillas import MARCA_EJEMPLO, Resultado, es_ejemplo
 from estructura.models import Materia
 
 from .models import EstadoLegajo, Legajo, Plantel
@@ -136,18 +142,7 @@ def exportar(institucion):
     return libro
 
 
-@dataclass
-class ResultadoImportacion:
-    creados: int = 0
-    actualizados: int = 0
-    observaciones: list[str] = field(default_factory=list)
-
-    @property
-    def total(self) -> int:
-        return self.creados + self.actualizados
-
-
-def importar(institucion, archivo) -> ResultadoImportacion:
+def importar(institucion, archivo) -> Resultado:
     """Lee la planilla y aplica lo que se pueda; lo dudoso se observa.
 
     No borra a nadie: una fila que falta en el archivo no es una baja, es una
@@ -155,9 +150,9 @@ def importar(institucion, archivo) -> ResultadoImportacion:
     """
     from openpyxl import load_workbook
 
-    resultado = ResultadoImportacion()
+    resultado = Resultado("Personal")
     try:
-        hoja = load_workbook(archivo, data_only=True).active
+        libro = load_workbook(archivo, data_only=True)
     except Exception:
         resultado.observaciones.append(
             "No se pudo leer el archivo. Tiene que ser el Excel descargado de acá "
@@ -165,45 +160,58 @@ def importar(institucion, archivo) -> ResultadoImportacion:
         )
         return resultado
 
+    # Sirve tanto el Excel que se baja de acá —una hoja, encabezado arriba de
+    # todo— como la hoja «Personal» de la planilla de carga, que trae dos filas
+    # de ayuda antes. Buscar el encabezado es más barato que pedir dos formatos.
+    hoja = libro["Personal"] if "Personal" in libro.sheetnames else libro.active
+    encabezado = _fila_del_encabezado(hoja)
+
     materias = {
         _clave(materia.nombre): materia
         for materia in Materia.objects.filter(institucion=institucion)
     }
 
-    filas = hoja.iter_rows(min_row=2, values_only=True)
-    for numero, fila in enumerate(filas, start=2):
+    indice = _indice_por_nombre(institucion)
+    filas = hoja.iter_rows(min_row=encabezado + 1, values_only=True)
+    for numero, fila in enumerate(filas, start=encabezado + 1):
         if fila is None or all(celda in (None, "") for celda in fila):
             continue
         if es_ejemplo(fila[0]):
             continue
         fila = list(fila) + [None] * (len(ENCABEZADOS) - len(fila))
 
-        cuil = _normalizar_cuil(fila[0])
-        if cuil is None:
-            resultado.observaciones.append(
-                f"Fila {numero}: CUIL vacío o inválido «{fila[0] or ''}». Se salteó."
-            )
-            continue
-
         apellido = str(fila[1] or "").strip()
         nombre = str(fila[2] or "").strip()
         if not apellido or not nombre:
             resultado.observaciones.append(
-                f"Fila {numero} ({cuil}): falta el apellido o el nombre. Se salteó."
+                f"Fila {numero}: falta el apellido o el nombre. Se salteó."
             )
             continue
 
+        cuil = _normalizar_cuil(fila[0])
+        if cuil is None and str(fila[0] or "").strip():
+            resultado.observaciones.append(
+                f"Fila {numero} ({apellido}): el CUIL «{fila[0]}» no tiene 11 dígitos. "
+                "Se salteó la fila: un CUIL mal cargado termina en la liquidación."
+            )
+            continue
+
+        legajo, duda = _quien_es(institucion, cuil, apellido, nombre, indice)
+        if duda:
+            resultado.observaciones.append(f"Fila {numero} ({apellido}, {nombre}): {duda}")
+            continue
+
         ingreso = _como_fecha(fila[6])
-        legajo = Legajo.objects.filter(institucion=institucion, cuil=cuil).first()
         nuevo = legajo is None
         if nuevo:
+            legajo = Legajo(institucion=institucion, cuil=cuil or "", fecha_ingreso=ingreso)
             if ingreso is None:
-                resultado.observaciones.append(
-                    f"Fila {numero} ({apellido}): es una persona nueva y no tiene fecha "
-                    "de ingreso. Se salteó."
+                resultado.avisar(
+                    "personas cargadas sin fecha de ingreso: hasta completarla no se les "
+                    "puede computar la antigüedad"
                 )
-                continue
-            legajo = Legajo(institucion=institucion, cuil=cuil, fecha_ingreso=ingreso)
+        elif cuil and not legajo.cuil:
+            legajo.cuil = cuil  # llegó el dato que faltaba
 
         legajo.apellido = apellido
         legajo.nombre = nombre
@@ -245,10 +253,57 @@ def importar(institucion, archivo) -> ResultadoImportacion:
 
         if nuevo:
             resultado.creados += 1
+            indice.setdefault(_clave_persona(apellido, nombre), []).append(legajo)
         else:
             resultado.actualizados += 1
 
     return resultado
+
+
+def _fila_del_encabezado(hoja, hasta: int = 6) -> int:
+    """En qué fila están los títulos de las columnas."""
+    for numero in range(1, hasta + 1):
+        if _clave(str(hoja.cell(row=numero, column=1).value or "")).lower() == "cuil":
+            return numero
+    return 1
+
+
+def _quien_es(institucion, cuil, apellido, nombre, indice):
+    """De quién es esta fila: el CUIL manda; si no está, el apellido y el nombre.
+
+    Identificar por nombre es peor que por CUIL —hay homónimos—, así que cuando
+    el nombre alcanza para dos personas no se toca ninguna: se avisa y que lo
+    resuelva alguien que sepa cuál es cuál.
+    """
+    if cuil:
+        propio = Legajo.objects.filter(institucion=institucion, cuil=cuil).first()
+        if propio is not None:
+            return propio, None
+
+    candidatos = indice.get(_clave_persona(apellido, nombre), [])
+    if cuil:
+        # El que ya tiene otro CUIL es otra persona con el mismo nombre.
+        candidatos = [legajo for legajo in candidatos if not legajo.cuil]
+    if len(candidatos) > 1:
+        return None, (
+            "hay más de una persona con ese apellido y nombre, y la fila no trae CUIL "
+            "para distinguirlas. No se tocó ninguna."
+        )
+    if candidatos:
+        return candidatos[0], None
+    return None, None
+
+
+def _indice_por_nombre(institucion) -> dict[str, list]:
+    indice: dict[str, list] = {}
+    for legajo in Legajo.objects.filter(institucion=institucion):
+        indice.setdefault(_clave_persona(legajo.apellido, legajo.nombre), []).append(legajo)
+    return indice
+
+
+def _clave_persona(apellido, nombre) -> str:
+    """Apellido y nombre comparables: sin tildes, sin mayúsculas, sin dobles espacios."""
+    return " ".join(_clave(f"{apellido} {nombre}").lower().split())
 
 
 def _clave(texto: str) -> str:
@@ -319,3 +374,194 @@ def _materias_de(crudo, materias: dict) -> tuple[list, list[str]]:
         else:
             encontradas.append(materia)
     return encontradas, desconocidas
+
+
+# ---------------------------------------------------------------------------
+# Los cargos
+# ---------------------------------------------------------------------------
+#
+# La clave de un cargo no es un número: es *qué hace la persona y quién se lo
+# paga*. Dos filas con la misma persona, la misma materia, el mismo curso y la
+# misma fuente son el mismo cargo, aunque cambien las horas. Con eso alcanza
+# para que volver a subir la planilla corrija en vez de duplicar.
+
+
+def importar_cargos(institucion, libro, ciclo=None) -> Resultado:
+    """La hoja «Cargos» de la planilla de carga.
+
+    Cada fila pasa por ``full_clean``: un cargo de horas cátedra sin materia, o
+    una baja sin motivo, queda observado y no entra. Es plata de por medio.
+    """
+    from core.planillas import entero, fecha, leer, opcion, opciones_de, si_no, texto
+    from estructura.models import CicloLectivo, Curso, Nivel, TipoNivel
+    from estructura.planilla import buscar_curso
+
+    from .models import Cargo, FuentePago, MotivoBaja, SituacionRevista, TipoCargo
+
+    resultado = Resultado("Cargos")
+    if ciclo is None:
+        ciclo = CicloLectivo.objects.filter(institucion=institucion).order_by("-anio").first()
+    indice = _indice_por_nombre(institucion)
+    alta_por_omision = ciclo.fecha_inicio if ciclo else date.today()
+    hay_cursos = bool(ciclo) and Curso.objects.filter(ciclo_lectivo=ciclo).exists()
+    sin_cursos = 0
+
+    for numero, fila in leer(libro, "Cargos"):
+        legajo, duda = _quien_es(
+            institucion,
+            _normalizar_cuil(fila.get("CUIL")),
+            texto(fila.get("Apellido")),
+            texto(fila.get("Nombre")),
+            indice,
+        )
+        if duda:
+            resultado.observar(numero, duda)
+            continue
+        if legajo is None:
+            resultado.observar(
+                numero,
+                "no hay nadie con ese CUIL ni con ese apellido y nombre. Cargá primero la "
+                "hoja Personal.",
+            )
+            continue
+
+        tipo = opcion(fila.get("Tipo de cargo"), TipoCargo.choices)
+        if tipo is None:
+            resultado.observar(
+                numero,
+                f"«{texto(fila.get('Tipo de cargo'))}» no es un tipo de cargo. "
+                f"Vale {opciones_de(TipoCargo.choices)}.",
+            )
+            continue
+        situacion = opcion(fila.get("Situación de revista"), SituacionRevista.choices)
+        fuente = opcion(fila.get("Fuente de pago"), FuentePago.choices)
+        if situacion is None or fuente is None:
+            resultado.observar(
+                numero,
+                "falta la situación de revista o la fuente de pago. La fuente es la que "
+                "decide a qué planilla van las novedades, así que no se puede suponer.",
+            )
+            continue
+
+        nivel = None
+        if texto(fila.get("Nivel")):
+            tipo_nivel = opcion(fila.get("Nivel"), TipoNivel.choices)
+            nivel = Nivel.objects.filter(institucion=institucion, tipo=tipo_nivel).first()
+
+        materia = None
+        if texto(fila.get("Materia")):
+            materia = _materia_del_cargo(institucion, nivel, fila.get("Materia"))
+            if materia is None:
+                resultado.observar(
+                    numero,
+                    f"la materia «{texto(fila.get('Materia'))}» no existe. Cargala primero "
+                    "en la hoja Materias, escrita igual.",
+                )
+                continue
+            nivel = nivel or materia.nivel
+
+        curso = None
+        if texto(fila.get("Curso")):
+            if not hay_cursos:
+                sin_cursos += 1
+                continue
+            curso, problema = buscar_curso(institucion, ciclo, fila.get("Curso"), nivel)
+            if problema:
+                resultado.observar(numero, problema)
+                continue
+
+        alta = fecha(fila.get("Fecha de alta"))
+        if alta is None:
+            alta = alta_por_omision
+            resultado.avisar(f"cargos sin fecha de alta: se usó {alta_por_omision:%d/%m/%Y}")
+
+        cargo = Cargo.objects.filter(
+            institucion=institucion,
+            legajo=legajo,
+            tipo=tipo,
+            materia=materia,
+            curso=curso,
+            fuente_pago=fuente,
+            denominacion=texto(fila.get("Denominación"))[:120],
+        ).first()
+        creado = cargo is None
+        if creado:
+            cargo = Cargo(
+                institucion=institucion,
+                legajo=legajo,
+                tipo=tipo,
+                materia=materia,
+                curso=curso,
+                fuente_pago=fuente,
+                denominacion=texto(fila.get("Denominación"))[:120],
+            )
+
+        cargo.nivel = nivel
+        cargo.horas_semanales = entero(fila.get("Horas semanales"))
+        cargo.jornada_completa = si_no(fila.get("Jornada completa"))
+        cargo.situacion_revista = situacion
+        cargo.fecha_alta = alta
+        cargo.fecha_baja = fecha(fila.get("Fecha de baja"))
+        cargo.motivo_baja = opcion(fila.get("Motivo de baja"), MotivoBaja.choices, defecto="") or ""
+        cargo.resolucion_numero = texto(fila.get("Resolución n°"))[:50]
+        cargo.resolucion_fecha = fecha(fila.get("Fecha de resolución"))
+
+        try:
+            cargo.full_clean(exclude=["resolucion_archivo"])
+        except ValidationError as error:
+            resultado.observar(numero, _en_una_linea(error, Cargo))
+            continue
+        cargo.save()
+        if creado:
+            resultado.creados += 1
+        else:
+            resultado.actualizados += 1
+
+    if sin_cursos:
+        resultado.problema(
+            f"{sin_cursos} cargos están asignados a un curso y la escuela todavía no "
+            "tiene cursos cargados. Completá «Ciclo y períodos», «Turnos» y «Grilla "
+            "horaria» —de ahí salen los cursos— y volvé a correr el comando."
+        )
+    return resultado
+
+
+def _materia_del_cargo(institucion, nivel, escrito):
+    from core.planillas import clave as comparable
+    from estructura.models import Materia
+
+    buscado = comparable(escrito)
+    candidatas = Materia.objects.filter(institucion=institucion)
+    if nivel is not None:
+        candidatas = candidatas.filter(nivel=nivel)
+    for materia in candidatas:
+        if comparable(materia.nombre) == buscado:
+            return materia
+    return None
+
+
+def _en_una_linea(error: ValidationError, modelo=None) -> str:
+    """El error de validación como lo leería la secretaría, no el programador.
+
+    Los campos se nombran con su etiqueta («horas semanales»), no con el
+    nombre en la base («horas_semanales»): el informe lo lee quien completó
+    el Excel.
+    """
+    partes = []
+    for campo, mensajes in getattr(error, "message_dict", {}).items():
+        etiqueta = ""
+        if campo != "__all__":
+            etiqueta = f"{_como_se_llama(modelo, campo)}: "
+        partes.append(etiqueta + " ".join(mensajes))
+    return " ".join(partes) or str(error)
+
+
+def _como_se_llama(modelo, campo: str) -> str:
+    from django.core.exceptions import FieldDoesNotExist
+
+    if modelo is None:
+        return campo.replace("_", " ")
+    try:
+        return str(modelo._meta.get_field(campo).verbose_name)
+    except FieldDoesNotExist:
+        return campo.replace("_", " ")

@@ -241,10 +241,13 @@ HOJAS = [
         ayuda=(
             "Una fila por cargo: alguien con 15 horas en tres cursos son tres filas. "
             "La fuente de pago es lo que define a qué planilla va cada novedad, y por "
-            "eso una misma persona puede tener cargos de las dos."
+            "eso una misma persona puede tener cargos de las dos. El apellido y el "
+            "nombre van para poder identificar a la persona mientras no haya CUIL."
         ),
         columnas=[
             "CUIL",
+            "Apellido",
+            "Nombre",
             "Tipo de cargo",
             "Denominación",
             "Nivel",
@@ -260,7 +263,7 @@ HOJAS = [
             "Resolución n°",
             "Fecha de resolución",
         ],
-        anchos=[22, 24, 26, 14, 26, 16, 15, 16, 22, 32, 14, 14, 18, 16, 18],
+        anchos=[22, 22, 22, 24, 26, 14, 26, 16, 15, 16, 22, 32, 14, 14, 18, 16, 18],
         listas={
             "Tipo de cargo": _etiquetas(TipoCargo.choices),
             "Nivel": _etiquetas(TipoNivel.choices),
@@ -272,6 +275,8 @@ HOJAS = [
         ejemplos=[
             [
                 EJ + "27-30111222-4",
+                "Benítez",
+                "María Laura",
                 "Horas cátedra (40 min)",
                 "Profesora de Matemática",
                 "Secundario",
@@ -289,6 +294,8 @@ HOJAS = [
             ],
             [
                 EJ + "27-30111222-4",
+                "Benítez",
+                "María Laura",
                 "Horas cátedra (40 min)",
                 "Profesora de Matemática",
                 "Secundario",

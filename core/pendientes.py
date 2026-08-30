@@ -190,6 +190,7 @@ def _de_secretaria(institucion, situacion, documentos_vencidos) -> list[Pendient
             url=reverse("parte_diario"),
             accion="Abrir el parte",
         ),
+        _legajos_sin_cuil(institucion),
         Pendiente(
             titulo="Documentación vencida",
             cantidad=len(documentos_vencidos),
@@ -199,6 +200,31 @@ def _de_secretaria(institucion, situacion, documentos_vencidos) -> list[Pendient
         ),
         _el_mes(institucion, hoy),
     ]
+
+
+def _legajos_sin_cuil(institucion) -> Pendiente:
+    """El dato que falta y nadie ve no se completa nunca.
+
+    Una escuela recién cargada arranca con la lista de apellidos: sin CUIL no
+    se puede liquidar ni certificar servicios, así que conviene tenerlo a la
+    vista hasta que esté completo.
+    """
+    from legajos.models import EstadoLegajo, Legajo
+
+    faltan = Legajo.objects.filter(
+        institucion=institucion, estado=EstadoLegajo.ACTIVO, cuil=""
+    ).count()
+    return Pendiente(
+        titulo="Legajos sin CUIL",
+        cantidad=faltan,
+        detalle=(
+            "Sin CUIL no se puede liquidar ni certificar servicios. Se completan en "
+            "el legajo, o subiendo de nuevo la planilla del personal con la columna "
+            "cargada."
+        ),
+        url=(reverse("admin:legajos_legajo_changelist") + "?faltan=cuil"),
+        accion="Completar",
+    )
 
 
 def _el_mes(institucion, hoy) -> Pendiente:

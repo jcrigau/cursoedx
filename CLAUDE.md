@@ -61,6 +61,7 @@ python manage.py enviar_resumen_diario --probar      # el correo de las 7:00
 python manage.py abrir_ciclo 2027                    # el año nuevo, copiado del anterior
 python manage.py respaldar                           # base + adjuntos en un ZIP
 python manage.py plantilla_carga                     # el Excel para cargar una escuela nueva
+python manage.py cargar_planilla escuela.xlsx --simular  # ver qué entraría; sin --simular, entra
 python manage.py probar_correo vos@mail.com          # ¿el correo está bien configurado?
 python manage.py reclamar_documentacion --probar     # avisarle a cada uno qué se le vence
 python manage.py runserver
@@ -154,6 +155,15 @@ instituciones expone datos laborales de otra escuela.
   correo a secretaría y dirección (`portal/avisos.py`) y queda como
   «comunicación sin responder» en el tablero hasta que alguien lo marque
   visto (lo que el docente ve en su portal) o le conteste por WhatsApp/email.
+- El **CUIL identifica, pero puede faltar**: una escuela llega con la lista de
+  apellidos mucho antes que los CUIL. Sin CUIL se identifica por apellido y
+  nombre (`legajos.planilla._quien_es`), los homónimos se observan sin tocar
+  nada, y el CUIL se completa solo cuando aparece. Un CUIL *mal escrito* sí
+  frena la fila: termina en la liquidación.
+- La carga de una escuela nueva entra **por la planilla completa**
+  (`cargar_planilla`): cada hoja se apoya en la anterior y es idempotente, así
+  que el circuito real es corregir el Excel y volver a correrlo. Lo que no se
+  puede resolver **no se inventa**: queda observado con el número de fila.
 - Las búsquedas de personas comparan **sin tildes** (`core.texto`), en Python:
   nadie escribe «Benítez» con tilde, y el sistema tiene que andar igual sobre
   SQLite.

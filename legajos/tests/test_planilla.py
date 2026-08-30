@@ -205,3 +205,99 @@ class TestLaFilaDeEjemplo:
         assert resultado.creados == 0
         assert not resultado.observaciones
         assert not Legajo.objects.filter(institucion=institucion).exists()
+
+
+class TestCuandoTodaviaNoHayCuil:
+    """Una escuela arranca con la lista de apellidos; los CUIL llegan después."""
+
+    def test_una_persona_sin_cuil_se_carga_igual(self, institucion):
+        libro = planilla.exportar(institucion)
+        libro.active.append(["", "Ochoa", "Ramiro", "", "", "", date(2026, 3, 1)])
+
+        resultado = planilla.importar(institucion, como_archivo(libro))
+
+        assert resultado.creados == 1
+        assert Legajo.objects.get(institucion=institucion, apellido="Ochoa").cuil == ""
+
+    def test_sin_cuil_y_sin_fecha_de_ingreso_entra_pero_se_avisa(self, institucion):
+        libro = planilla.exportar(institucion)
+        libro.active.append(["", "Ochoa", "Ramiro"])
+
+        resultado = planilla.importar(institucion, como_archivo(libro))
+
+        assert resultado.creados == 1
+        assert Legajo.objects.get(institucion=institucion, apellido="Ochoa").fecha_ingreso is None
+        assert any("antigüedad" in aviso for aviso in resultado.avisos)
+
+    def test_volver_a_subir_la_misma_lista_no_duplica(self, institucion):
+        libro = planilla.exportar(institucion)
+        libro.active.append(["", "Ochoa", "Ramiro", "", "", "", date(2026, 3, 1)])
+        planilla.importar(institucion, como_archivo(libro))
+
+        resultado = planilla.importar(institucion, como_archivo(libro))
+
+        assert resultado.creados == 0
+        assert resultado.actualizados == 1
+        assert Legajo.objects.filter(institucion=institucion).count() == 1
+
+    def test_el_mismo_nombre_dos_veces_en_el_archivo_es_una_sola_persona(self, institucion):
+        libro = planilla.exportar(institucion)
+        libro.active.append(["", "Ochoa", "Ramiro", "", "", "", date(2026, 3, 1)])
+        libro.active.append(["", "Ochoa", "Ramiro", "", "ramiro@x.com"])
+
+        planilla.importar(institucion, como_archivo(libro))
+
+        assert Legajo.objects.filter(institucion=institucion).count() == 1
+        assert Legajo.objects.get(institucion=institucion).email == "ramiro@x.com"
+
+    def test_despues_llega_el_cuil_y_completa_a_la_misma_persona(self, institucion):
+        Legajo.objects.create(institucion=institucion, apellido="Ochoa", nombre="Ramiro", cuil="")
+        libro = planilla.exportar(institucion)
+        libro.active.cell(row=2, column=1, value="20-28999888-7")
+
+        resultado = planilla.importar(institucion, como_archivo(libro))
+
+        assert resultado.creados == 0
+        assert Legajo.objects.get(institucion=institucion).cuil == "20-28999888-7"
+
+    def test_el_nombre_se_compara_sin_tildes_ni_mayusculas(self, institucion):
+        Legajo.objects.create(
+            institucion=institucion, apellido="Benítez", nombre="María Clara", cuil=""
+        )
+        libro = planilla.exportar(institucion)
+        libro.active.append(["", "BENITEZ", "maria  clara", "", "nuevo@x.com"])
+
+        planilla.importar(institucion, como_archivo(libro))
+
+        assert Legajo.objects.filter(institucion=institucion).count() == 1
+        assert Legajo.objects.get(institucion=institucion).email == "nuevo@x.com"
+
+    def test_dos_homonimos_sin_cuil_no_se_tocan(self, institucion):
+        for numero in (1, 2):
+            Legajo.objects.create(
+                institucion=institucion,
+                apellido="Ochoa",
+                nombre="Ramiro",
+                cuil="",
+                email=f"viejo{numero}@x.com",
+            )
+        libro = planilla.exportar(institucion)
+        libro.active.append(["", "Ochoa", "Ramiro", "", "pisado@x.com"])
+
+        resultado = planilla.importar(institucion, como_archivo(libro))
+
+        assert resultado.actualizados == 0
+        assert not Legajo.objects.filter(institucion=institucion, email="pisado@x.com").exists()
+        assert any("homónim" in o or "más de una persona" in o for o in resultado.observaciones)
+
+    def test_el_que_ya_tiene_otro_cuil_es_otra_persona(self, institucion):
+        Legajo.objects.create(
+            institucion=institucion, apellido="Ochoa", nombre="Ramiro", cuil="20-11111111-1"
+        )
+        libro = planilla.exportar(institucion)
+        libro.active.append(["20-28999888-7", "Ochoa", "Ramiro", "", "", "", date(2026, 3, 1)])
+
+        resultado = planilla.importar(institucion, como_archivo(libro))
+
+        assert resultado.creados == 1
+        assert Legajo.objects.filter(institucion=institucion).count() == 2
