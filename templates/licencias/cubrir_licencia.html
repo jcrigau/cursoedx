@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block titulo %}Cubrir la licencia de {{ licencia.legajo.apellido }} · SGE{% endblock %}
+
+{% block contenido %}
+  <h1>Cubrir la licencia</h1>
+  <p class="subtitulo">
+    {{ licencia.legajo.nombre_completo }} ·
+    {{ licencia.tipo }} ·
+    del {{ licencia.fecha_inicio|date:"d/m/Y" }} al {{ licencia.fecha_fin|date:"d/m/Y" }}
+    {% if not aprobada %}
+      · <span class="etiqueta alerta">{{ licencia.get_estado_display|lower }}</span>
+    {% endif %}
+  </p>
+
+  {% if not aprobada %}
+    <div class="aviso warning">
+      Esta licencia todavía no está aprobada. Se puede ir dejando resuelta la
+      cobertura, pero conviene que dirección la apruebe primero.
+    </div>
+  {% endif %}
+
+  {% if not hay_horario %}
+    <div class="aviso warning">
+      No hay un horario publicado para estas fechas, así que <strong>no se puede
+      verificar</strong> que al suplente no se le pisen las horas. Revisalo a mano.
+    </div>
+  {% endif %}
+
+  {% if choques %}
+    <div class="aviso error">
+      <strong>No se guardó nada.</strong> A esa persona se le pisan estas horas:
+      <ul>
+        {% for choque in choques %}<li>{{ choque }}</li>{% endfor %}
+      </ul>
+      Elegí a otra persona, o destildá los cargos que se superponen.
+    </div>
+  {% endif %}
+
+  {% if not pendientes %}
+    <div class="aviso success">
+      Todos los cargos de esta licencia ya están resueltos.
+    </div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+
+    <h2>Qué hay que cubrir</h2>
+    <table class="datos">
+      <thead>
+        <tr><th class="no-imprimir"></th><th>Cargo</th><th>Horas</th><th>Fuente</th><th>Estado</th></tr>
+      </thead>
+      <tbody>
+        {% for fila in cargos %}
+          <tr>
+            <td class="no-imprimir">
+              {% if not fila.cobertura %}
+                <input type="checkbox" name="cargos" value="{{ fila.cargo.pk }}"
+                       id="cargo{{ fila.cargo.pk }}"
+                       {% if fila.cargo.pk in elegidos %}checked{% endif %}>
+              {% endif %}
+            </td>
+            <td>
+              <label for="cargo{{ fila.cargo.pk }}">{{ fila.cargo.descripcion }}</label>
+            </td>
+            <td class="secundario">{{ fila.cargo.horas_semanales|default:"—" }} hs</td>
+            <td class="secundario">
+              {{ fila.cargo.get_fuente_pago_display|cut:" (lo paga el estado)"|cut:" (lo paga la escuela)" }}
+            </td>
+            <td>
+              {% if fila.cobertura %}
+                {% if fila.cobertura.suplente %}
+                  <span class="etiqueta">cubre {{ fila.cobertura.suplente.nombre_completo }}</span>
+                {% else %}
+                  <span class="etiqueta alerta">sin cobertura</span>
+                {% endif %}
+              {% else %}
+                <span class="secundario">sin resolver</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="5" class="secundario">Esta licencia no afecta ningún cargo vigente.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if pendientes %}
+      <h2>Qué se hace con lo tildado</h2>
+      <div class="tarjeta">
+        <p>
+          <label for="tipo"><strong>Decisión</strong></label><br>
+          <select name="tipo" id="tipo">
+            {% for valor, nombre in tipos %}<option value="{{ valor }}">{{ nombre }}</option>{% endfor %}
+          </select>
+        </p>
+
+        <p>
+          <label for="suplente"><strong>Suplente</strong></label><br>
+          <select name="suplente" id="suplente" style="min-width:22rem">
+            <option value="">— elegir —</option>
+            {% if posibles.con_la_materia %}
+              <optgroup label="Dan estas materias">
+                {% for legajo in posibles.con_la_materia %}
+                  <option value="{{ legajo.pk }}">{{ legajo.nombre_completo }}</option>
+                {% endfor %}
+              </optgroup>
+            {% endif %}
+            <optgroup label="El resto del personal">
+              {% for legajo in posibles.el_resto %}
+                <option value="{{ legajo.pk }}">{{ legajo.nombre_completo }}</option>
+              {% endfor %}
+            </optgroup>
+          </select>
+          <span class="secundario">Solo hace falta si se designa suplente.</span>
+        </p>
+
+        <p class="acciones-fila">
+          <label for="desde">Desde</label>
+          <input type="date" name="desde" id="desde" value="{{ licencia.fecha_inicio|date:'Y-m-d' }}">
+          <label for="hasta">Hasta</label>
+          <input type="date" name="hasta" id="hasta" value="{{ licencia.fecha_fin|date:'Y-m-d' }}">
+        </p>
+
+        <p class="acciones">
+          <button type="submit" class="boton">Asignar los cargos tildados</button>
+          <a class="ficha" href="{% url 'admin:licencias_licencia_change' licencia.pk %}">Ver la licencia</a>
+        </p>
+      </div>
+    {% endif %}
+  </form>
+
+  <p class="pie no-imprimir">
+    Antes de guardar, el sistema cruza las horas de los cargos tildados con lo
+    que esa persona ya da —y con las suplencias que ya tomó— comparando
+    <strong>horarios reales</strong>. Si algo se pisa, no se guarda nada y se
+    dice exactamente qué hora es. Cada cargo cubierto le crea al suplente su
+    designación, que es lo que después sale como alta en las novedades del mes.
+  </p>
+{% endblock %}

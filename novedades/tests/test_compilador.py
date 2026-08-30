@@ -235,6 +235,103 @@ class TestAsistencia:
         assert novedad.tipo == TipoNovedad.INASISTENCIA
         assert novedad.dias == 1
 
+    def test_una_falta_se_informa_una_vez_por_planilla(self, institucion, periodo, docente, nivel):
+        """Tres cargos de la misma planilla no son tres descuentos: es un día."""
+        for numero in range(3):
+            dar_cargo(institucion, docente, nivel=nivel, horas=5, denominacion=f"Cargo {numero}")
+        RegistroAsistencia.objects.create(
+            institucion=institucion,
+            legajo=docente,
+            fecha=date(ANIO, MES, 6),
+            estado=EstadoAsistencia.AUSENTE,
+        )
+
+        compilar(periodo)
+
+        novedad = periodo.novedades.get()  # una sola
+        assert novedad.dias == 1
+        # Y sin horas: la planilla toma las horas si están, y las semanales del
+        # cargo no tienen nada que ver con lo que faltó ese día.
+        assert novedad.horas is None
+
+    def test_las_horas_de_una_ausencia_parcial_no_se_multiplican(
+        self, institucion, periodo, docente, nivel
+    ):
+        """El error que se veía en pantalla: 2 horas informadas tres veces."""
+        for numero in range(3):
+            dar_cargo(institucion, docente, nivel=nivel, horas=5, denominacion=f"Cargo {numero}")
+        RegistroAsistencia.objects.create(
+            institucion=institucion,
+            legajo=docente,
+            fecha=date(ANIO, MES, 6),
+            estado=EstadoAsistencia.PARCIAL,
+            horas_afectadas=2,
+        )
+
+        compilar(periodo)
+
+        novedades = list(periodo.novedades.all())
+        assert len(novedades) == 1
+        assert novedades[0].horas == 2
+        assert sum(novedad.horas or 0 for novedad in novedades) == 2
+
+    def test_cargos_de_distinta_fuente_sí_generan_dos_lineas(
+        self, institucion, periodo, docente, nivel
+    ):
+        """Son dos planillas distintas: ahí la separación es correcta."""
+        dar_cargo(institucion, docente, nivel=nivel, fuente=FuentePago.SUBVENCIONADO, horas=5)
+        dar_cargo(institucion, docente, nivel=nivel, fuente=FuentePago.INTERNO, horas=3)
+        RegistroAsistencia.objects.create(
+            institucion=institucion,
+            legajo=docente,
+            fecha=date(ANIO, MES, 6),
+            estado=EstadoAsistencia.AUSENTE,
+        )
+
+        compilar(periodo)
+
+        destinos = {novedad.destino for novedad in periodo.novedades.all()}
+        assert len(destinos) == 2
+
+    def test_recompilar_limpia_las_lineas_que_ya_no_corresponden(
+        self, institucion, periodo, docente, nivel
+    ):
+        """Al anular el hecho, su novedad automática se va."""
+        dar_cargo(institucion, docente, nivel=nivel, horas=5)
+        registro = RegistroAsistencia.objects.create(
+            institucion=institucion,
+            legajo=docente,
+            fecha=date(ANIO, MES, 6),
+            estado=EstadoAsistencia.AUSENTE,
+        )
+        compilar(periodo)
+        assert periodo.novedades.count() == 1
+
+        registro.delete()  # se corrigió: no había faltado
+        resultado = compilar(periodo)
+
+        assert periodo.novedades.count() == 0
+        assert resultado.eliminadas == 1
+
+    def test_no_borra_lo_cargado_a_mano(self, institucion, periodo, docente, nivel):
+        from novedades.models import Novedad, Origen, TipoNovedad
+
+        cargo = dar_cargo(institucion, docente, nivel=nivel, horas=5)
+        Novedad.objects.create(
+            institucion=institucion,
+            periodo=periodo,
+            legajo=docente,
+            cargo=cargo,
+            tipo=TipoNovedad.OTRA,
+            fecha=date(ANIO, MES, 7),
+            origen=Origen.MANUAL,
+            motivo="Cargada a mano",
+        )
+
+        compilar(periodo)
+
+        assert periodo.novedades.filter(origen=Origen.MANUAL).count() == 1
+
     def test_una_ausencia_justificada_no_genera_inasistencia(
         self, institucion, periodo, docente, nivel
     ):

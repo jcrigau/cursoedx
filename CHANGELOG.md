@@ -12,6 +12,21 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
 
 ## Sin publicar
 
+### Corregido
+
+- **Una falta se informaba una vez por cargo, no por planilla.** Alguien con
+  tres cargos de Matemática generaba tres líneas de «2 hs» por una ausencia
+  parcial de dos horas: seis horas informadas al liquidador. Ahora es una
+  línea por planilla —el mismo criterio que ya usaban las tardanzas—, y la
+  fuente de pago sigue separando cuando corresponde.
+- **Una falta de día entero se exportaba con las horas semanales del cargo.**
+  El export toma las horas si están, así que «faltó un día» salía como «10».
+  Un día entero se informa en días y una ausencia parcial en las horas que
+  realmente no dio; nunca las dos cosas.
+- **Al recompilar se quitan las novedades automáticas que ya no corresponden**
+  (una licencia anulada, una falta corregida, líneas repetidas de una versión
+  anterior). No se toca lo cargado a mano ni lo congelado por un cierre.
+
 ### Seguridad
 
 - **Cada archivo se autoriza contra su dueño, no contra el login.** Los
@@ -41,6 +56,12 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
 
 ### Lo demás
 
+- **Cubrir toda una licencia de una vez**: la pantalla lista los cargos que
+  deja libres, se tildan los que van a la misma persona y se designan juntos.
+  Antes era un formulario por cargo. Antes de guardar, el sistema cruza esas
+  horas con lo que el suplente ya da —y con las suplencias que ya tomó—
+  comparando horarios reales: si algo se pisa, **no guarda nada** y dice qué
+  hora es. También sirve para dejar varios cargos sin cobertura de una vez.
 - **Respaldo en un comando** (`respaldar`): un ZIP con la base de datos y todos
   los archivos subidos, con rotación de los últimos ocho. Se programa semanal
   y se baja del servidor. Una copia de la base sin los certificados deja

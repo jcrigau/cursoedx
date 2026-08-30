@@ -27,6 +27,150 @@ PERMISO = "licencias.change_cobertura"
 
 
 @login_required
+@permission_required(PERMISO, raise_exception=True)
+def cubrir_licencia(request, pk):
+    """Resolver de una vez todos los cargos que deja libres una licencia.
+
+    Una licencia sobre un profesor con seis horas cátedra son seis cargos, y
+    hasta ahora cada uno era un formulario aparte. Acá se tildan los que se le
+    dan a la misma persona y se designa una sola vez, con el sistema
+    revisando que no le queden dos cursos a la misma hora.
+    """
+    from .models import EstadoLicencia, Licencia, TipoCobertura
+    from .superposicion import hay_horario, revisar
+
+    licencia = get_object_or_404(
+        Licencia.objects.del_contexto().select_related("legajo", "tipo"), pk=pk
+    )
+    ya_resueltos = {
+        cobertura.cargo_id: cobertura
+        for cobertura in licencia.coberturas.select_related("suplente")
+    }
+    cargos = list(licencia.cargos_afectados().select_related("materia", "curso"))
+
+    if request.method == "POST":
+        resultado = _guardar_la_cobertura(request, licencia, cargos, ya_resueltos)
+        if resultado is not None:
+            return resultado
+
+    return render(
+        request,
+        "licencias/cubrir_licencia.html",
+        {
+            "licencia": licencia,
+            "cargos": [
+                {"cargo": cargo, "cobertura": ya_resueltos.get(cargo.id)} for cargo in cargos
+            ],
+            "pendientes": [cargo for cargo in cargos if cargo.id not in ya_resueltos],
+            "posibles": _posibles_suplentes(licencia, cargos),
+            "hay_horario": hay_horario(request.institucion, licencia.fecha_inicio),
+            "aprobada": licencia.estado == EstadoLicencia.APROBADA,
+            "tipos": TipoCobertura.choices,
+            "choques": getattr(request, "_choques", []),
+            "elegidos": [int(c) for c in request.POST.getlist("cargos") if c.isdigit()],
+            "revisar": revisar,  # se usa solo en las pruebas de la vista
+        },
+    )
+
+
+def _posibles_suplentes(licencia, cargos):
+    """Personal que puede tomar esos cargos, primero quien da esas materias."""
+    from legajos.models import PLANTELES_SIN_CLASES, EstadoLegajo, Legajo
+
+    materias = {cargo.materia_id for cargo in cargos if cargo.materia_id}
+    gente = (
+        Legajo.objects.filter(institucion=licencia.institucion, estado=EstadoLegajo.ACTIVO)
+        .exclude(pk=licencia.legajo_id)
+        .exclude(plantel__in=PLANTELES_SIN_CLASES)
+        .prefetch_related("cargos", "materias_que_puede_dar")
+        .order_by("apellido", "nombre")
+    )
+    con_la_materia, el_resto = [], []
+    for legajo in gente:
+        suyas = {cargo.materia_id for cargo in legajo.cargos.all() if cargo.materia_id}
+        suyas |= {materia.id for materia in legajo.materias_que_puede_dar.all()}
+        (con_la_materia if materias & suyas else el_resto).append(legajo)
+    return {"con_la_materia": con_la_materia, "el_resto": el_resto}
+
+
+def _guardar_la_cobertura(request, licencia, cargos, ya_resueltos):
+    """Crea las coberturas tildadas. Devuelve None si hay que volver a mostrar."""
+    from .models import Cobertura, TipoCobertura
+    from .superposicion import revisar
+
+    elegidos = [int(valor) for valor in request.POST.getlist("cargos") if valor.isdigit()]
+    seleccionados = [
+        cargo for cargo in cargos if cargo.id in elegidos and cargo.id not in ya_resueltos
+    ]
+    if not seleccionados:
+        messages.error(request, "Tildá al menos un cargo para cubrir.")
+        return None
+
+    desde = _fecha(request.POST.get("desde")) or licencia.fecha_inicio
+    hasta = _fecha(request.POST.get("hasta")) or licencia.fecha_fin
+    if desde < licencia.fecha_inicio or hasta > licencia.fecha_fin:
+        messages.error(
+            request,
+            "Las fechas de la cobertura tienen que estar dentro de la licencia "
+            f"({licencia.fecha_inicio:%d/%m} al {licencia.fecha_fin:%d/%m}).",
+        )
+        return None
+
+    tipo = request.POST.get("tipo", TipoCobertura.SUPLENTE)
+    suplente = None
+    if tipo == TipoCobertura.SUPLENTE:
+        suplente = Legajo.objects.del_contexto().filter(pk=request.POST.get("suplente")).first()
+        if suplente is None:
+            messages.error(request, "Elegí a quién se le asignan esos cargos.")
+            return None
+
+        choques = revisar(request.institucion, suplente, seleccionados, desde, hasta)
+        if choques:
+            # No se guarda nada: es el error que después aparece con dos cursos
+            # esperando a la misma persona.
+            request._choques = choques
+            messages.error(
+                request,
+                f"{suplente.nombre_completo} no puede tomar todo eso: hay "
+                f"{len(choques)} hora(s) que se le pisan con lo que ya tiene.",
+            )
+            return None
+
+    creadas = 0
+    for cargo in seleccionados:
+        cobertura, creada = Cobertura.objects.get_or_create(
+            institucion=licencia.institucion,
+            licencia=licencia,
+            cargo=cargo,
+            defaults={
+                "tipo": tipo,
+                "suplente": suplente,
+                "fecha_inicio": desde,
+                "fecha_fin": hasta,
+            },
+        )
+        if creada:
+            cobertura.designar_cargo_del_suplente()
+            creadas += 1
+
+    registrar_auditoria(
+        AccionAuditada.CREACION,
+        licencia,
+        usuario=request.user,
+        descripcion=(
+            f"{creadas} cargo(s) de {licencia.legajo.nombre_completo} "
+            + (f"cubiertos por {suplente.nombre_completo}" if suplente else "sin cobertura")
+        ),
+    )
+    messages.success(
+        request,
+        f"Listo: {creadas} cargo(s) resueltos"
+        + (f" con {suplente.nombre_completo}." if suplente else " sin cobertura."),
+    )
+    return HttpResponseRedirect(reverse("cubrir_licencia", args=[licencia.pk]))
+
+
+@login_required
 @permission_required("licencias.view_licencia", raise_exception=True)
 def calendario(request):
     """El mes completo: quién falta cada día, de un vistazo.

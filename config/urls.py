@@ -86,6 +86,7 @@ urlpatterns = [
     path("avisos/", portal_views.avisos_recibidos, name="avisos_recibidos"),
     path("avisos/<int:pk>/responder/", portal_views.responder_aviso, name="responder_aviso"),
     path("licencias/calendario/", licencias_views.calendario, name="calendario_licencias"),
+    path("licencias/<int:pk>/cubrir/", licencias_views.cubrir_licencia, name="cubrir_licencia"),
     path("asistencia/semana/", asistencia_views.semana, name="semana"),
     path("asistencia/resumen/", asistencia_views.resumen_del_mes, name="resumen_asistencia"),
     path("asistencia/ausentismo/", asistencia_views.ausentismo, name="ausentismo"),

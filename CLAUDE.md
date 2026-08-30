@@ -122,6 +122,17 @@ instituciones expone datos laborales de otra escuela.
   cruce que el parte diario: son los mismos datos ordenados al revés —por curso
   en vez de por persona— y por eso no pueden contradecirse. Si se toca uno, se
   toca el otro.
+- Una falta se informa **una línea por planilla, no una por cargo**
+  (`novedades.compilador`): tres cargos de la misma fuente son un solo
+  descuento. Un día entero va en `dias`; una ausencia parcial, en `horas` —
+  nunca las dos, porque el export toma las horas si están.
+- Al compilar se **quitan las novedades automáticas que ya no salen de ningún
+  hecho** (`_quitar_lo_que_ya_no_corresponde`), sin tocar lo manual ni lo
+  congelado: una línea de más en la planilla es plata de más o de menos.
+- Antes de designar un suplente se revisa que **no se le pisen las horas**
+  (`licencias.superposicion`), comparando horarios reales contra lo que ya da
+  y lo que ya está supliendo. Sin horario publicado no frena: avisa que no se
+  pudo verificar.
 - Una suplencia **se apoya siempre en una licencia**: es lo que la justifica y
   lo que la convierte en alta para la liquidación. Sin licencia no se designa;
   se ofrece cargarla primero.

@@ -103,8 +103,11 @@ def _del_directivo(institucion, situacion) -> list[Pendiente]:
         Pendiente(
             titulo="Licencias sin decidir la cobertura",
             cantidad=situacion["coberturas_pendientes"],
-            detalle="Hay que designar suplente o dejar constancia de que el curso queda libre.",
-            url=reverse("admin:licencias_cobertura_add"),
+            detalle=(
+                "Hay que designar suplente o dejar constancia de que el curso queda "
+                "libre. Se resuelven todos los cargos de una licencia de una vez."
+            ),
+            url=(reverse("admin:licencias_licencia_changelist") + "?estado__exact=APROBADA"),
             accion="Decidir",
             urgente=True,
         ),
@@ -172,8 +175,11 @@ def _de_secretaria(institucion, situacion, documentos_vencidos) -> list[Pendient
         Pendiente(
             titulo="Licencias sin decidir la cobertura",
             cantidad=situacion["coberturas_pendientes"],
-            detalle="Hay que designar suplente o dejar constancia de que el curso queda libre.",
-            url=reverse("admin:licencias_cobertura_add"),
+            detalle=(
+                "Hay que designar suplente o dejar constancia de que el curso queda "
+                "libre. Se resuelven todos los cargos de una licencia de una vez."
+            ),
+            url=(reverse("admin:licencias_licencia_changelist") + "?estado__exact=APROBADA"),
             accion="Decidir",
             urgente=True,
         ),

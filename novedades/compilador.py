@@ -34,7 +34,11 @@ SIN_REEMPLAZO = "SIN REEMPLAZO"
 class Resultado:
     creadas: int = 0
     actualizadas: int = 0
+    eliminadas: int = 0
     avisos: list[str] = field(default_factory=list)
+    # Las claves de todo lo que esta corrida generó. Lo automático que no esté
+    # acá ya no corresponde a ningún hecho: se quita.
+    claves: set = field(default_factory=set)
 
     @property
     def total(self) -> int:
@@ -57,6 +61,7 @@ def compilar(periodo, usuario=None) -> Resultado:
         _licencias(periodo, inicio, fin, resultado)
         _inasistencias(periodo, inicio, fin, resultado)
         _tardanzas(periodo, inicio, fin, resultado)
+        _quitar_lo_que_ya_no_corresponde(periodo, resultado)
 
         periodo.compilado_en = timezone.now()
         periodo.save(update_fields=["compilado_en", "actualizado_en"])
@@ -185,20 +190,37 @@ def _inasistencias(periodo, inicio: date, fin: date, resultado: Resultado):
             )
             continue
 
+        # Una línea por planilla, no por cargo. Faltar un día es un hecho del
+        # día: si la persona tiene tres cargos de la misma fuente, informarlo
+        # tres veces le triplica el descuento. Lo que sí separa es la fuente de
+        # pago, porque son dos planillas distintas —el mismo criterio que ya
+        # usan las tardanzas—.
+        por_fuente: dict[str, list] = {}
         for cargo in cargos:
+            por_fuente.setdefault(cargo.fuente_pago, []).append(cargo)
+
+        es_el_dia_entero = registro.estado == EstadoAsistencia.AUSENTE
+        for fuente, cargos_de_la_fuente in por_fuente.items():
             _guardar(
                 periodo,
                 resultado,
-                clave=f"inasistencia:{registro.id}:cargo:{cargo.id}",
+                clave=f"inasistencia:{registro.id}:fuente:{fuente}",
                 legajo=registro.legajo,
-                cargo=cargo,
+                # Con un solo cargo se deja anotado cuál; con varios, la línea
+                # es de la persona y de la planilla.
+                cargo=cargos_de_la_fuente[0] if len(cargos_de_la_fuente) == 1 else None,
+                destino=Destino.desde_fuente(fuente),
                 tipo=TipoNovedad.INASISTENCIA,
                 fecha=registro.fecha,
-                dias=1 if registro.estado == EstadoAsistencia.AUSENTE else None,
-                horas=registro.horas_afectadas or cargo.horas_semanales,
-                espacio=_espacio_de(cargo),
+                # Un día entero se informa en días; una ausencia parcial, en
+                # las horas que realmente no dio. Nunca las dos cosas: la
+                # planilla toma las horas si están, y las horas semanales del
+                # cargo no tienen nada que ver con lo que faltó ese día.
+                dias=1 if es_el_dia_entero else None,
+                horas=None if es_el_dia_entero else registro.horas_afectadas,
+                espacio=_espacios_de(cargos_de_la_fuente),
                 motivo=registro.get_estado_display(),
-                jornada_completa=cargo.jornada_completa,
+                jornada_completa=any(cargo.jornada_completa for cargo in cargos_de_la_fuente),
                 observaciones=registro.observaciones,
             )
 
@@ -237,6 +259,16 @@ def _tardanzas(periodo, inicio: date, fin: date, resultado: Resultado):
 
 
 # -- utilidades --------------------------------------------------------------
+
+
+def _espacios_de(cargos) -> str:
+    """Los espacios curriculares de una línea que agrupa varios cargos."""
+    nombres = []
+    for cargo in cargos:
+        nombre = _espacio_de(cargo)
+        if nombre and nombre not in nombres:
+            nombres.append(nombre)
+    return ", ".join(nombres)
 
 
 def _espacio_de(cargo) -> str:
@@ -280,8 +312,33 @@ def _reemplazante(licencia, cargo) -> str:
     return cobertura.suplente.nombre_completo if cobertura.suplente_id else ""
 
 
+def _quitar_lo_que_ya_no_corresponde(periodo, resultado: Resultado):
+    """Borra las novedades automáticas que ya no salen de ningún hecho.
+
+    Si se anula una licencia, se corrige una inasistencia o cambia la forma de
+    agrupar, lo viejo tiene que desaparecer: una línea de más en la planilla es
+    plata de más o de menos. No se toca lo cargado a mano ni lo congelado por
+    un cierre.
+    """
+    sobrantes = (
+        Novedad.objects.filter(periodo=periodo, origen=Origen.AUTOMATICA, congelada=False)
+        .exclude(clave_origen="")
+        .exclude(clave_origen__in=resultado.claves)
+    )
+    cantidad = sobrantes.count()
+    if cantidad:
+        sobrantes.delete()
+        resultado.eliminadas = cantidad
+        resultado.avisos.append(
+            f"Se quitaron {cantidad} novedad(es) que ya no corresponden a ningún hecho "
+            "(una licencia anulada, una falta corregida o líneas repetidas de una "
+            "versión anterior del sistema)."
+        )
+
+
 def _guardar(periodo, resultado: Resultado, *, clave: str, legajo, cargo, tipo, **datos):
     """Crea o actualiza la novedad de ese hecho, sin pisar lo ya informado."""
+    resultado.claves.add(clave)
     destino = datos.pop("destino", None)
     if destino is None:
         destino = Destino.desde_fuente(cargo.fuente_pago) if cargo else Destino.OFICIAL

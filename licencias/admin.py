@@ -53,6 +53,7 @@ class LicenciaAdmin(AdminInstitucional):
         "cantidad_dias",
         "situacion_actual",
         "cobertura_resuelta",
+        "resolver",
     )
     list_filter = ("estado", "tipo", "tipo__con_goce")
     search_fields = ("legajo__apellido", "legajo__nombre", "tipo__nombre", "tipo__codigo")
@@ -62,6 +63,16 @@ class LicenciaAdmin(AdminInstitucional):
     inlines = [CoberturaInline]
     readonly_fields = ("resuelta_en", "resuelta_por")
     actions = ["accion_aprobar", "accion_rechazar"]
+
+    @admin.display(description="cubrir")
+    def resolver(self, obj):
+        """Atajo a la pantalla que resuelve todos los cargos de una vez."""
+        from django.urls import reverse
+        from django.utils.html import format_html
+
+        return format_html(
+            '<a href="{}">Cubrir los cargos</a>', reverse("cubrir_licencia", args=[obj.pk])
+        )
 
     fieldsets = (
         (None, {"fields": ("legajo", "tipo", "fecha_inicio", "fecha_fin", "estado")}),
