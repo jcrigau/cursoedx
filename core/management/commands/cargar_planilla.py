@@ -68,6 +68,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("Simulación: no se va a guardar nada.\n"))
 
         self.libro = libro
+        self.avisos: list[str] = []
         resultados: list[Resultado] = []
         institucion = None
         # La escuela se busca (o se crea) adentro de la transacción: si no, una
@@ -112,6 +113,7 @@ class Command(BaseCommand):
                 legajos.importar(institucion, self.archivo),
                 legajos.importar_cargos(institucion, libro, ciclo),
             ]
+            self.avisos = estructura.revisar(institucion, ciclo)
             return resultados
 
     def _escuela(self, libro, nombre_pedido) -> Institucion:
@@ -163,6 +165,12 @@ class Command(BaseCommand):
             resto = len(resultado.observaciones) - 15
             if resto > 0:
                 self.stdout.write(f"      · … y {resto} más del mismo tipo o parecidas.")
+
+        if self.avisos:
+            self.stdout.write("")
+            self.stdout.write(self.style.WARNING("Cargado, pero conviene mirar esto:"))
+            for aviso in self.avisos:
+                self.stdout.write(f"      · {aviso}")
 
         pendientes = [hoja for hoja in SIN_IMPORTADOR if tiene_filas(self.libro, hoja)]
         if pendientes:

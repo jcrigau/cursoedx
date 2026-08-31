@@ -425,3 +425,35 @@ def _explicar(error: ValidationError, modelo=None) -> str:
     from legajos.planilla import _en_una_linea
 
     return _en_una_linea(error, modelo)
+
+
+def revisar(institucion, ciclo) -> list[str]:
+    """Lo que quedó cargado pero no cierra. Se mira después de cargar todo.
+
+    El caso que importa: un plan de estudios que pide más horas de las que
+    tiene la grilla. Se descubre recién al generar el horario —cuando el
+    generador no encuentra solución y nadie sabe por qué—, así que conviene
+    decirlo apenas se carga.
+    """
+    if ciclo is None:
+        return []
+    avisos = []
+    for curso in Curso.objects.filter(institucion=institucion, ciclo_lectivo=ciclo):
+        pedidas = curso.horas_asignadas()
+        ofrece = curso.esquema_horario.cantidad_horas_semanales
+        if pedidas > ofrece:
+            avisos.append(
+                f"{curso}: el plan pide {pedidas} horas semanales y la grilla ofrece "
+                f"{ofrece}. O falta grilla, o hay materias que se dictan un solo período."
+            )
+    sin_plan = [
+        str(curso)
+        for curso in Curso.objects.filter(institucion=institucion, ciclo_lectivo=ciclo)
+        if not curso.plan.exists()
+    ]
+    if sin_plan:
+        avisos.append(
+            f"Sin plan de estudios: {', '.join(sin_plan)}. El generador de horarios no "
+            "tiene qué ubicar en esos cursos."
+        )
+    return avisos

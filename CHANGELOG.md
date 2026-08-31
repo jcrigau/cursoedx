@@ -47,6 +47,16 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
 - La hoja de Cargos tiene **apellido y nombre** (para colgar el cargo cuando no
   hay CUIL) y **observaciones**, donde queda lo que no entra en ningún campo:
   «se dicta a 3°A y 3°B juntos», por ejemplo.
+- **`python manage.py crear_usuario`**: el acceso de una persona a una escuela,
+  con su rol. Hasta ahora los usuarios salían de los datos de ejemplo o del
+  `createsuperuser` de Django, que crea un administrador de todo; una escuela
+  real necesita lo contrario. Genera la contraseña si no se le pasa, la muestra
+  una sola vez, y con `--legajo` deja atado el usuario a su legajo, que es lo
+  que hace andar el portal docente.
+- Al terminar de cargar, **el comando avisa lo que no cierra**: un curso cuyo
+  plan de estudios pide más horas de las que ofrece la grilla, o un curso sin
+  plan. Eso se descubría recién al generar el horario, cuando el generador no
+  encuentra solución y nadie sabe por qué.
 - El informe de la carga **agrupa lo repetido** («64 personas sin fecha de
   ingreso») y nombra los campos como los ve la secretaría, no como se llaman
   en la base.

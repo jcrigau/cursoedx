@@ -62,6 +62,7 @@ python manage.py abrir_ciclo 2027                    # el año nuevo, copiado de
 python manage.py respaldar                           # base + adjuntos en un ZIP
 python manage.py plantilla_carga                     # el Excel para cargar una escuela nueva
 python manage.py cargar_planilla escuela.xlsx --simular  # ver qué entraría; sin --simular, entra
+python manage.py crear_usuario ana@escuela.edu.ar --rol secretaria  # el acceso de alguien
 python manage.py probar_correo vos@mail.com          # ¿el correo está bien configurado?
 python manage.py reclamar_documentacion --probar     # avisarle a cada uno qué se le vence
 python manage.py runserver
