@@ -17,6 +17,7 @@ from django.urls import reverse
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
+from asistencia.models import buscar_licencia_que_justifica
 from asistencia.parte import version_vigente
 from core.bienvenida import para as bienvenida_para
 from horarios.models import AsignacionHoraria
@@ -272,6 +273,23 @@ def fichar(request, legajo):
     if legajo.fichadas.filter(fecha=ahora.date(), tipo=tipo).exists():
         return JsonResponse(
             {"ok": False, "mensaje": f"Ya registraste tu {tipo.lower()} de hoy."}, status=409
+        )
+
+    licencia = buscar_licencia_que_justifica(legajo, ahora.date())
+    if licencia is not None:
+        # El botón para fichar ya no se muestra en este caso (ver "Hoy"), pero
+        # el guardado del lado del servidor no puede depender solo de eso: acá
+        # se frena igual, con el mismo criterio que ya usa el parte diario
+        # ("quien tiene licencia aprobada ni siquiera aparece para marcar").
+        return JsonResponse(
+            {
+                "ok": False,
+                "mensaje": (
+                    f"Tenés una licencia aprobada ({licencia.tipo}) que cubre hoy: no hace "
+                    "falta fichar. Si es un error, avisale a secretaría."
+                ),
+            },
+            status=409,
         )
 
     def numero(clave):

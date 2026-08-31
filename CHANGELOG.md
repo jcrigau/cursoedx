@@ -75,6 +75,29 @@ esté en uso diario en una escuela, con un ciclo lectivo completo encima.
 - **Al recompilar se quitan las novedades automáticas que ya no corresponden**
   (una licencia anulada, una falta corregida, líneas repetidas de una versión
   anterior). No se toca lo cargado a mano ni lo congelado por un cierre.
+- **Una ausencia parcial de alguien con cargos en las dos fuentes se cobraba
+  doble.** Dos horas afectadas se copiaban enteras a cada planilla —2 quedaban
+  informadas como 4—, en vez de reconocer que el parte no dice de qué cargo
+  eran esas horas. Ahora no se inventa el reparto: se avisa y se carga a mano,
+  en la planilla que corresponda. (Encontrado simulando un día de trabajo
+  completo con los cuatro roles del sistema.)
+- **Dos licencias aprobadas superpuestas sobre el mismo cargo podían esconder
+  al suplente ya asignado.** El cruce del parte diario y de «Cursos de hoy»
+  armaba un diccionario por cargo que se pisaba entre sí: si la que quedaba
+  arriba era la que decía «sin cobertura», el suplente de la otra licencia
+  desaparecía de las dos pantallas —aunque las novedades del mes sí lo
+  reflejaban bien—. Ahora, entre varias, gana siempre la que tiene un
+  suplente designado.
+- **El directivo no podía consultar un mes de novedades mientras estuviera
+  abierto**: un chequeo pensado para el liquidador («solo lo cerrado») también
+  lo alcanzaba a él, aunque el rol dice que «consulta todo». Ahora tiene su
+  propio permiso para verlo sin poder tocarlo; el liquidador sigue viendo solo
+  lo cerrado.
+- **Fichar la entrada no controlaba si había una licencia aprobada ese día.**
+  El botón ya no aparece en ese caso, pero el servidor aceptaba igual una
+  fichada forzada, con el mismo criterio contradictorio que el parte diario ya
+  evita («quien tiene licencia aprobada ni siquiera aparece para marcar»).
+  Ahora se rechaza con el mismo mensaje que «ya fichaste hoy».
 
 ### Seguridad
 

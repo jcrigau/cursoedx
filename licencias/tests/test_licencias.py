@@ -391,3 +391,56 @@ class TestCobertura:
             fecha_fin=hoy + timedelta(days=3),
         )
         assert suplencias_por_vencer(institucion).count() == 1
+
+
+class TestColumnaDeCobertura:
+    """La columna del listado de licencias tiene que distinguir "resuelta,
+    sin suplente" de "todavía sin resolver": son estados distintos."""
+
+    def _texto(self, licencia):
+        from django.contrib import admin
+
+        from licencias.admin import LicenciaAdmin
+        from licencias.models import Licencia as LicenciaModel
+
+        admin_de = LicenciaAdmin(LicenciaModel, admin.site)
+        return str(admin_de.cobertura_resuelta(licencia))
+
+    def test_todos_los_cargos_sin_cobertura_se_lee_como_resuelto(self, institucion, docente, cargo):
+        tipo = crear_tipo(institucion)
+        hoy = date.today()
+        licencia = Licencia.objects.create(
+            institucion=institucion,
+            legajo=docente,
+            tipo=tipo,
+            fecha_inicio=hoy,
+            fecha_fin=hoy,
+            estado=EstadoLicencia.APROBADA,
+        )
+        Cobertura.objects.create(
+            institucion=institucion,
+            licencia=licencia,
+            cargo=cargo,
+            tipo=TipoCobertura.SIN_COBERTURA,
+            fecha_inicio=hoy,
+            fecha_fin=hoy,
+        )
+
+        texto = self._texto(licencia)
+
+        assert "resuelta" in texto
+        assert "faltan" not in texto
+
+    def test_sin_decidir_nada_dice_faltan(self, institucion, docente, cargo):
+        tipo = crear_tipo(institucion)
+        hoy = date.today()
+        licencia = Licencia.objects.create(
+            institucion=institucion,
+            legajo=docente,
+            tipo=tipo,
+            fecha_inicio=hoy,
+            fecha_fin=hoy,
+            estado=EstadoLicencia.APROBADA,
+        )
+
+        assert "faltan 1" in self._texto(licencia)

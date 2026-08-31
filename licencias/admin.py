@@ -113,7 +113,11 @@ class LicenciaAdmin(AdminInstitucional):
         if decididos >= afectados:
             sin_cubrir = obj.coberturas.filter(tipo=TipoCobertura.SIN_COBERTURA).count()
             if sin_cubrir:
-                return format_html('<span style="color:#a06000">{} sin cubrir</span>', sin_cubrir)
+                # "Resuelta" al frente a propósito: ya se decidió que esos
+                # cargos quedan sin suplente, no es lo mismo que "faltan".
+                return format_html(
+                    '<span style="color:#a06000">resuelta: {} sin cubrir</span>', sin_cubrir
+                )
             return "cubierta"
         return format_html(
             '<span style="color:#b4451f;font-weight:600">faltan {}</span>', afectados - decididos
@@ -130,9 +134,12 @@ class LicenciaAdmin(AdminInstitucional):
             licencia.aprobar(usuario=request.user)
             aprobadas += 1
         if aprobadas:
+            verbo, sustantivo = (
+                ("aprobó", "licencia") if aprobadas == 1 else ("aprobaron", "licencias")
+            )
             self.message_user(
                 request,
-                f"Se aprobaron {aprobadas} licencias. Falta definir la cobertura de las horas.",
+                f"Se {verbo} {aprobadas} {sustantivo}. Falta definir la cobertura de las horas.",
                 messages.SUCCESS,
             )
 

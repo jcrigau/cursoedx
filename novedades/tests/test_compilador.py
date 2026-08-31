@@ -293,6 +293,30 @@ class TestAsistencia:
         destinos = {novedad.destino for novedad in periodo.novedades.all()}
         assert len(destinos) == 2
 
+    def test_una_ausencia_parcial_mixta_no_se_duplica_y_se_avisa(
+        self, institucion, periodo, docente, nivel
+    ):
+        """El error real: 2 horas parciales de alguien "mixto" salían como 4.
+
+        Acá, a diferencia del día entero, "horas" es de un cargo puntual y el
+        parte diario no dice de cuál: repartirlas es inventar el dato, así que
+        no se genera ninguna línea automática y se avisa para cargarla a mano.
+        """
+        dar_cargo(institucion, docente, nivel=nivel, fuente=FuentePago.SUBVENCIONADO, horas=5)
+        dar_cargo(institucion, docente, nivel=nivel, fuente=FuentePago.INTERNO, horas=3)
+        RegistroAsistencia.objects.create(
+            institucion=institucion,
+            legajo=docente,
+            fecha=date(ANIO, MES, 6),
+            estado=EstadoAsistencia.PARCIAL,
+            horas_afectadas=2,
+        )
+
+        resultado = compilar(periodo)
+
+        assert periodo.novedades.filter(tipo=TipoNovedad.INASISTENCIA).count() == 0
+        assert any("las dos fuentes" in aviso for aviso in resultado.avisos)
+
     def test_recompilar_limpia_las_lineas_que_ya_no_corresponden(
         self, institucion, periodo, docente, nivel
     ):

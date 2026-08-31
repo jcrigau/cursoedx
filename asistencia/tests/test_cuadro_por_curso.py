@@ -128,6 +128,55 @@ class TestCuadroPorCurso:
         for hora in cuadro.horas:
             assert hora.estado == EstadoHora.SIN_RESOLVER
 
+    def test_dos_licencias_superpuestas_no_esconden_al_suplente(self, con_horario_publicado):
+        """La misma superposición que se prueba en el parte, vista por curso."""
+        from licencias.models import EstadoLicencia, Licencia, TipoLicencia
+
+        institucion = con_horario_publicado["escuela"]["institucion"]
+        fecha = con_horario_publicado["fecha"]
+        cargo = con_horario_publicado["cargo"]
+
+        con_suplente = dar_licencia(con_horario_publicado)
+        suplente = Legajo.objects.create(
+            institucion=institucion, apellido="Suplente", nombre="Marta", cuil="27-39888777-6"
+        )
+        Cobertura.objects.create(
+            institucion=institucion,
+            licencia=con_suplente,
+            cargo=cargo,
+            tipo=TipoCobertura.SUPLENTE,
+            suplente=suplente,
+            fecha_inicio=con_suplente.fecha_inicio,
+            fecha_fin=con_suplente.fecha_fin,
+        )
+
+        otro_tipo = TipoLicencia.objects.create(
+            institucion=institucion, nombre="Trámite personal", codigo="Art. 93.4"
+        )
+        sin_suplente = Licencia.objects.create(
+            institucion=institucion,
+            legajo=con_horario_publicado["docente"],
+            tipo=otro_tipo,
+            fecha_inicio=fecha,
+            fecha_fin=fecha,
+            estado=EstadoLicencia.APROBADA,
+        )
+        Cobertura.objects.create(
+            institucion=institucion,
+            licencia=sin_suplente,
+            cargo=cargo,
+            tipo=TipoCobertura.SIN_COBERTURA,
+            fecha_inicio=fecha,
+            fecha_fin=fecha,
+        )
+
+        cuadro = horas_del_unico_curso(con_horario_publicado)
+
+        assert not cuadro.tiene_problemas
+        for hora in cuadro.horas:
+            assert hora.estado == EstadoHora.SUPLENTE
+            assert hora.docente == suplente
+
     def test_no_contradice_al_parte(self, con_horario_publicado):
         """Las dos pantallas salen del mismo cruce: tienen que coincidir."""
         licencia = dar_licencia(con_horario_publicado)

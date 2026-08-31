@@ -135,6 +135,65 @@ class TestLicenciasYCoberturas:
         assert parte.lineas == []
         assert all(hora.decidida for hora in parte.sin_cobertura)
 
+    def test_dos_licencias_superpuestas_no_esconden_al_suplente(self, con_horario_publicado):
+        """Dos solicitudes aprobadas para el mismo cargo y el mismo día.
+
+        Pasa de verdad: alguien pide dos licencias distintas que terminan
+        superponiéndose, y las dos se aprueban. La que se resolvió "sin
+        cobertura" se guarda **después** —el orden que hacía perder al
+        suplente con un diccionario armado sin este criterio—, y aun así
+        tiene que ganar la que sí tiene a alguien dando la clase.
+        """
+        from licencias.models import EstadoLicencia, Licencia, TipoLicencia
+
+        escuela = con_horario_publicado["escuela"]
+        institucion = escuela["institucion"]
+        fecha = con_horario_publicado["fecha"]
+        cargo = con_horario_publicado["cargo"]
+
+        con_suplente = dar_licencia(con_horario_publicado)
+        suplente = Legajo.objects.create(
+            institucion=institucion, apellido="Suplente", nombre="Marta", cuil="27-39888777-6"
+        )
+        Cobertura.objects.create(
+            institucion=institucion,
+            licencia=con_suplente,
+            cargo=cargo,
+            tipo=TipoCobertura.SUPLENTE,
+            suplente=suplente,
+            fecha_inicio=con_suplente.fecha_inicio,
+            fecha_fin=con_suplente.fecha_fin,
+        )
+
+        otro_tipo = TipoLicencia.objects.create(
+            institucion=institucion, nombre="Trámite personal", codigo="Art. 93.4"
+        )
+        sin_suplente = Licencia.objects.create(
+            institucion=institucion,
+            legajo=con_horario_publicado["docente"],
+            tipo=otro_tipo,
+            fecha_inicio=fecha,
+            fecha_fin=fecha,
+            estado=EstadoLicencia.APROBADA,
+        )
+        Cobertura.objects.create(
+            institucion=institucion,
+            licencia=sin_suplente,
+            cargo=cargo,
+            tipo=TipoCobertura.SIN_COBERTURA,
+            fecha_inicio=fecha,
+            fecha_fin=fecha,
+        )
+
+        parte = parte_diario(institucion, fecha)
+
+        assert parte.sin_cobertura == []
+        assert len(parte.lineas) == 1
+        linea = parte.lineas[0]
+        assert linea.legajo == suplente
+        assert linea.es_suplente
+        assert linea.titular == con_horario_publicado["docente"]
+
     def test_la_licencia_de_otro_dia_no_afecta(self, con_horario_publicado):
         otro_dia = con_horario_publicado["fecha"] + timedelta(days=7)
         dar_licencia(con_horario_publicado, desde=otro_dia, hasta=otro_dia)

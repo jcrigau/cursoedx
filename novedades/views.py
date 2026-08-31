@@ -66,8 +66,13 @@ def detalle(request, anio: int, mes: int):
     periodo = periodo_de(request.institucion, anio, mes, crear=puede_editar)
     if periodo is None:
         raise PermissionDenied("Ese período todavía no fue preparado.")
-    # El liquidador solo ve lo que ya se cerró: un borrador puede cambiar.
-    if not periodo.esta_cerrado and not puede_editar:
+    # El liquidador solo ve lo que ya se cerró: un borrador puede cambiar. El
+    # directivo consulta aunque no esté cerrado —no puede editar igual—, así
+    # que tiene su propio permiso para esto.
+    puede_ver_borrador = puede_editar or request.user.has_perm(
+        "novedades.ver_sin_cerrar_periodonovedades"
+    )
+    if not periodo.esta_cerrado and not puede_ver_borrador:
         raise PermissionDenied("El período todavía no está cerrado.")
 
     return render(

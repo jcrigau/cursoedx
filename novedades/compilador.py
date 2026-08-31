@@ -200,6 +200,20 @@ def _inasistencias(periodo, inicio: date, fin: date, resultado: Resultado):
             por_fuente.setdefault(cargo.fuente_pago, []).append(cargo)
 
         es_el_dia_entero = registro.estado == EstadoAsistencia.AUSENTE
+
+        if not es_el_dia_entero and len(por_fuente) > 1:
+            # Una ausencia parcial son horas de un cargo puntual, y el parte
+            # diario no pregunta de cuál: si la persona tiene cargos de las
+            # dos fuentes, repartir esas horas entre las dos planillas es
+            # inventar el dato — y copiarlas enteras a cada una las duplica.
+            # No se inventa: se avisa, y se carga a mano en la que corresponda.
+            resultado.avisos.append(
+                f"{registro.legajo.nombre_completo} faltó {registro.horas_afectadas or 0} "
+                f"hora(s) el {registro.fecha:%d/%m} pero tiene cargos de las dos fuentes: no "
+                "se puede saber de cuál. Cargala a mano en la planilla que corresponda."
+            )
+            continue
+
         for fuente, cargos_de_la_fuente in por_fuente.items():
             _guardar(
                 periodo,

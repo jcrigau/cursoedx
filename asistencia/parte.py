@@ -97,6 +97,28 @@ def version_vigente(institucion, fecha: date) -> VersionHorario | None:
     ).first()
 
 
+def _coberturas_por_cargo(institucion, fecha: date) -> dict:
+    """La cobertura vigente de cada cargo, sin perder la más específica.
+
+    Dos licencias aprobadas pueden superponerse sobre el mismo cargo el mismo
+    día —dos solicitudes que se aprobaron para el mismo período—, y entonces
+    puede haber más de una `Cobertura` para ese cargo. Se prefiere la que
+    designa un suplente por sobre la que dice "sin cobertura": es la decisión
+    más específica, y la que de verdad importa para saber quién da la clase.
+    Elegir cualquiera al azar —lo que hacía un diccionario armado sin este
+    criterio— podía esconder un suplente ya asignado.
+    """
+    por_cargo: dict[int, Cobertura] = {}
+    for cobertura in coberturas_vigentes(institucion, fecha):
+        actual = por_cargo.get(cobertura.cargo_id)
+        si_mejora = actual is None or (
+            actual.tipo != TipoCobertura.SUPLENTE and cobertura.tipo == TipoCobertura.SUPLENTE
+        )
+        if si_mejora:
+            por_cargo[cobertura.cargo_id] = cobertura
+    return por_cargo
+
+
 def parte_diario(institucion, fecha: date) -> ParteDiario:
     """Arma el parte de un día."""
     parte = ParteDiario(fecha=fecha)
@@ -126,9 +148,7 @@ def parte_diario(institucion, fecha: date) -> ParteDiario:
     licencias = {
         licencia.legajo_id: licencia for licencia in licencias_vigentes(institucion, fecha)
     }
-    coberturas = {
-        cobertura.cargo_id: cobertura for cobertura in coberturas_vigentes(institucion, fecha)
-    }
+    coberturas = _coberturas_por_cargo(institucion, fecha)
 
     lineas: dict[int, LineaParte] = {}
 
@@ -287,9 +307,7 @@ def cuadro_del_dia(institucion, fecha: date) -> list[CuadroCurso]:
     licencias = {
         licencia.legajo_id: licencia for licencia in licencias_vigentes(institucion, fecha)
     }
-    coberturas = {
-        cobertura.cargo_id: cobertura for cobertura in coberturas_vigentes(institucion, fecha)
-    }
+    coberturas = _coberturas_por_cargo(institucion, fecha)
     registros = {
         registro.legajo_id: registro
         for registro in RegistroAsistencia.objects.filter(institucion=institucion, fecha=fecha)
@@ -329,11 +347,15 @@ def _hora_del_curso(asignacion, licencias, coberturas, registros, avisados) -> H
     licencia = licencias.get(asignacion.legajo_id)
     if licencia is not None:
         cobertura = coberturas.get(asignacion.cargo_id)
+        # La nota sale de la licencia de la cobertura, no de `licencia`: si la
+        # persona tiene más de una vigente ese día, es la que efectivamente
+        # decidió qué pasa con este cargo puntual, y puede no ser la misma.
+        nota = str(cobertura.licencia.tipo) if cobertura is not None else str(licencia.tipo)
         if cobertura is not None and cobertura.tipo == TipoCobertura.SUPLENTE:
             hora.docente = cobertura.suplente
             hora.titular = asignacion.legajo
             hora.estado = EstadoHora.SUPLENTE
-            hora.nota = str(licencia.tipo)
+            hora.nota = nota
             # Un suplente también puede faltar.
             registro = registros.get(cobertura.suplente_id)
             if registro is not None and registro.es_ausencia:
@@ -346,7 +368,7 @@ def _hora_del_curso(asignacion, licencias, coberturas, registros, avisados) -> H
         hora.estado = EstadoHora.SIN_DOCENTE if cobertura is not None else EstadoHora.SIN_RESOLVER
         hora.titular = asignacion.legajo
         hora.docente = None
-        hora.nota = str(licencia.tipo)
+        hora.nota = nota
         return hora
 
     registro = registros.get(asignacion.legajo_id)

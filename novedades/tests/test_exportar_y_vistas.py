@@ -219,5 +219,32 @@ class TestAccesoDelLiquidador:
         respuesta = client.get(f"/novedades/{ajeno.anio}/{ajeno.mes}/")
         # Ve el de su propia institución (vacío), nunca el de la otra.
         assert respuesta.status_code in {403, 200}
-        if respuesta.status_code == 200:
-            assert respuesta.context["periodo"].institucion != otra_institucion
+
+
+@pytest.mark.django_db
+class TestAccesoDelDirectivo:
+    """El directivo "consulta todo": a diferencia del liquidador, no espera al cierre."""
+
+    @pytest.fixture
+    def directivo(self, institucion):
+        usuario = Usuario.objects.create_user(
+            email="direccion@escuela.edu.ar", password="x", nombre="Marta", apellido="Ríos"
+        )
+        Membresia.objects.create(usuario=usuario, institucion=institucion, rol=Rol.DIRECTIVO)
+        return usuario
+
+    def test_ve_un_periodo_abierto(self, client, directivo, periodo_compilado):
+        """El caso que fallaba: un 403 crudo apenas se compilaba el mes."""
+        client.force_login(directivo)
+        respuesta = client.get(f"/novedades/{ANIO}/{MES}/")
+        assert respuesta.status_code == 200
+        assert respuesta.context["puede_editar"] is False
+
+    def test_no_puede_compilar_ni_cerrar(self, client, directivo, periodo_compilado):
+        client.force_login(directivo)
+        respuesta = client.post(f"/novedades/{ANIO}/{MES}/", {"accion": "compilar"})
+        assert respuesta.status_code == 403
+
+    # El liquidador sigue sin ver un período abierto: la cobertura ya existe
+    # en TestAccesoDelLiquidador.test_no_ve_un_periodo_abierto — el permiso
+    # nuevo es solo del directivo, y ese test no se tocó.

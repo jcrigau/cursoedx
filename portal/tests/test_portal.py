@@ -139,6 +139,31 @@ class TestFichaje:
         self._fichar(client, tipo=TipoFichada.SALIDA)
         assert Fichada.objects.count() == 2
 
+    def test_no_se_ficha_con_una_licencia_aprobada_vigente(
+        self, client, docente_con_portal, escuela_ubicada
+    ):
+        """El botón ya no se muestra en "Hoy", pero el servidor no confía solo en eso."""
+        tipo = TipoLicencia.objects.create(
+            institucion=escuela_ubicada["institucion"], nombre="Enfermedad", codigo="Art. 76"
+        )
+        Licencia.objects.create(
+            institucion=escuela_ubicada["institucion"],
+            legajo=docente_con_portal["legajo"],
+            tipo=tipo,
+            fecha_inicio=HOY,
+            fecha_fin=HOY + timedelta(days=2),
+            estado=EstadoLicencia.APROBADA,
+        )
+        client.force_login(docente_con_portal["usuario"])
+
+        respuesta = self._fichar(
+            client, latitud=LATITUD_ESCUELA, longitud=LONGITUD_ESCUELA, precision=12
+        )
+
+        assert respuesta.status_code == 409
+        assert not respuesta.json()["ok"]
+        assert Fichada.objects.count() == 0
+
     def test_sin_ubicacion_de_la_escuela_no_se_puede_comparar(
         self, client, docente_con_portal, escuela_ubicada
     ):

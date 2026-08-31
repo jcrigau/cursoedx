@@ -71,6 +71,15 @@ class PeriodoNovedades(ModeloInstitucional):
                 fields=["institucion", "anio", "mes"], name="periodo_novedades_unico"
             )
         ]
+        permissions = [
+            (
+                # El codename repite el nombre del modelo a propósito: así entra
+                # tal cual en el molde `f"{accion}_{modelo}"` que ya arma
+                # core.permisos.sincronizar_permisos(), sin tocar esa función.
+                "ver_sin_cerrar_periodonovedades",
+                "Puede ver un período de novedades antes de que se cierre",
+            )
+        ]
 
     def __str__(self) -> str:
         return f"{MESES[self.mes - 1].capitalize()} {self.anio}"

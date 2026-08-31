@@ -73,7 +73,13 @@ PERMISOS_POR_ROL: dict[str, dict[str, dict[str, tuple[str, ...]]]] = {
         "horarios": {modelo: SOLO_VER for modelo in HORARIOS},
         "licencias": {"tipolicencia": SOLO_VER, "licencia": TODAS, "cobertura": TODAS},
         "asistencia": {modelo: SOLO_VER for modelo in ASISTENCIA},
-        "novedades": {modelo: SOLO_VER for modelo in NOVEDADES},
+        # A diferencia del liquidador, el directivo consulta el mes aunque
+        # todavía esté abierto: el "consulta todo" de arriba lo dice, y
+        # necesita ver cómo va la compilación sin poder tocarla.
+        "novedades": {
+            "periodonovedades": (*SOLO_VER, "ver_sin_cerrar"),
+            "novedad": SOLO_VER,
+        },
         # Los avisos también los responde: marcarlos vistos es contestarle
         # al docente en su portal.
         "portal": {"avisoinasistencia": ("view", "change"), "fichada": SOLO_VER},
